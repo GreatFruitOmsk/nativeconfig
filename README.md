@@ -1,6 +1,6 @@
 # nativeconfig
 
-Developers of a cross-platform applications often face problems when application should interact with the system.  
+Developers of cross-platform applications often face problems when application should interact with the system.  
 And config files are no exception, since every popular OS has its own format and guidelines.
 
 This package addresses this very problem in an elegant and Pythonic way:
@@ -17,5 +17,3 @@ This package addresses this very problem in an elegant and Pythonic way:
         favorite_number = IntOption('FavoriteNumber', default=42)
 
 We just created a config that will use appropriate locations on Windows, Mac OS X and Linux!
-
-It's very easy to extend with your own data classes or provide custom validation. 
