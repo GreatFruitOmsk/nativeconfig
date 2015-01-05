@@ -1,6 +1,12 @@
 nativeconfig
 ============
 
+.. image:: https://travis-ci.org/GreatFruitOmsk/nativeconfig.svg?branch=master
+
+.. image:: https://badge.fury.io/py/nativeconfig.png
+    :target: http://badge.fury.io/py/nativeconfig
+
+
 Developers of cross-platform applications often face problems when application should interact with the system.  
 And config files are no exception, since every popular OS has its own format and guidelines.
 
