@@ -22,12 +22,6 @@ class MyBaseConfig(object):
     dict_value_default = DictOption('DictDefault', default={'a': '1', 'b': '2'})
 
 
-
-# TODO: validate
-# TODO: snapshot
-# TODO: base methods
-
-
 class TestBaseConfig(object):
     MyConfig = None
 
@@ -267,12 +261,6 @@ class TestBaseConfig(object):
         with self.assertRaises(ValueError):
             c.single_value_int_default = ''
 
-    def test_validate(self):
-        # duplicate
-        # wrong choice
-        # wrong default type
-        pass
-
     def test_snapshot_returns_empty_and_none_values(self):
         c = self.MyConfig.instance()
 
@@ -324,6 +312,8 @@ class TestBaseConfig(object):
 
 
 if sys.platform.startswith('win32'):
+    from nativeconfig import _traverse_registry_key
+
     class TestRegistryConfig(TestBaseConfig, unittest.TestCase):
         class MyConfig(MyBaseConfig, RegistryConfig):
             REGISTRY_PATH = r'Software\NativeConfigTest'
