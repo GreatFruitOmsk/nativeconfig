@@ -1,9 +1,12 @@
-# nativeconfig
+nativeconfig
+============
 
 Developers of cross-platform applications often face problems when application should interact with the system.  
 And config files are no exception, since every popular OS has its own format and guidelines.
 
 This package addresses this very problem in an elegant and Pythonic way:
+
+.. code-block:: python
 
     import os
     from nativeconfig import PreferredConfig, Option, ChoiceOption, IntOption
