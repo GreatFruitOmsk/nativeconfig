@@ -582,18 +582,23 @@ if sys.platform.startswith('win32'):
     except ImportError:
         import _winreg as winreg
 
-    ERROR_NO_MORE_ITEMS = 18
+    ERROR_NO_MORE_ITEMS = 259
+    ERROR_NO_MORE_FILES = 18
 
     def _traverse_registry_key(key, sub_key):
         """
         Traverse registry key and yield one by one.
+
+        @raise WindowsError: If key cannot be opened (e.g. does not exist).
         """
-        current_key = winreg.OpenKey(key, sub_key)
+        current_key = winreg.OpenKey(key, sub_key, 0, winreg.KEY_ALL_ACCESS)
+
         try:
             i = 0
             while True:
                 next_key = winreg.EnumKey(current_key, i)
-                _traverse_registry_key(key, r'{}\{}'.format(sub_key, next_key))
+                for k in _traverse_registry_key(key, r'{}\{}'.format(sub_key, next_key)):
+                    yield k
                 i += 1
         except WindowsError:
             yield sub_key
@@ -628,7 +633,7 @@ if sys.platform.startswith('win32'):
 
         def set_value(self, key, value):
             try:
-                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, access=winreg.KEY_WRITE) as app_key:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     try:
                         winreg.SetValueEx(app_key, key, 0, winreg.REG_SZ, str(value))
                     except:
@@ -638,8 +643,15 @@ if sys.platform.startswith('win32'):
 
         def remove_value(self, key):
             try:
-                for k in _traverse_registry_key(self.REGISTRY_KEY, self.REGISTRY_PATH):
-                    winreg.DeleteKey(self.REGISTRY_KEY, k)
+                try:
+                    for k in _traverse_registry_key(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, key)):
+                        winreg.DeleteKey(self.REGISTRY_KEY, k)
+                except WindowsError:
+                    try:
+                        with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_ALL_ACCESS) as app_key:
+                            winreg.DeleteValue(app_key, key)
+                    except WindowsError:
+                        self.LOG.info("Unable to delete '%s' from the registry:", key)
             except:
                 self.LOG.exception("Unable to access registry:")
 
@@ -657,7 +669,7 @@ if sys.platform.startswith('win32'):
 
         def set_array_value(self, key, value):
             try:
-                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, access=winreg.KEY_WRITE) as app_key:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     try:
                         winreg.SetValueEx(app_key, key, 0, winreg.REG_MULTI_SZ, [str(v) for v in value])
                     except:
@@ -667,18 +679,21 @@ if sys.platform.startswith('win32'):
 
         def get_dict_value(self, key):
             try:
-                with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, key), access=winreg.KEY_WRITE) as app_key:
+                with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, key), 0, winreg.KEY_ALL_ACCESS) as app_key:
                     v = {}
 
                     try:
-                        for i in range(1024):
-                            name, value, _ = winreg.EnumValue(app_key, i)
+                        i = 0
+                        while True:
+                            name, value, _value_type = winreg.EnumValue(app_key, i)
 
-                            if value:
+                            if value is not None:
                                 v[name] = str(value)
+
+                            i += 1
                     except WindowsError as e:
-                        if e.winerror != ERROR_NO_MORE_ITEMS:
-                            self.LOG.error(e.message)
+                        if e.winerror != ERROR_NO_MORE_ITEMS and e.winerror != ERROR_NO_MORE_FILES:
+                            raise
                         else:
                             pass  # end of keys
                     except:
@@ -687,16 +702,16 @@ if sys.platform.startswith('win32'):
 
                     return v
             except:
-                self.LOG.exception("Unable to access registry:")
+                self.LOG.info("Unable to get dict '%s' from the registry:")
 
             return None
 
         def set_dict_value(self, key, value):
             try:
-                with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, key)) as app_key:
+                with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, key)) as dict_key:
                     try:
                         for k, v in value.items():
-                            winreg.SetValueEx(app_key, str(k), 0, winreg.REG_SZ, str(v))
+                            winreg.SetValueEx(dict_key, str(k), 0, winreg.REG_SZ, str(v))
                     except:
                         self.LOG.exception("Unable to access registry:")
             except:
