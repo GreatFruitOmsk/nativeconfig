@@ -395,6 +395,8 @@ class BaseConfig(object):
                 else:
                     properties.add(property_name)
 
+#{ Access options by name
+
     def get_value_for_option_name(self, name):
         """
         Get option's raw value by its name in underlying config storage.
@@ -405,28 +407,30 @@ class BaseConfig(object):
         @return: JSON-encoded raw value. None if such option does not exist.
         @rtype: str or dict or list or None
         """
-        for attribute_name in dir(type(self)):
-            attribute = getattr(type(self), attribute_name)
+        attribute = self.property_for_option_name(name)
 
-            if isinstance(attribute, property) and hasattr(attribute.fget, 'keywords') and attribute.fget.keywords['name'] == name:
-                getter = attribute.fget.keywords['getter']
-                value = getattr(self, getter)(name)
-                if value is None or (value == '' and attribute.fget.keywords.get('default_if_empty', False)):
-                    default = attribute.fget.keywords['default']
-                    if default is not None:
-                        # We only support 3 types of values: str, dict and list. All 3 has predefined getters and setter.
-                        if getter == 'get_array_value':
-                            value = [attribute.fset.keywords['serializer'](v) for v in default]
-                        elif getter == 'get_dict_value':
-                            value = {k: attribute.fset.keywords['serializer'](v) for k, v in default.items()}
-                        else:
-                            value = attribute.fset.keywords['serializer'](default)
-                    else:
-                        value = None
-
-                return json.dumps(value)
-        else:
+        if not attribute:
             return None
+
+        getter = self.getter_for_option_property(attribute)
+        value = getattr(self, getter)(name)
+
+        if value is None or (not value and self.default_if_empty_for_option_property(attribute)):
+            default = self.default_for_option_property(attribute)
+
+            if default is not None:
+                serializer = self.serializer_for_option_property(attribute)
+
+                if getter == 'get_array_value':
+                    value = [serializer(v) for v in default]
+                elif getter == 'get_dict_value':
+                    value = {k: serializer(v) for k, v in default.items()}
+                else:
+                    value = serializer(default)
+            else:
+                value = None
+
+        return json.dumps(value)
 
     def set_value_for_option_name(self, name, value):
         """
@@ -438,25 +442,30 @@ class BaseConfig(object):
         @param value: JSON-encoded raw value.
         @type value: str
         """
-        for attribute_name in dir(type(self)):
-            attribute = getattr(type(self), attribute_name)
+        attribute = self.property_for_option_name(name)
 
-            if isinstance(attribute, property) and hasattr(attribute.fget, 'keywords') and attribute.fget.keywords['name'] == name:
-                value = json.loads(value)
-                if value is not None:
-                    serializer = attribute.fset.keywords['serializer']
-                    deserializer = attribute.fget.keywords['deserializer']
-                    # Ensure input is valid.
-                    if isinstance(value, list):
-                        value = [serializer(deserializer(v)) for v in value]
-                    elif isinstance(value, dict):
-                        value = {k: serializer(deserializer(v)) for k, v in value.items()}
-                    else:
-                        value = serializer(deserializer(value))
-                    getattr(self, attribute.fset.keywords['setter'])(name, value)
-                else:
-                    getattr(self, attribute.fset.keywords['deleter'])(name, value)
-                break
+        if attribute is None:
+            return
+
+        value = json.loads(value)
+
+        if value is not None:
+            setter = self.setter_for_option_property(attribute)
+            serializer = self.serializer_for_option_property(attribute)
+            deserializer = self.deserializer_for_option_property(attribute)
+
+            # Ensure input is valid.
+            if setter == 'set_array_value':
+                value = [serializer(deserializer(v)) for v in value]
+            elif setter == 'set_dict_value':
+                value = {k: serializer(deserializer(v)) for k, v in value.items()}
+            else:
+                value = serializer(deserializer(value))
+
+            getattr(self, setter)(name, value)
+        else:
+            deleter = self.deleter_for_option_property(attribute)
+            getattr(self, deleter)(name)
 
     def remove_value_for_option_name(self, name):
         """
@@ -465,12 +474,13 @@ class BaseConfig(object):
         @param name: Name of the option.
         @type name: str
         """
-        for attribute_name in dir(type(self)):
-            attribute = getattr(type(self), attribute_name)
+        attribute = self.property_for_option_name(name)
 
-            if isinstance(attribute, property) and hasattr(attribute.fget, 'keywords') and attribute.fget.keywords['name'] == name:
-                delattr(self, attribute_name)
-                break
+        if attribute is None:
+            return
+
+        deleter = self.deleter_for_option_property(attribute)
+        getattr(self, deleter)(name)
 
     def snapshot(self):
         """
@@ -489,6 +499,133 @@ class BaseConfig(object):
                 options[name] = self.get_value_for_option_name(name)
 
         return options
+
+#{ Introspection
+
+    def property_for_option_name(self, name):
+        """
+        Return property object for an option name. Useful for introspection.
+
+        @param name: Name of an option.
+        @type name: str
+
+        @rtype: property or None
+        """
+        for attribute_name in dir(type(self)):
+            attribute = getattr(type(self), attribute_name)
+
+            if isinstance(attribute, property):
+                if hasattr(attribute.fget, 'keywords') and attribute.fget.keywords['name'] == name:
+                    return attribute
+        else:
+            return None
+
+    def getter_for_option_property(self, attribute):
+        """
+        Return getter value for an option property.
+
+        getter is name of the function used to read raw value from underlying config.
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fget.keywords['getter']
+
+    def setter_for_option_property(self, attribute):
+        """
+        Return setter value for an option property.
+
+        setter is name of the function used to set raw value to underlying config.
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fset.keywords['setter']
+
+    def deleter_for_option_property(self, attribute):
+        """
+        Return deleter value for an option property.
+
+        deleter is name of the function used to delete option from underlying config.
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fdel.keywords['deleter']
+
+    def default_for_option_property(self, attribute):
+        """
+        Return default value for an option property.
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fget.keywords.get('default', None)
+
+    def default_if_empty_for_option_property(self, attribute):
+        """
+        Return default_if_empty value for an option property.
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fget.keywords.get('default_if_empty', False)
+
+    def serializer_for_option_property(self, attribute):
+        """
+        Return deserializer for an option property
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fset.keywords['serializer']
+
+    def deserializer_for_option_property(self, attribute):
+        """
+        Return serializer for an option property
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fget.keywords['deserializer']
+
+    def doc_for_option_property(self, attribute):
+        """
+        Return doc for an option property
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fget.keywords['doc']
+
+    def options_for_choice_option_property(self, attribute):
+        """
+        Return options for a choice option property
+
+        @param attribute: Property object returned by property_for_option_name.
+        @type attribute: property
+
+        @see: property_for_option_name
+        """
+        return attribute.fget.keywords['options']
+
+#{ Abstract methods for subclasses
 
     @abstractmethod
     def get_value(self, key):
@@ -574,6 +711,7 @@ class BaseConfig(object):
         @type value: dict
         """
         pass
+#}
 
 
 if sys.platform.startswith('win32'):
