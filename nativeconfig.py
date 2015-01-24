@@ -139,12 +139,13 @@ from functools import partial
 import json
 import logging
 import os
+from pathlib import Path, PurePosixPath, PureWindowsPath
+import re
 import sys
-import time
 import threading
 
 
-__version__ = '1.0.0'
+__version__ = '2.0.0'
 
 
 LOG = logging.getLogger(__name__)
@@ -182,8 +183,6 @@ class BaseOption(property, metaclass=ABCMeta):
     - deleter to delete value from Storage
     - resolver to resolve value that cannot be deserialized
 
-
-
     Value of an option can be overridden via an environment variable.
 
     Setting option to  None is equivalent to deleting it.
@@ -193,6 +192,7 @@ class BaseOption(property, metaclass=ABCMeta):
     """
     def __init__(self,
                  name,
+                 *,
                  getter='get_value',
                  setter='set_value',
                  deleter='del_value',
@@ -364,16 +364,8 @@ class BooleanOption(BaseOption):
     FALSE_VALUES = ['0', 'NO', 'FALSE', 'OFF']
     ALLOWED_VALUES = TRUE_VALUES + FALSE_VALUES
 
-    def __init__(self,
-                 name,
-                 getter='get_value',
-                 setter='set_value',
-                 deleter='del_value',
-                 resolver='resolve_value',
-                 env_name=None,
-                 default=None):
-        super().__init__(name, getter, setter, deleter, resolver, env_name=env_name, default=default,
-                         default_if_empty=True)
+    def __init__(self, name, **kwargs):
+        super().__init__(name, choices=None, default_if_empty=True, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -389,7 +381,7 @@ class BooleanOption(BaseOption):
         elif raw_value.upper() in self.FALSE_VALUES:
             return False
         else:
-            raise DeserializationError("value '{}' must be one of {}.".format(raw_value, self.ALLOWED_VALUES), raw_value)
+            raise DeserializationError("value '{}' must be one of {}".format(raw_value, self.ALLOWED_VALUES), raw_value)
 
 
 class CharOption(BaseOption):
@@ -397,17 +389,8 @@ class CharOption(BaseOption):
 
 
 class DateOption(BaseOption):
-    def __init__(self,
-                 name,
-                 getter='get_value',
-                 setter='set_value',
-                 deleter='del_value',
-                 resolver='resolve_value',
-                 choices=None,
-                 env_name=None,
-                 default=None):
-        super().__init__(name, getter, setter, deleter, resolver, choices=choices, env_name=env_name, default=default,
-                         default_if_empty=True)
+    def __init__(self, name, **kwargs):
+        super().__init__(name, default_if_empty=True, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -419,8 +402,7 @@ class DateOption(BaseOption):
 
     def deserialize(self, raw_value):
         try:
-            t = time.strptime(raw_value, '%Y-%m-%d')
-            return datetime.date(t.tm_year, t.tm_mon, t.tm_mday)
+            return datetime.datetime.strptime(raw_value, '%Y-%m-%d').date()
         except ValueError:
             raise DeserializationError("Date must be of the YYYY-MM-DD format.", raw_value)
 
@@ -431,29 +413,96 @@ class DateOption(BaseOption):
         return self.deserialize(super().deserialize_json(json_value))
 
 
-class DateTimeOption(BaseOption):
-    pass
+# TODO: datetime option requires complicated handling of timezones which are not part of stdlib
+# class DateTimeOption(BaseOption):
+#     pass
 
 
-class EmailOption(BaseOption):
-    pass
+# TODO: email option requires advanced validation
+# class EmailOption(BaseOption):
+#     pass
+
+class PathOption(BaseOption):
+    def __init__(self, name,  **kwargs):
+        super().__init__(name, default_if_empty=True, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, Path):
+            raise ValidationError("only Path values are allowed", value)
+
+    def deserialize(self, raw_value):
+        return Path(raw_value)
+
+    def serialize_json(self, value):
+        return super().serialize_json(self.serialize(value))
+
+    def deserialize_json(self, json_value):
+        return self.deserialize(super().deserialize_json(json_value))
 
 
-class FilePathOption(BaseOption):
-    pass
+class PureWindowsPathOption(BaseOption):
+    def __init__(self, name,  **kwargs):
+        super().__init__(name, default_if_empty=True, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, PureWindowsPath):
+            raise ValidationError("only PureWindowsPath values are allowed", value)
+
+    def deserialize(self, raw_value):
+        return PureWindowsPath(raw_value)
+
+    def serialize_json(self, value):
+        return super().serialize_json(self.serialize(value))
+
+    def deserialize_json(self, json_value):
+        return self.deserialize(super().deserialize_json(json_value))
+
+
+class PurePosixPathOption(BaseOption):
+    def __init__(self, name,  **kwargs):
+        super().__init__(name, default_if_empty=True, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, PurePosixPath):
+            raise ValidationError("only PurePosixPath values are allowed", value)
+
+    def deserialize(self, raw_value):
+        return PurePosixPath(raw_value)
+
+    def serialize_json(self, value):
+        return super().serialize_json(self.serialize(value))
+
+    def deserialize_json(self, json_value):
+        return self.deserialize(super().deserialize_json(json_value))
 
 
 class FloatOption(BaseOption):
-    pass
+    def __init__(self, name, **kwargs):
+        super().__init__(name, default_if_empty=True, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, float) and not isinstance(value, int):
+            raise ValidationError("only float and int values are allowed", value)
+
+    def deserialize(self, raw_value):
+        return float(raw_value)
 
 
 class IntegerOption(BaseOption):
-    def __init__(self, name, getter, setter, deleter, allowed_range=None, choices=None, env_name=None, default=None):
-        if allowed_range is not None and choices is not None:
-            raise Error("both range and choices cannot be None simultaneously")
+    def __init__(self, name, **kwargs):
+        super().__init__(name, default_if_empty=True, **kwargs)
 
-        self._range = allowed_range
-        super().__init__(name, getter, setter, deleter, choices, env_name=env_name, default=default, default_if_empty=True)
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, int):
+            raise ValidationError("only int values are allowed", value)
+
+    def deserialize(self, raw_value):
+        return int(raw_value)
 
 
 class IPAddressOption(BaseOption):
@@ -464,16 +513,49 @@ class IPInterfaceOption(BaseOption):
     pass
 
 
-class IPPortOption(BaseOption):
-    pass
+class IPPortOption(IntegerOption):
+    def __init__(self, name, min_port=0, max_port=65536, **kwargs):
+        super().__init__(name, choices=range(min_port, max_port), **kwargs)
 
 
 class TimeOption(BaseOption):
-    pass
+    def __init__(self, name, **kwargs):
+        super().__init__(name, default_if_empty=True, **kwargs)
+
+    def validate(self, value):
+        super().validate(value)
+
+        if not isinstance(value, datetime.time):
+            raise ValidationError("Only datetime.time values are allowed", value)
+
+    def serialize(self, value):
+        return value.isoformat()
+
+    def deserialize(self, raw_value):
+        try:
+            try:
+                return datetime.datetime.strptime(raw_value, '%H:%M:%S.%f%z').timetz()
+            except ValueError:
+                try:
+                    return datetime.datetime.strptime(raw_value, '%H:%M:%S.%f').timetz()
+                except ValueError:
+                    try:
+                        return datetime.datetime.strptime(raw_value, '%H:%M:%S%z').timetz()
+                    except ValueError:
+                        return datetime.datetime.strptime(raw_value, '%H:%M:%S').timetz()
+        except ValueError:
+            raise DeserializationError("time must be of the HH-MM-SS[.mmmmmm[(+|-)ZZZZ]] format.", raw_value)
+
+    def serialize_json(self, value):
+        return super().serialize_json(self.serialize(value))
+
+    def deserialize_json(self, json_value):
+        return self.deserialize(super().deserialize_json(json_value))
 
 
-class URLOption(BaseOption):
-    pass
+# TODO: url option requires advanced validation
+# class URLOption(BaseOption):
+#     pass
 
 
 class BaseConfig(metaclass=ABCMeta):
