@@ -126,7 +126,7 @@ with raw names instead. The values they return/accept are JSON encoded version o
 >>>
 >>> MyConfig.instance().get_value_for_option_name('FavoriteNumber') # '"9000"'
 >>> MyConfig.instance().set_value_for_option_name('FavoriteNumber', '"42"')
->>> MyConfig.instance().remove_value_for_option_name('FavoriteNumber')
+>>> MyConfig.instance().del_value_for_option_name('FavoriteNumber')
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -134,11 +134,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from abc import ABCMeta, abstractmethod
+import datetime
 from functools import partial
 import json
 import logging
 import os
 import sys
+import time
 import threading
 
 
@@ -148,208 +150,333 @@ __version__ = '1.0.0'
 LOG = logging.getLogger(__name__)
 
 
-if sys.version_info < (3, 0):
-    str = unicode
+class Error(Exception):
+    pass
 
 
-def Option(name, serializer=str, deserializer=str, default=None, default_if_empty=False, doc=""):
+class ValidationError(Error):
+    def __init__(self, msg, value):
+        self.value = value
+        super().__init__(msg)
+
+
+class SerializationError(Error):
+    def __init__(self, msg, value):
+        self.value = value
+        super().__init__(msg)
+
+
+class DeserializationError(Error):
+    def __init__(self, msg, raw_value):
+        self.raw_value = raw_value
+        super().__init__(msg)
+
+
+class BaseOption(property, metaclass=ABCMeta):
     """
-    Generic method to add single-value options.
+    Base class that provides structure, flow and basic methods to work with options.
 
-    @param name: Name of the option.
-    @type name: str
+    An option must have a name and 4 methods:
+    - getter to read raw value from Storage
+    - setter to write value to Storage
+    - deleter to delete value from Storage
+    - resolver to resolve value that cannot be deserialized
 
-    @param serializer: Callable that will be used to convert python object into string.
 
-    @param deserializer: Callable that will be used to convert string into python object.
 
-    @param default: Default value of the option.
+    Value of an option can be overridden via an environment variable.
 
-    @param default_if_empty: If True, will return default if raw value is an empty string.
-    @type default_if_empty: bool
+    Setting option to  None is equivalent to deleting it.
 
-    @param doc: Help message of the option.
-    @type doc: str
-
-    @rtype: property
+    @raise Error: Raise if choices is an empty list.
+    @raise ValidationError: Raise if default value is invalid.
     """
-    def get_property(self, name, default, default_if_empty, deserializer, getter):
-        raw_v = getattr(self, getter)(name)
+    def __init__(self,
+                 name,
+                 getter='get_value',
+                 setter='set_value',
+                 deleter='del_value',
+                 resolver='resolve_value',
+                 choices=None,
+                 env_name=None,
+                 default=None,
+                 default_if_empty=False):
+        """
+        @param name: Name of the property.
+        @type name: str
 
-        if raw_v is None or (default_if_empty and not raw_v):
-            return default
-        else:
-            return deserializer(raw_v)
+        @param getter: Name of the method of the enclosing class to get value.
 
-    def set_property(self, value, name, serializer, setter, deleter):
-        if value is not None:
-            getattr(self, setter)(name, serializer(value))
-        else:
-            getattr(self, deleter)(name)
+        @param setter: Name of the of the enclosing class to set value.
 
-    def del_property(self, name, deleter):
-        getattr(self, deleter)(name)
+        @param deleter: Name of the deleter of the enclosing class to delete value.
 
-    return property(partial(get_property, name=name, default=default, default_if_empty=default_if_empty, deserializer=deserializer, getter='get_value'),
-                    partial(set_property, name=name, serializer=serializer, setter='set_value', deleter='remove_value'),
-                    partial(del_property, name=name, deleter='remove_value'),
-                    doc)
+        @param resolver: Name of the resolver of the enclosing class to resolve value that cannot be serialized.
 
+        @param choices: List of allowed choices for the option.
 
-def IntOption(name, default=None, doc=""):
-    return Option(name, lambda x: str(int(x)), int, default, True, doc)
+        @param env_name: Name of the environment variable that can override value of the option
+        @type env_name: str
 
+        @param default: Default value of the option.
 
-def ChoiceOption(name, options, default, serializer=str, deserializer=str, doc=""):
-    """
-    Similar to Option but checks whether value is one of allowed.
-    Default must present.
+        @param default_if_empty: Whether default should be used when raw value is an empty string.
+        @type default: bool
 
-    @param name: Name of the option.
-    @type name: str
+        @raise ValidationError: if default or any of choices is invalid.
+        """
+        super(BaseOption, self).__init__(self.fget, self.fset, self.fdel, doc=self.__doc__)
 
-    @param options: List of allowed values. Each value is an str.
+        self._name = name
+        self._getter = getter
+        self._setter = setter
+        self._deleter = deleter
+        self._resolver = resolver
+        self._choices = choices
+        self._env_name = env_name
+        self._default = default
+        self._default_if_empty = default_if_empty
 
-    @param serializer: Callable that will be used to convert python object into string.
+        self._one_shot_value = None
 
-    @param deserializer: Callable that will be used to convert string into python object.
+        if not name:
+            raise Error("name cannot be empty")
 
-    @param default: Default value of the option.
+        if choices is not None and len(choices) == 0:
+            raise Error("choices cannot be empty")
 
-    @param doc: Help message of the option.
-    @type doc: str
+        if choices is not None:
+            for c in choices:
+                self.validate(c)
 
-    @rtype: property
-    """
-    if default not in options:
-        raise ValueError("{} is not one of {}.".format(default, options))
+        if default is not None:
+            self.validate(default)
 
-    def get_property(self, name, default, deserializer, getter):
-        raw_v = getattr(self, getter)(name)
+    def validate(self, value):
+        """
+        Validate value. Must raise ValidationError if value is wrong.
 
-        if not raw_v:
-            return default
-        else:
-            return deserializer(raw_v)
+        @raise ValidationError: Raise if value is wrong.
+        """
+        if value is None:
+            return
 
-    def set_property(self, value, name, options, serializer, setter, deleter):
-        if value is not None:
-            if value not in options:
-                raise ValueError("{} is not one of {}.".format(value, options))
+        if self._choices is not None and value not in self._choices:
+            raise ValidationError("value '{}' is not one of choices '{}'".format(value, self._choices), value)
 
-            getattr(self, setter)(name, serializer(value))
-        else:
-            getattr(self, deleter)(name)
+    def serialize(self, value):
+        """
+        Serialize value to raw value.
 
-    def del_property(self, name, deleter):
-        getattr(self, deleter)(name)
+        @see: deserialize
 
-    return property(partial(get_property, name=name, default=default, deserializer=deserializer, getter='get_value'),
-                    partial(set_property, name=name, options=options, serializer=serializer, setter='set_value', deleter='remove_value'),
-                    partial(del_property, name=name, deleter='remove_value'),
-                    doc)
+        @raise SerializationError: Raise if value cannot be serialized.
+        """
+        return str(value)
 
+    def deserialize(self, raw_value):
+        """
+        Deserialize raw value to value.
 
-def DictOption(name, serializer=str, deserializer=str, default=None, doc=""):
-    """
-    Generic method to add dictionary options.
+        @see: serialize
 
-    @param name: Name of the option.
-    @type name: str
+        @raise DeserializationError: Raise if value cannot be deserialized.
+        """
+        return str(raw_value)
 
-    @param serializer: Callable that will be used to convert each value of the dictionary into str.
+    def serialize_json(self, value):
+        """
+        Serialize value to json compatible string.
 
-    @param deserializer: Callable that will be used to convert each value of the dictionary into python object.
+        @see: deserialize_json
 
-    @param default: Default value of the option.
+        @rtype: str
+        """
+        return json.dumps(value)
 
-    @param doc: Help message of the option.
-    @type doc: str
+    def deserialize_json(self, json_value):
+        """
+        Deserialize json value to value.
 
-    @rtype: property
-    """
-    def get_property(self, name, default, deserializer, getter):
-        raw_v = getattr(self, getter)(name)
+        @see: serialize_json
+        """
+        return json.loads(json_value)
+
+    def set_one_shot_value(self, value):
+        """
+        Set one shot value of the option that overrides value from storage but can be reset by set.
+
+        Useful if you want to allow a user to override the option via CLI.
+
+        @raise ValidationError: Raise if value is not valid.
+        """
+        self.validate(value)
+        self._one_shot_value = None
+
+    def fget(self, enclosing_self):
+        """
+        @raise DeserializationError: Raise if value cannot be deserialized or deserialized value isn't one of choices.
+        """
+        raw_v = None
+
+        if self._env_name:
+            raw_v = os.getenv(self._env_name)
+            if raw_v is not None:
+                LOG.debug("value of '%s' is overridden by environment variable: %s", self._name, raw_v)
 
         if raw_v is None:
-            return default
-        else:
-            return {k: deserializer(v) for k, v in raw_v.items()}
-
-    def set_property(self, value, name, serializer, setter, deleter):
-        if value is not None:
-            getattr(self, setter)(name, {k: serializer(v) for k, v in value.items()})
-        else:
-            getattr(self, deleter)(name)
-
-    def del_property(self, name, deleter):
-        getattr(self, deleter)(name)
-
-    return property(partial(get_property, name=name, default=default, deserializer=deserializer, getter='get_dict_value'),
-                    partial(set_property, name=name, serializer=serializer, setter='set_dict_value', deleter='remove_value'),
-                    partial(del_property, name=name, deleter='remove_value'),
-                    doc)
-
-
-def ArrayOption(name, serializer=str, deserializer=str, default=None, doc=""):
-    """
-    Generic method to add array options.
-
-    @param name: Name of the option.
-    @type name: str
-
-    @param serializer: Callable that will be used to convert each value of the array into str.
-
-    @param deserializer: Callable that will be used to convert each value of the array into python object.
-
-    @param default: Default value of the option.
-
-    @param doc: Help message of the option.
-    @type doc: str
-
-    @rtype: property
-    """
-    def get_property(self, name, default, deserializer, getter):
-        raw_v = getattr(self, getter)(name)
+            raw_v = self._one_shot_value
 
         if raw_v is None:
-            return default
-        else:
-            return [deserializer(value) for value in raw_v]
+            raw_v = getattr(enclosing_self, self._getter)(self._name)
 
-    def set_property(self, value, name, serializer, setter, deleter):
+        if raw_v is None or (self._default_if_empty and raw_v == ""):
+            LOG.debug("No value is set for '%s', use default.", self._name)
+            return self._default
+        else:
+            try:
+                value = self.deserialize(raw_v)
+                if self._choices and value not in self._choices:
+                    raise DeserializationError("value '{}' is not one of choices {}".format(value, self._choices), value)
+                else:
+                    return value
+            except DeserializationError as e:
+                return getattr(enclosing_self, self._resolver)(e, self._name, raw_v)
+
+    def fset(self, enclosing_self, value):
+        self._one_shot_value = None
+
         if value is not None:
-            getattr(self, setter)(name, [serializer(value) for value in value])
+            self.validate(value)
+            raw_value = self.serialize(value)
+            LOG.debug("Value of '%s' is set to '%s'.", value, raw_value)
+            getattr(enclosing_self, self._setter)(self._name, raw_value)
         else:
-            getattr(self, deleter)(name)
+            self.fdel(enclosing_self)
 
-    def del_property(self, name, deleter):
-        getattr(self, deleter)(name)
-
-    return property(partial(get_property, name=name, default=default, deserializer=deserializer, getter='get_array_value'),
-                    partial(set_property, name=name, serializer=serializer, setter='set_array_value', deleter='remove_value'),
-                    partial(del_property, name=name, deleter='remove_value'),
-                    doc)
+    def fdel(self, enclosing_self):
+        LOG.debug("Delete value of '%s'.", self._name)
+        getattr(enclosing_self, self._deleter)(self._name)
 
 
-def add_metaclass(metaclass):
-    """Class decorator for creating a class with a metaclass."""
-    def wrapper(cls):
-        orig_vars = cls.__dict__.copy()
-        orig_vars.pop('__dict__', None)
-        orig_vars.pop('__weakref__', None)
-        slots = orig_vars.get('__slots__')
-        if slots is not None:
-            if isinstance(slots, str):
-                slots = [slots]
-            for slots_var in slots:
-                orig_vars.pop(slots_var)
-        return metaclass(cls.__name__, cls.__bases__, orig_vars)
-    return wrapper
+class BooleanOption(BaseOption):
+    TRUE_VALUES = ['1', 'YES', 'TRUE', 'ON']
+    FALSE_VALUES = ['0', 'NO', 'FALSE', 'OFF']
+    ALLOWED_VALUES = TRUE_VALUES + FALSE_VALUES
+
+    def __init__(self,
+                 name,
+                 getter='get_value',
+                 setter='set_value',
+                 deleter='del_value',
+                 resolver='resolve_value',
+                 env_name=None,
+                 default=None):
+        super().__init__(name, getter, setter, deleter, resolver, env_name=env_name, default=default,
+                         default_if_empty=True)
+
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, bool):
+            raise ValidationError("Only boolean values are allowed.", value)
+
+    def serialize(self, value):
+        return '1' if value else '0'
+
+    def deserialize(self, raw_value):
+        if raw_value.upper() in self.TRUE_VALUES:
+            return True
+        elif raw_value.upper() in self.FALSE_VALUES:
+            return False
+        else:
+            raise DeserializationError("value '{}' must be one of {}.".format(raw_value, self.ALLOWED_VALUES), raw_value)
 
 
-@add_metaclass(ABCMeta)
-class BaseConfig(object):
+class CharOption(BaseOption):
+    pass
+
+
+class DateOption(BaseOption):
+    def __init__(self,
+                 name,
+                 getter='get_value',
+                 setter='set_value',
+                 deleter='del_value',
+                 resolver='resolve_value',
+                 choices=None,
+                 env_name=None,
+                 default=None):
+        super().__init__(name, getter, setter, deleter, resolver, choices=choices, env_name=env_name, default=default,
+                         default_if_empty=True)
+
+    def validate(self, value):
+        super().validate(value)
+        if not isinstance(value, datetime.date):
+            raise ValidationError("Only datetime.date values are allowed.", value)
+
+    def serialize(self, value):
+        return value.isoformat()
+
+    def deserialize(self, raw_value):
+        try:
+            t = time.strptime(raw_value, '%Y-%m-%d')
+            return datetime.date(t.tm_year, t.tm_mon, t.tm_mday)
+        except ValueError:
+            raise DeserializationError("Date must be of the YYYY-MM-DD format.", raw_value)
+
+    def serialize_json(self, value):
+        return super().serialize_json(self.serialize(value))
+
+    def deserialize_json(self, json_value):
+        return self.deserialize(super().deserialize_json(json_value))
+
+
+class DateTimeOption(BaseOption):
+    pass
+
+
+class EmailOption(BaseOption):
+    pass
+
+
+class FilePathOption(BaseOption):
+    pass
+
+
+class FloatOption(BaseOption):
+    pass
+
+
+class IntegerOption(BaseOption):
+    def __init__(self, name, getter, setter, deleter, allowed_range=None, choices=None, env_name=None, default=None):
+        if allowed_range is not None and choices is not None:
+            raise Error("both range and choices cannot be None simultaneously")
+
+        self._range = allowed_range
+        super().__init__(name, getter, setter, deleter, choices, env_name=env_name, default=default, default_if_empty=True)
+
+
+class IPAddressOption(BaseOption):
+    pass
+
+
+class IPInterfaceOption(BaseOption):
+    pass
+
+
+class IPPortOption(BaseOption):
+    pass
+
+
+class TimeOption(BaseOption):
+    pass
+
+
+class URLOption(BaseOption):
+    pass
+
+
+class BaseConfig(metaclass=ABCMeta):
     """
     Base class for all configs. Provides abstract methods and basic implementations.
 
@@ -412,25 +539,7 @@ class BaseConfig(object):
         if not attribute:
             return None
 
-        getter = self.getter_for_option_property(attribute)
-        value = getattr(self, getter)(name)
-
-        if value is None or (not value and self.default_if_empty_for_option_property(attribute)):
-            default = self.default_for_option_property(attribute)
-
-            if default is not None:
-                serializer = self.serializer_for_option_property(attribute)
-
-                if getter == 'get_array_value':
-                    value = [serializer(v) for v in default]
-                elif getter == 'get_dict_value':
-                    value = {k: serializer(v) for k, v in default.items()}
-                else:
-                    value = serializer(default)
-            else:
-                value = None
-
-        return json.dumps(value)
+        return attribute.serialize_json(attribute.fget(self))
 
     def set_value_for_option_name(self, name, value):
         """
@@ -447,27 +556,9 @@ class BaseConfig(object):
         if attribute is None:
             return
 
-        value = json.loads(value)
+        attribute.fset(self, attribute.deserialize_json(value))
 
-        if value is not None:
-            setter = self.setter_for_option_property(attribute)
-            serializer = self.serializer_for_option_property(attribute)
-            deserializer = self.deserializer_for_option_property(attribute)
-
-            # Ensure input is valid.
-            if setter == 'set_array_value':
-                value = [serializer(deserializer(v)) for v in value]
-            elif setter == 'set_dict_value':
-                value = {k: serializer(deserializer(v)) for k, v in value.items()}
-            else:
-                value = serializer(deserializer(value))
-
-            getattr(self, setter)(name, value)
-        else:
-            deleter = self.deleter_for_option_property(attribute)
-            getattr(self, deleter)(name)
-
-    def remove_value_for_option_name(self, name):
+    def del_value_for_option_name(self, name):
         """
         Delete option by its name in underlying config storage.
 
@@ -479,8 +570,7 @@ class BaseConfig(object):
         if attribute is None:
             return
 
-        deleter = self.deleter_for_option_property(attribute)
-        getattr(self, deleter)(name)
+        attribute.fdel(self)
 
     def snapshot(self):
         """
@@ -509,123 +599,17 @@ class BaseConfig(object):
         @param name: Name of an option.
         @type name: str
 
-        @rtype: property or None
+        @rtype: BaseOption or None
         """
         for attribute_name in dir(type(self)):
             attribute = getattr(type(self), attribute_name)
 
-            if isinstance(attribute, property):
-                if hasattr(attribute.fget, 'keywords') and attribute.fget.keywords['name'] == name:
-                    return attribute
+            if isinstance(attribute, BaseOption) and attribute._name == name:
+                return attribute
         else:
             return None
 
-    def getter_for_option_property(self, attribute):
-        """
-        Return getter value for an option property.
-
-        getter is name of the function used to read raw value from underlying config.
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fget.keywords['getter']
-
-    def setter_for_option_property(self, attribute):
-        """
-        Return setter value for an option property.
-
-        setter is name of the function used to set raw value to underlying config.
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fset.keywords['setter']
-
-    def deleter_for_option_property(self, attribute):
-        """
-        Return deleter value for an option property.
-
-        deleter is name of the function used to delete option from underlying config.
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fdel.keywords['deleter']
-
-    def default_for_option_property(self, attribute):
-        """
-        Return default value for an option property.
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fget.keywords.get('default', None)
-
-    def default_if_empty_for_option_property(self, attribute):
-        """
-        Return default_if_empty value for an option property.
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fget.keywords.get('default_if_empty', False)
-
-    def serializer_for_option_property(self, attribute):
-        """
-        Return deserializer for an option property
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fset.keywords['serializer']
-
-    def deserializer_for_option_property(self, attribute):
-        """
-        Return serializer for an option property
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fget.keywords['deserializer']
-
-    def doc_for_option_property(self, attribute):
-        """
-        Return doc for an option property
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fget.keywords['doc']
-
-    def options_for_choice_option_property(self, attribute):
-        """
-        Return options for a choice option property
-
-        @param attribute: Property object returned by property_for_option_name.
-        @type attribute: property
-
-        @see: property_for_option_name
-        """
-        return attribute.fget.keywords['options']
-
-#{ Abstract methods for subclasses
+#{ Methods for subclasses
 
     @abstractmethod
     def get_value(self, key):
@@ -653,7 +637,7 @@ class BaseConfig(object):
         pass
 
     @abstractmethod
-    def remove_value(self, key):
+    def del_value(self, key):
         """
         Remove value for a given key.
 
@@ -661,6 +645,26 @@ class BaseConfig(object):
         @type key: str
         """
         pass
+
+    def resolve_value(self, exception, key, raw_value):
+        """
+        Resolve raw value that cannot be deserialized or re-raise exception.
+
+        Logs error message and returns default.
+
+        @param exception: Exception that was raised during serialization.
+        @type exception: DeserializationError
+
+        @param key: Name of the option that cannot be deserialized.
+        @type key: str
+
+        @param raw_value: Raw value that cannot be deserialized.
+        @type raw_value: str
+
+        @return: Value to be used based on raw value.
+        """
+        LOG.error("Unable to deserialize value of '%s' from '%s': %s.", key, raw_value, exception)
+        return self.property_for_option_name(key)._default
 
     @abstractmethod
     def get_array_value(self, key):
@@ -779,7 +783,7 @@ if sys.platform.startswith('win32'):
             except:
                 self.LOG.exception("Unable to access registry:")
 
-        def remove_value(self, key):
+        def del_value(self, key):
             try:
                 try:
                     for k in _traverse_registry_key(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, key)):
@@ -887,7 +891,7 @@ elif sys.platform.startswith('darwin'):
             except:
                 self.LOG.exception("Unable to set '%s' in the user defaults:", key)
 
-        def remove_value(self, key):
+        def del_value(self, key):
             try:
                 self._user_defaults.removeObjectForKey_(key)
             except:
@@ -973,7 +977,7 @@ class JSONConfig(BaseConfig):
     def set_value(self, key, value):
         self._set_json_value(key, str(value))
 
-    def remove_value(self, key):
+    def del_value(self, key):
         try:
             with open(self.JSON_PATH, 'r+') as file:
                 content = file.readline()
@@ -1013,7 +1017,7 @@ class InMemoryConfig(BaseConfig):
     def set_value(self, key, value):
         self._config[key] = str(value)
 
-    def remove_value(self, key):
+    def del_value(self, key):
         self._config.pop(key, None)
 
     def get_array_value(self, key):
