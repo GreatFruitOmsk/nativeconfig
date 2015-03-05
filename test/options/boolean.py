@@ -138,7 +138,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
         c.set_value_for_option_name('BooleanTrue', 'false')
-        c.boolean_true = False
+        self.assertEqual(c.boolean_true, False)
 
     def test_value_can_be_overridden_by_env(self):
         os.environ['BOOLEAN_TRUE'] = '0'
@@ -147,7 +147,8 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_can_be_overridden_by_one_shot_value(self):
         c = MyConfig.get_instance()
-
+        c.set_one_shot_value_for_option_name('BooleanTrue', 'false')
+        self.assertEqual(c.boolean_true, False)
 
     def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
         pass
