@@ -83,3 +83,7 @@ class TestOptionMixin(ABC):
     @abstractmethod
     def test_deleting_value(self):
         pass
+
+    @abstractmethod
+    def test_env_is_first_json_deserialized_then_deserialized(self):
+        pass

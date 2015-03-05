@@ -17,7 +17,10 @@ def all_casings(input_string):
 
 class DummyMemoryConfig(MemoryConfig):
     def resolve_value(self, exception, name, raw_value):
-        raise exception
+        if raw_value == "":
+            return self.property_for_option_name(name)._default
+        else:
+            raise exception
 
     def migrate(self, version):
         super().migrate(version)

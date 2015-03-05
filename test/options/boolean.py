@@ -167,4 +167,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
     def test_deleting_value(self):
         pass
 
+    def test_env_is_first_json_deserialized_then_deserialized(self):
+        pass
+
 #}
