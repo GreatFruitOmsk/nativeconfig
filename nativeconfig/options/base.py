@@ -161,6 +161,7 @@ class BaseOption(property, ABC):
             raw_v = os.getenv(self._env_name)
             if raw_v is not None:
                 LOG.debug("value of '%s' is overridden by environment variable: %s", self._name, raw_v)
+                raw_v = self.deserialize_json(raw_v)
 
         if raw_v is None:
             raw_v = self._one_shot_value

@@ -141,7 +141,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         c.boolean_true = False
 
     def test_value_can_be_overridden_by_env(self):
-        os.environ['BOOLEAN_TRUE'] = '0'
+        os.environ['BOOLEAN_TRUE'] = '\"0\"'
         c = MyConfig.get_instance()
         self.assertEqual(c.boolean_true, False)
 
