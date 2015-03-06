@@ -1,6 +1,9 @@
 from itertools import chain
 import os
 import unittest
+from unittest.mock import create_autospec, patch
+from checkbox.vendor.mock import Mock
+from nativeconfig.config.base import BaseConfig
 
 from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
 from nativeconfig.options import FloatOption
@@ -107,12 +110,26 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
             c.height = "vysoko-vysoko"
 
     def test_setting_none_deletes_value(self):
-        pass
+        c = MyConfig.get_instance()
+        c.height = 1.0
+        c.height = None
+        self.assertEqual(c.height, 185.5)
 
     def test_deleting_value(self):
-        pass
+        c = MyConfig.get_instance()
+        del c.height
+        self.assertEqual(c.height, 185.5)
 
     def test_env_is_first_json_deserialized_then_deserialized(self):
-        pass
+        c = MyConfig.get_instance()
+        os.environ['WIDTH'] = '4.2'
+        with patch.object(FloatOption, 'deserialize_json') as mock_deserialize_json:
+            w = c.width
+
+        with patch.object(FloatOption, 'deserialize') as mock_deserialize:
+            w = c.width
+
+        mock_deserialize_json.assert_called_with('4.2')
+        mock_deserialize.assert_called_with(4.2)
 
 #}
