@@ -1,6 +1,7 @@
 from itertools import chain
 import os
 import unittest
+from unittest.mock import patch
 
 from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
 from nativeconfig.options import BooleanOption
@@ -151,24 +152,61 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.boolean_true, False)
 
     def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
-        pass
+        c = MyConfig.get_instance()
+        os.environ['BOOLEAN_TRUE'] = '\"Not true\"'
+
+        with self.assertRaises(DeserializationError):
+            boolean_true = c.boolean_true
+
+        with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
+            boolean_true = c.boolean_true
+            self.assertEqual(boolean_true, 'unresolved')
+
+            os.environ['BOOLEAN_TRUE'] = '\"False\"'
+            boolean_true = c.boolean_true
+            self.assertEqual(boolean_true, False)
 
     def test_invalid_deserialized_value_during_get_calls_resolver(self):
-        pass
+        pass  # never get ValidationError after boolean deserialization
 
     def test_setting_value_resets_one_shot_value(self):
-        pass
+        c = MyConfig.get_instance()
+        c.set_one_shot_value_for_option_name('BooleanTrue', 'false')
+
+        c.boolean_true = True
+        self.assertEqual(c.boolean_true, True)
 
     def test_setting_invalid_value_raises_exception(self):
-        pass
+        c = MyConfig.get_instance()
+        with self.assertRaises(ValidationError):
+            c.boolean_true = "False"
 
     def test_setting_none_deletes_value(self):
-        pass
+        c = MyConfig.get_instance()
+        c.boolean_true = False
+        c.boolean_true = None
+        self.assertEqual(c.boolean_true, True)
 
     def test_deleting_value(self):
-        pass
+        c = MyConfig.get_instance()
+        c.boolean_true = False
+        del c.boolean_true
+        self.assertEqual(c.boolean_true, True)
 
     def test_env_is_first_json_deserialized_then_deserialized(self):
-        pass
+        class ArduinoLEDStates(DummyMemoryConfig):
+            green_led_on = BooleanOption('GreenLEDOn', env_name='GREEN_LED_ON', default=False)
+
+        c = ArduinoLEDStates.get_instance()
+        os.environ['GREEN_LED_ON'] = '\"true\"'
+
+        with patch.object(BooleanOption, 'deserialize_json', return_value='False') as mock_deserialize_json:
+            diameter = c.green_led_on
+
+        with patch.object(BooleanOption, 'deserialize', return_value=False) as mock_deserialize:
+            diameter = c.green_led_on
+
+        mock_deserialize_json.assert_called_with('\"true\"')
+        mock_deserialize.assert_called_with('true')
 
 #}
