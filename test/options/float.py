@@ -1,15 +1,11 @@
-from itertools import chain
 import os
 import unittest
-from unittest.mock import create_autospec, patch
-from checkbox.vendor.mock import Mock
-from nativeconfig.config.base import BaseConfig
+from unittest.mock import patch
 
-from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
+from nativeconfig.exceptions import InitializationError, ValidationError
 from nativeconfig.options import FloatOption
 
 from test import DummyMemoryConfig
-from test import all_casings
 from test.options import TestOptionMixin
 
 
