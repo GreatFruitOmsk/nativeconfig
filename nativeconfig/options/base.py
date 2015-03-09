@@ -29,8 +29,7 @@ class BaseOption(property, ABC):
                  resolver='resolve_value',
                  choices=None,
                  env_name=None,
-                 default=None,
-                 default_if_empty=False):
+                 default=None):
         """
         @param name: Name of the property.
         @type name: str
@@ -66,7 +65,6 @@ class BaseOption(property, ABC):
         self._choices = choices
         self._env_name = env_name
         self._default = default
-        self._default_if_empty = default_if_empty
 
         self._one_shot_value = None
 
@@ -163,6 +161,7 @@ class BaseOption(property, ABC):
             raw_v = os.getenv(self._env_name)
             if raw_v is not None:
                 LOG.debug("value of '%s' is overridden by environment variable: %s", self._name, raw_v)
+                raw_v = self.deserialize_json(raw_v)
 
         if raw_v is None:
             raw_v = self._one_shot_value
@@ -170,7 +169,7 @@ class BaseOption(property, ABC):
         if raw_v is None:
             raw_v = getattr(enclosing_self, self._getter)(self._name)
 
-        if raw_v is None or (self._default_if_empty and raw_v == ""):
+        if raw_v is None:
             LOG.debug("No value is set for '%s', use default.", self._name)
             return self._default
         else:

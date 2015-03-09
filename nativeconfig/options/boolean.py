@@ -20,7 +20,7 @@ class BooleanOption(BaseOption):
         """
         Accepts all the arguments of BaseConfig except choices and default_if_empty.
         """
-        super().__init__(name, choices=[True, False], default_if_empty=True, **kwargs)
+        super().__init__(name, choices=[True, False], **kwargs)
 
     def serialize(self, value):
         return '1' if value else '0'

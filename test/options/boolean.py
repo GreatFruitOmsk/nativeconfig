@@ -141,7 +141,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.boolean_true, False)
 
     def test_value_can_be_overridden_by_env(self):
-        os.environ['BOOLEAN_TRUE'] = '0'
+        os.environ['BOOLEAN_TRUE'] = '\"0\"'
         c = MyConfig.get_instance()
         self.assertEqual(c.boolean_true, False)
 
@@ -166,6 +166,9 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         pass
 
     def test_deleting_value(self):
+        pass
+
+    def test_env_is_first_json_deserialized_then_deserialized(self):
         pass
 
 #}
