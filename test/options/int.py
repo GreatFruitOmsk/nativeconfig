@@ -1,5 +1,6 @@
 import os
 import unittest
+from unittest.mock import patch
 
 from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
 from nativeconfig.options import IntOption
@@ -90,22 +91,73 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.age, 21)
 
     def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
-        pass
+        c = MyConfig.get_instance()
+        os.environ['FORTY_TWO'] = '\"FORTYTWO\"'
+
+        with self.assertRaises(DeserializationError):
+            fortytwo = c.fortytwo
+
+        with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
+            fortytwo = c.fortytwo
+            self.assertEqual(fortytwo, 'unresolved')
+
+            os.environ['FORTY_TWO'] = '\"42\"'
+            fortytwo = c.fortytwo
+            self.assertEqual(fortytwo, 42)
 
     def test_invalid_deserialized_value_during_get_calls_resolver(self):
-        pass
+        class Diameters(DummyMemoryConfig):
+            lamp_cap_diameter = IntOption('LampCapDiameter', choices=[14, 27], env_name='LAMP_CAP_DIAMETER', default=27)
+
+        c = Diameters.get_instance()
+        os.environ['LAMP_CAP_DIAMETER'] = '\"9\"'
+
+        with self.assertRaises(ValidationError):
+            diameter = c.lamp_cap_diameter
+
+        with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
+            diameter = c.lamp_cap_diameter
+            self.assertEqual(diameter, 'unresolved')
+
+            os.environ['LAMP_CAP_DIAMETER'] = '\"14\"'
+            diameter = c.lamp_cap_diameter
+            self.assertEqual(diameter, 14)
 
     def test_setting_value_resets_one_shot_value(self):
-        pass
+        c = MyConfig.get_instance()
+        c.set_one_shot_value_for_option_name('FortyTwo', '44')
+
+        c.fortytwo = 43
+        self.assertEqual(c.fortytwo, 43)
 
     def test_setting_invalid_value_raises_exception(self):
-        pass
+        c = MyConfig.get_instance()
+        with self.assertRaises(ValidationError):
+            c.age = "young"
 
     def test_setting_none_deletes_value(self):
-        pass
+        c = MyConfig.get_instance()
+        c.fortytwo = 44
+        c.fortytwo = None
+        self.assertEqual(c.fortytwo, 42)
 
     def test_deleting_value(self):
-        pass
+        c = MyConfig.get_instance()
+        del c.fortytwo
+        self.assertEqual(c.fortytwo, 42)
 
     def test_env_is_first_json_deserialized_then_deserialized(self):
-        pass
+        class Diameters(DummyMemoryConfig):
+            lamp_cap_diameter = IntOption('LampCapDiameter', choices=[14, 27], env_name='LAMP_CAP_DIAMETER', default=27)
+
+        c = Diameters.get_instance()
+        os.environ['LAMP_CAP_DIAMETER'] = '\"14\"'
+
+        with patch.object(IntOption, 'deserialize_json', return_value='14') as mock_deserialize_json:
+            diameter = c.lamp_cap_diameter
+
+        with patch.object(IntOption, 'deserialize', return_value=14) as mock_deserialize:
+            diameter = c.lamp_cap_diameter
+
+        mock_deserialize_json.assert_called_with('\"14\"')
+        mock_deserialize.assert_called_with('14')
