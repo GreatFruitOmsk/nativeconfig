@@ -111,8 +111,6 @@ You can use your own types for deserialization:
 >>>     JSON_PATH = '~/.config/MyApp/config'
 >>>
 >>>     window_resolution = Option('Resolution', default=Resolution(), deserializer=Resolution)
-Note the default_if_empty argument: if due to some bug or user's manual misconfiguration value is set
-to an empty string, default will be returned.
 Since Resolution defines the __str__ method, default serializer (str) is fine.
 
 nativeconfig also allows you to manage config from CLI. These functions mimics python properties but works

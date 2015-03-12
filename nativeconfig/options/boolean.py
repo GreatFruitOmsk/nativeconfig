@@ -18,7 +18,7 @@ class BooleanOption(BaseOption):
 
     def __init__(self, name, **kwargs):
         """
-        Accepts all the arguments of BaseConfig except choices and default_if_empty.
+        Accepts all the arguments of BaseConfig except choices.
         """
         super().__init__(name, choices=[True, False], **kwargs)
 

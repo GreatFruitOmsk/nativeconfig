@@ -49,9 +49,6 @@ class BaseOption(property, ABC):
 
         @param default: Default value of the option.
 
-        @param default_if_empty: Whether default should be used when raw value is an empty string.
-        @type default: bool
-
         @raise InitializationError: If any of arguments is incorrect. Only handles most obvious errors.
         @raise ValidationError: if default or any of choices is invalid.
         """
