@@ -1,4 +1,3 @@
-from array import array
 from nativeconfig.exceptions import DeserializationError, ValidationError
 from nativeconfig.options.base import BaseOption
 
@@ -19,19 +18,19 @@ class ArrayOption(BaseOption):
         return str(value)
 
     def deserialize(self, raw_value):
-        if type(raw_value) == array:
+        if type(raw_value) == list:
             return raw_value
         else:
             try:
-                value = array(raw_value)
-            except ValueError:
-                raise DeserializationError("Unable to deserialize '{}' into float value.".format(raw_value), raw_value)
+                value = list(eval(raw_value))
+            except (ValueError, TypeError, NameError):
+                raise DeserializationError("Unable to deserialize '{}' into array.".format(raw_value), raw_value)
             else:
                 return value
 
     def validate(self, value):
         super().validate(value)
-        try:
-            valid_val = array(value)
-        except ValueError:
-            raise ValidationError("Invalid float value '{}'.".format(value), value)
+        if type(value) == list:
+            return
+        else:
+            raise ValidationError("Invalid array '{}'.".format(value), value)
