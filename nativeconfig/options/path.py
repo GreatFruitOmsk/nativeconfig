@@ -6,7 +6,7 @@ from nativeconfig.options.base import BaseOption
 
 class PathOption(BaseOption):
     """
-    FloatOption represents Python float in config.
+    PathOption represents pathlib's Path in config.
 
     """
 

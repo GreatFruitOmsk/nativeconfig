@@ -4,7 +4,7 @@ from nativeconfig.options.base import BaseOption
 
 class StringOption(BaseOption):
     """
-    FloatOption represents Python float in config.
+    StringOption represents Python string in config.
 
     """
 

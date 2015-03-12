@@ -3,7 +3,15 @@ from nativeconfig.options.base import BaseOption
 
 
 class IntOption(BaseOption):
+    """
+    FloatOption represents Python float in config.
+
+    """
+
     def __init__(self, name, **kwargs):
+        """
+        Accepts all the arguments of BaseConfig except choices.
+        """
         super().__init__(name, **kwargs)
 
     def serialize(self, value):
