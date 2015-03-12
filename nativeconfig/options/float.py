@@ -21,7 +21,7 @@ class FloatOption(BaseOption):
         try:
             value = float(raw_value)
         except ValueError:
-            raise DeserializationError("unable to deserialize value '{}'".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize '{}' into float value.".format(raw_value), raw_value)
         else:
             return value
 
@@ -30,4 +30,4 @@ class FloatOption(BaseOption):
         try:
             valid_val = float(value)
         except ValueError:
-            raise ValidationError("Unable to validate '{}'".format(value), value)
+            raise ValidationError("Invalid float value '{}'.".format(value), value)

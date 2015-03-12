@@ -23,7 +23,7 @@ class PathOption(BaseOption):
         try:
             value = PurePath(raw_value)
         except ValueError:
-            raise DeserializationError("unable to deserialize value '{}'".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize '{}' into path.".format(raw_value), raw_value)
         else:
             return value
 
@@ -38,4 +38,4 @@ class PathOption(BaseOption):
         if type(value) == PurePosixPath or type(value) == PureWindowsPath:
             return
         else:
-            raise ValidationError("Unable to validate '{}'".format(value), value)
+            raise ValidationError("Invalid path '{}'.".format(value), value)
