@@ -20,7 +20,7 @@ class ArrayOption(BaseOption):
 
     def deserialize(self, raw_value):
         if type(raw_value) == array:
-            return value
+            return raw_value
         else:
             try:
                 value = array(raw_value)
