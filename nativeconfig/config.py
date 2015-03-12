@@ -110,7 +110,7 @@ You can use your own types for deserialization:
 >>>     REGISTRY_PATH = r'Software\MyApp'
 >>>     JSON_PATH = '~/.config/MyApp/config'
 >>>
->>>     window_resolution = Option('Resolution', default=Resolution(), default_if_empty=True, deserializer=Resolution)
+>>>     window_resolution = Option('Resolution', default=Resolution(), deserializer=Resolution)
 Note the default_if_empty argument: if due to some bug or user's manual misconfiguration value is set
 to an empty string, default will be returned.
 Since Resolution defines the __str__ method, default serializer (str) is fine.
@@ -157,7 +157,7 @@ class CharOption(BaseOption):
 
 class DateOption(BaseOption):
     def __init__(self, name, **kwargs):
-        super().__init__(name, default_if_empty=True, **kwargs)
+        super().__init__(name, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -191,7 +191,7 @@ class DateOption(BaseOption):
 
 class PathOption(BaseOption):
     def __init__(self, name,  **kwargs):
-        super().__init__(name, default_if_empty=True, **kwargs)
+        super().__init__(name, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -210,7 +210,7 @@ class PathOption(BaseOption):
 
 class PureWindowsPathOption(BaseOption):
     def __init__(self, name,  **kwargs):
-        super().__init__(name, default_if_empty=True, **kwargs)
+        super().__init__(name, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -229,7 +229,7 @@ class PureWindowsPathOption(BaseOption):
 
 class PurePosixPathOption(BaseOption):
     def __init__(self, name,  **kwargs):
-        super().__init__(name, default_if_empty=True, **kwargs)
+        super().__init__(name, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -248,7 +248,7 @@ class PurePosixPathOption(BaseOption):
 
 class FloatOption(BaseOption):
     def __init__(self, name, **kwargs):
-        super().__init__(name, default_if_empty=True, **kwargs)
+        super().__init__(name, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -261,7 +261,7 @@ class FloatOption(BaseOption):
 
 class IntegerOption(BaseOption):
     def __init__(self, name, **kwargs):
-        super().__init__(name, default_if_empty=True, **kwargs)
+        super().__init__(name, **kwargs)
 
     def validate(self, value):
         super().validate(value)
@@ -287,7 +287,7 @@ class IPPortOption(IntegerOption):
 
 class TimeOption(BaseOption):
     def __init__(self, name, **kwargs):
-        super().__init__(name, default_if_empty=True, **kwargs)
+        super().__init__(name, **kwargs)
 
     def validate(self, value):
         super().validate(value)

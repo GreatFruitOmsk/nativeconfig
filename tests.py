@@ -149,7 +149,7 @@ class TestDateOption(unittest.TestCase):
 # class MyBaseConfig(object):
 #     single_value = Option('Single')
 #     single_value_default = Option('SingleDefault', default='a')
-#     single_value_default_no_empty = Option('SingleDefaultNoEmpty', default='a', default_if_empty=True)
+#     single_value_default_no_empty = Option('SingleDefaultNoEmpty', default='a')
 #
 #     single_value_int = IntOption('SingleInt')
 #     single_value_int_default = IntOption('SingleIntDefault', default=1)
