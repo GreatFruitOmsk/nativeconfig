@@ -84,7 +84,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
         c = MyConfig.get_instance()
-        os.environ['TEST_ARRAY'] = '1'
+        os.environ['TEST_ARRAY'] = '\"FORTYTWO\"'
 
         with self.assertRaises(DeserializationError):
             test_array = c.test_array
@@ -93,67 +93,65 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
             test_array = c.test_array
             self.assertEqual(test_array, 'unresolved')
 
-            os.environ['TEST_ARRAY'] = '[1, 2]'
+            os.environ['TEST_ARRAY'] = '[1, 2, 3]'
             test_array = c.test_array
-            self.assertEqual(test_array, [1, 2])
+            self.assertEqual(test_array, [1, 2, 3])
 
     def test_invalid_deserialized_value_during_get_calls_resolver(self):
-        pass
-        # class Diameters(DummyMemoryConfig):
-        #     hdd_diameter = FloatOption('HddDiameter', choices=[2.5, 3.5], env_name='HDD_DIAMETER', default=3.5)
-        #
-        # c = Diameters.get_instance()
-        # os.environ['HDD_DIAMETER'] = '\"5.0\"'
-        #
-        # with self.assertRaises(ValidationError):
-        #     diameter = c.hdd_diameter
-        #
-        # with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
-        #     diameter = c.hdd_diameter
-        #     self.assertEqual(diameter, 'unresolved')
-        #
-        #     os.environ['HDD_DIAMETER'] = '\"3.5\"'
-        #     diameter = c.hdd_diameter
-        #     self.assertEqual(diameter, 3.5)
+        class Arrays(DummyMemoryConfig):
+            test_array = ArrayOption('TestArray', choices=[[1, 2, 3], [4, 5, 6]], env_name='TEST_ARRAY')
+
+        c = Arrays.get_instance()
+        os.environ['TEST_ARRAY'] = '[1]'
+
+        with self.assertRaises(ValidationError):
+            test_array = c.test_array
+
+        with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
+            test_array = c.test_array
+            self.assertEqual(test_array, 'unresolved')
+
+            os.environ['TEST_ARRAY'] = '[4, 5, 6]'
+            test_array = c.test_array
+            self.assertEqual(test_array, [4, 5, 6])
 
     def test_setting_value_resets_one_shot_value(self):
-        pass
-        # c = MyConfig.get_instance()
-        # c.set_one_shot_value_for_option_name('Height', '234.5')
-        #
-        # c.height = 345.6
-        # self.assertEqual(c.height, 345.6)
+        c = MyConfig.get_instance()
+        c.set_one_shot_value_for_option_name('TestArray', '["1", "2", 3]')
+
+        c.test_array = [1]
+        self.assertEqual(c.test_array, [1])
 
     def test_setting_invalid_value_raises_exception(self):
-        pass
-        # c = MyConfig.get_instance()
-        # with self.assertRaises(ValidationError):
-        #     c.height = "very_high"
+        c = MyConfig.get_instance()
+        with self.assertRaises(ValidationError):
+            c.test_array = "super array"
 
     def test_setting_none_deletes_value(self):
-        pass
-        # c = MyConfig.get_instance()
-        # c.height = 1.0
-        # c.height = None
-        # self.assertEqual(c.height, 185.5)
+        c = MyConfig.get_instance()
+        c.test_array = [1]
+        c.test_array = None
+        self.assertEqual(c.test_array, ["1", "2", "3"])
 
     def test_deleting_value(self):
-        pass
-        # c = MyConfig.get_instance()
-        # del c.height
-        # self.assertEqual(c.height, 185.5)
+        c = MyConfig.get_instance()
+        del c.test_array
+        self.assertEqual(c.test_array, ["1", "2", "3"])
 
     def test_env_is_first_json_deserialized_then_deserialized(self):
-        pass
-        # c = MyConfig.get_instance()
-        # os.environ['WIDTH'] = '\"4.2\"'
-        # with patch.object(FloatOption, 'deserialize_json', return_value='4.2') as mock_deserialize_json:
-        #     w = c.width
-        #
-        # with patch.object(FloatOption, 'deserialize', return_value=4.2) as mock_deserialize:
-        #     w = c.width
-        #
-        # mock_deserialize_json.assert_called_with('\"4.2\"')
-        # mock_deserialize.assert_called_with('4.2')
+        class Arrays(DummyMemoryConfig):
+            test_array = ArrayOption('ArrayOption', env_name='TEST_ARRAY')
+
+        os.environ['TEST_ARRAY'] = '[1]'
+        c = Arrays.get_instance()
+
+        with patch.object(ArrayOption, 'deserialize_json', return_value=[1]) as mock_deserialize_json:
+            test_array = c.test_array
+
+        with patch.object(ArrayOption, 'deserialize', return_value=[1]) as mock_deserialize:
+            test_array = c.test_array
+
+        mock_deserialize_json.assert_called_with('[1]')
+        mock_deserialize.assert_called_with([1])
 
 #}
