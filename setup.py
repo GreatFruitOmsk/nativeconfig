@@ -1,3 +1,4 @@
+import os
 from setuptools import setup
 from sys import platform
 
@@ -8,16 +9,22 @@ if platform.startswith('darwin'):
     REQUIREMENTS.append('pyobjc-core >= 2.5')
 
 
+with open(os.path.join(os.path.dirname(__file__), 'nativeconfig', 'version.py')) as f:
+    version = None
+    code = compile(f.read(), 'version.py', 'exec')
+    exec(code)
+    assert version
+
+
 setup(
     name='nativeconfig',
-    version='1.0.0',
-    py_modules=['nativeconfig'],
+    version=version,
+    packages=['nativeconfig'],
     url='https://github.com/GreatFruitOmsk/nativeconfig',
     license='MIT License',
     author='Ilya Kulakov',
     author_email='kulakov.ilya@gmail.com',
-    description="Cross-platform python module to store application config via"
-                "native subsystems such as Windows Registry or NSUserDefaults.",
+    description="Cross-platform python module to store application config via native subsystems such as Windows Registry or NSUserDefaults.",
     platforms=["Mac OS X 10.6+", "Windows XP+", "Linux 2.6+"],
     keywords='config',
     classifiers=[
@@ -33,5 +40,5 @@ setup(
         'Programming Language :: Python :: 2.7',
     ],
     install_requires=REQUIREMENTS,
-    test_suite='tests'
+    test_suite='test'
 )
