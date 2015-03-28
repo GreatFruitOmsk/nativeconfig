@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 import logging
 import threading
 
@@ -8,7 +8,7 @@ from nativeconfig.options.base import BaseOption
 LOG = logging.getLogger('nativeconfig')
 
 
-class BaseConfig(ABC):
+class BaseConfig(metaclass=ABCMeta):
     """
     Base class for all configs.
 

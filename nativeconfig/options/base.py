@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABCMeta
 import json
 import logging
 import os
@@ -9,7 +9,7 @@ from nativeconfig.exceptions import InitializationError, ValidationError, Deseri
 LOG = logging.getLogger('nativeconfig')
 
 
-class BaseOption(property, ABC):
+class BaseOption(property, metaclass=ABCMeta):
     """
     Base class for all options.
 
