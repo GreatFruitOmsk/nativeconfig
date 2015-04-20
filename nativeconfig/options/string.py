@@ -14,8 +14,8 @@ class StringOption(BaseOption):
         """
         super().__init__(name, **kwargs)
 
-    def serialize(self, value):
-        return str(value).encode('utf-8')
+    def serialize(self, python_value):
+        return str(python_value).encode('utf-8')
 
     def deserialize(self, raw_value):
         if raw_value == "":
@@ -28,9 +28,9 @@ class StringOption(BaseOption):
             else:
                 return value
 
-    def validate(self, value):
-        super().validate(value)
-        if type(value) == str:
+    def validate(self, python_value):
+        super().validate(python_value)
+        if type(python_value) == str:
             return
         else:
-            raise ValidationError("Invalid string value '{}'.".format(value), value)
+            raise ValidationError("Invalid string value '{}'.".format(python_value), python_value)

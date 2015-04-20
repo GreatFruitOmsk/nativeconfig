@@ -22,8 +22,8 @@ class BooleanOption(BaseOption):
         """
         super().__init__(name, choices=[True, False], **kwargs)
 
-    def serialize(self, value):
-        return '1' if value else '0'
+    def serialize(self, python_value):
+        return '1' if python_value else '0'
 
     def deserialize(self, raw_value):
         if raw_value.upper() in self.TRUE_RAW_VALUES:

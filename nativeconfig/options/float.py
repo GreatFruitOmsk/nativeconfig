@@ -14,8 +14,8 @@ class FloatOption(BaseOption):
         """
         super().__init__(name, **kwargs)
 
-    def serialize(self, value):
-        return str(value)
+    def serialize(self, python_value):
+        return str(python_value)
 
     def deserialize(self, raw_value):
         try:
@@ -25,9 +25,9 @@ class FloatOption(BaseOption):
         else:
             return value
 
-    def validate(self, value):
-        super().validate(value)
+    def validate(self, python_value):
+        super().validate(python_value)
         try:
-            valid_val = float(value)
+            valid_val = float(python_value)
         except ValueError:
-            raise ValidationError("Invalid float value '{}'.".format(value), value)
+            raise ValidationError("Invalid float value '{}'.".format(python_value), python_value)

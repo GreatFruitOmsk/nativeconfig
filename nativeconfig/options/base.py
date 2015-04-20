@@ -19,7 +19,6 @@ class BaseOption(property, metaclass=ABCMeta):
         2. Raw Value (utf-8 sting): used to store in underlying config
         3. JSON Value: used to interact with the user
 
-
     Value of an option can be overridden by an environment variable.
 
     Setting option to None is equivalent to deleting it.
@@ -88,34 +87,35 @@ class BaseOption(property, metaclass=ABCMeta):
         if default is not None:
             self.validate(default)
 
-    def set_one_shot_value(self, value):
+    def set_one_shot_value(self, json_value):
         """
-        Set one shot value of the option that overrides value from storage but can be reset by set.
+        Set One Shot Value of the option that overrides Raw Value from storage but can be reset by set.
 
         Useful if you want to allow a user to override the option via CLI.
 
-        @raise ValidationError: Raise if value is not valid.
+        @raise ValidationError: Raise if json_value is not valid.
         """
-        self.validate(value)
-        self._one_shot_value = None
+        python_value = self.deserialize_json(json_value)
+        self.validate(python_value)
+        self._one_shot_value = python_value
 
 #{ Validation
 
-    def validate(self, value):
+    def validate(self, python_value):
         """
         Validate Python Value. Must raise ValidationError if value is wrong.
 
         @raise ValidationError: Raise if value is wrong.
         """
-        if value is None:
+        if python_value is None:
             return
 
-        if self._choices is not None and value not in self._choices:
-            raise ValidationError("Value '{}' is not one of the choices {}.".format(value, self._choices), value)
+        if self._choices is not None and python_value not in self._choices:
+            raise ValidationError("Value '{}' is not one of the choices {}.".format(python_value, self._choices), python_value)
 
 #{ Serialization and deserialization
 
-    def serialize(self, value):
+    def serialize(self, python_value):
         """
         Serialize Python Value into Raw Value.
 
@@ -123,7 +123,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @raise SerializationError: Raise if value cannot be serialized.
         """
-        return str(value)
+        return str(python_value)
 
     def deserialize(self, raw_value):
         """
@@ -135,7 +135,7 @@ class BaseOption(property, metaclass=ABCMeta):
         """
         return str(raw_value)
 
-    def serialize_json(self, value):
+    def serialize_json(self, python_value):
         """
         Serialize Python Value into JSON Value.
 
@@ -143,7 +143,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @rtype: str
         """
-        return json.dumps(value)
+        return json.dumps(python_value)
 
     def deserialize_json(self, json_value):
         """
@@ -188,7 +188,7 @@ class BaseOption(property, metaclass=ABCMeta):
             except (DeserializationError, ValidationError) as e:
                 return getattr(enclosing_self, self._resolver)(e, self._name, raw_v)
 
-    def fset(self, enclosing_self, value):
+    def fset(self, enclosing_self, python_value):
         """
         Serialize Python Value into Raw Value and write it to storage.
 
@@ -197,13 +197,13 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param enclosing_self: Instance of class that defines this property.
 
-        @param value: Python Value to be set.
+        @param python_value: Python Value to be set.
         """
         self._one_shot_value = None
 
-        if value is not None:
-            self.validate(value)
-            raw_value = self.serialize(value)
+        if python_value is not None:
+            self.validate(python_value)
+            raw_value = self.serialize(python_value)
             LOG.debug("Value of '%s' is set to '%s'.", self._name, raw_value)
             getattr(enclosing_self, self._setter)(self._name, raw_value)
         else:
