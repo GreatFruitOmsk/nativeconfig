@@ -13,6 +13,13 @@ class BaseOption(property, metaclass=ABCMeta):
     """
     Base class for all options.
 
+    Value of each option can be represented by three different versions:
+
+        1. Python Value: used in the code
+        2. Raw Value (utf-8 sting): used to store in underlying config
+        3. JSON Value: used to interact with the user
+
+
     Value of an option can be overridden by an environment variable.
 
     Setting option to None is equivalent to deleting it.
@@ -42,15 +49,15 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param resolver: Name of the resolver of the enclosing class to resolve value that cannot be serialized.
 
-        @param choices: List of allowed choices for the option.
+        @param choices: List of allowed Python Values for the option.
 
-        @param env_name: Name of the environment variable that can override value of the option
+        @param env_name: Name of the env variable that contains JSON Value that can override value of the option.
         @type env_name: str
 
-        @param default: Default value of the option.
+        @param default: Default Python Value of the option.
 
         @raise InitializationError: If any of arguments is incorrect. Only handles most obvious errors.
-        @raise ValidationError: if default or any of choices is invalid.
+        @raise ValidationError: If default or any of choices is invalid.
         """
         super(BaseOption, self).__init__(self.fget, self.fset, self.fdel, doc=self.__doc__)
 
@@ -96,7 +103,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def validate(self, value):
         """
-        Validate value. Must raise ValidationError if value is wrong.
+        Validate Python Value. Must raise ValidationError if value is wrong.
 
         @raise ValidationError: Raise if value is wrong.
         """
@@ -110,7 +117,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def serialize(self, value):
         """
-        Serialize value into raw value.
+        Serialize Python Value into Raw Value.
 
         @see: deserialize
 
@@ -120,7 +127,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def deserialize(self, raw_value):
         """
-        Deserialize raw value to value.
+        Deserialize Raw Value into Python Value.
 
         @see: serialize
 
@@ -130,7 +137,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def serialize_json(self, value):
         """
-        Serialize value into json compatible string.
+        Serialize Python Value into JSON Value.
 
         @see: deserialize_json
 
@@ -140,7 +147,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def deserialize_json(self, json_value):
         """
-        Deserialize json value to value.
+        Deserialize JSON Value into Python Value.
 
         @see: serialize_json
         """
@@ -150,7 +157,11 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def fget(self, enclosing_self):
         """
-        @raise DeserializationError: Raise if value cannot be deserialized or deserialized value isn't one of choices.
+        Read Raw Value from the storage and deserialized it into Python Value.
+
+        If either DeserializationError or ValidationError occurs in process, they will be forwarded to resolver.
+
+        @param enclosing_self: Instance of class that defines this property.
         """
         raw_v = None
 
@@ -178,17 +189,32 @@ class BaseOption(property, metaclass=ABCMeta):
                 return getattr(enclosing_self, self._resolver)(e, self._name, raw_v)
 
     def fset(self, enclosing_self, value):
+        """
+        Serialize Python Value into Raw Value and write it to storage.
+
+        Resets One Shot Value.
+        Setting None simply deletes Raw Value from storage.
+
+        @param enclosing_self: Instance of class that defines this property.
+
+        @param value: Python Value to be set.
+        """
         self._one_shot_value = None
 
         if value is not None:
             self.validate(value)
             raw_value = self.serialize(value)
-            LOG.debug("Value of '%s' is set to '%s'.", value, raw_value)
+            LOG.debug("Value of '%s' is set to '%s'.", self._name, raw_value)
             getattr(enclosing_self, self._setter)(self._name, raw_value)
         else:
             self.fdel(enclosing_self)
 
     def fdel(self, enclosing_self):
+        """
+        Delete Raw Value from the storage.
+
+        @param enclosing_self: Instance of class that defines this property.
+        """
         LOG.debug("Delete value of '%s'.", self._name)
         getattr(enclosing_self, self._deleter)(self._name)
 #}
