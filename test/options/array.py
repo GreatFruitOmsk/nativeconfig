@@ -1,9 +1,11 @@
 import os
+from pathlib import PurePath
 import unittest
 from unittest.mock import patch
 
 from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
 from nativeconfig.options.array import ArrayOption
+from nativeconfig.options.path import PathOption
 
 from test import DummyMemoryConfig
 from test.options import TestOptionMixin
@@ -11,6 +13,8 @@ from test.options import TestOptionMixin
 
 class MyConfig(DummyMemoryConfig):
     test_array = ArrayOption('TestArray', env_name='TEST_ARRAY', default=["1", "2", "3"])
+    path_array = ArrayOption('PathArray', container_type=PathOption('PathContainer', choices=[PurePath("."), PurePath("..")]))
+    path_option = PathOption('PathOption', default=PurePath('.'))
 
 
 class TestArrayOption(unittest.TestCase, TestOptionMixin):
@@ -66,6 +70,8 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         c.test_array = [1, 2, 3]
         self.assertEqual(c.get_value_for_option_name('TestArray'), '[1, 2, 3]')
+        c.path_array = [PurePath("."), PurePath("..")]
+        self.assertEqual(c.get_value_for_option_name('PathArray'), '[".", ".."]')
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
