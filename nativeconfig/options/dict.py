@@ -46,7 +46,7 @@ class DictOption(BaseOption):
 
     def serialize_json(self, value):
         serializable_dict = {}
-        if self._container_type is not None:
+        if isinstance(self._container_type, BaseOption):
             for k, v in value.items():
                 serialized_v = self._container_type.serialize(v)
                 serializable_dict.update({k: serialized_v})
