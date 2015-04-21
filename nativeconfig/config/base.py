@@ -1,14 +1,49 @@
 from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
+import inspect
 import logging
 import threading
 
 from nativeconfig.options.base import BaseOption
+from nativeconfig.options import StringOption
 
 
 LOG = logging.getLogger('nativeconfig')
 
 
-class BaseConfig(metaclass=ABCMeta):
+class _OrderedClass(ABCMeta):
+    """
+    Simple metaclass that maintains list of all properties (including all superclasses) in order of definition.
+    """
+    @classmethod
+    def __prepare__(metacls, name, bases):
+        return OrderedDict()
+
+    def __new__(cls, name, bases, classdict):
+        result = type.__new__(cls, name, bases, dict(classdict))
+        result.ordered_options = []
+
+        # Get ordered options from base class.
+        mro = inspect.getmro(result)
+        if len(mro) > 1:
+            if hasattr(mro[1], 'ordered_options'):
+                result.ordered_options.extend(mro[1].ordered_options)
+
+        for k, v in classdict.items():
+            if inspect.isdatadescriptor(v):
+                try:
+                    i = result.ordered_options.index(v._name)
+                except ValueError:
+                    pass
+                else:
+                    del result.ordered_options[i]
+
+                result.ordered_options.append(v._name)
+
+        return result
+
+
+class BaseConfig(metaclass=_OrderedClass):
     """
     Base class for all configs.
 
@@ -16,18 +51,17 @@ class BaseConfig(metaclass=ABCMeta):
 
     @cvar CONFIG_VERSION: Version of the config. Used during migrations and usually should be identical to app's __version__.
     @cvar CONFIG_VERSION_OPTION_NAME: Name of the option that represents config version in backend.
+    @cvar CREATE_IF_NEEDED: Whether entity should be created during initialization of config. E.g. file or registry record.
+    @cvar CONFIG_PATH: Implementation-dependent path to config file. See docstring of concrete implementation.
     """
-    CONFIG_VERSION = None
+    CONFIG_VERSION = '1.0'
     CONFIG_VERSION_OPTION_NAME = "ConfigVersion"
+    CREATE_IF_NEEDED = True
+    CONFIG_PATH = None
 
     _instances = {}
     _instances_events = {}
     _instances_lock = threading.Lock()
-
-    def __init__(self):
-        self.validate()
-        super().__init__()
-        self.migrate(self.get_value(self.CONFIG_VERSION))
 
     @classmethod
     def get_instance(cls):
@@ -57,25 +91,32 @@ class BaseConfig(metaclass=ABCMeta):
         """
         properties = set()
 
-        for attribute_name in dir(cls):
-            attribute = getattr(cls, attribute_name)
-
-            if isinstance(attribute, BaseOption):
-                if attribute._name in properties:
-                    raise AttributeError("Duplication of property named {}!".format(attribute._name))
+        for attribute_name, attribute_value in inspect.getmembers(cls, inspect.isdatadescriptor):
+            if isinstance(attribute_value, BaseOption):
+                if attribute_value._name in properties:
+                    raise AttributeError("Duplication of property named {}!".format(attribute_value._name))
                 else:
-                    properties.add(attribute._name)
+                    properties.add(attribute_value._name)
+
+    def __init__(self):
+        self.validate()
+        super().__init__()
+        self.migrate(self.config_version)
+
+#{ Default options
+
+    config_version = StringOption(CONFIG_VERSION_OPTION_NAME, default=CONFIG_VERSION)
 
 #{ Access options by name
 
     def get_value_for_option_name(self, name):
         """
-        Get option's raw value by its name in backend.
+        Get option's Raw Value by its name in backend.
 
         @param name: Name of the option.
         @type name: str
 
-        @return: JSON-encoded raw value. None if such option does not exist.
+        @return: JSON Value. None if such option does not exist.
         @rtype: str or dict or list or None
         """
         attribute = self.property_for_option_name(name)
@@ -85,28 +126,37 @@ class BaseConfig(metaclass=ABCMeta):
         else:
             LOG.warning("No option named '%s'.", name)
 
-    def set_value_for_option_name(self, name, value):
+    def set_value_for_option_name(self, name, json_value):
         """
         Set option by its name in backend.
 
         @param name: Name of the option.
-        @type name: str
+        @type name: str or dict or list or None
 
-        @param value: JSON-encoded raw value.
-        @type value: str
+        @param json_value: JSON value.
+        @type json_value: str
         """
         attribute = self.property_for_option_name(name)
 
         if attribute:
-            attribute.fset(self, attribute.deserialize_json(value))
+            attribute.fset(self, attribute.deserialize_json(json_value))
         else:
             LOG.warning("No option named '%s'.", name)
 
-    def set_one_shot_value_for_option_name(self, name, value):
+    def set_one_shot_value_for_option_name(self, name, json_value):
+        """
+        Set One Shot Value for a given name.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param json_value: JSON value.
+        @type json_value: str or dict or list or None
+        """
         attribute = self.property_for_option_name(name)
 
         if attribute:
-            attribute.fset(self, attribute.deserialize_json(value))
+            attribute.fset(self, attribute.deserialize_json(json_value))
         else:
             LOG.warning("No option named '%s'.", name)
 
@@ -163,12 +213,9 @@ class BaseConfig(metaclass=ABCMeta):
 
 #{ Recovery and migrations
 
-    @abstractmethod
     def resolve_value(self, exception, name, raw_value):
         """
-        Resolve raw value that cannot be deserialized or re-raise exception.
-
-        Logs error message and returns default.
+        Resolve Raw Value that cannot be deserialized or re-raise exception.
 
         Default implementation logs an exception and returns default value.
 
@@ -186,16 +233,22 @@ class BaseConfig(metaclass=ABCMeta):
         LOG.error("Unable to deserialize value of '%s' from '%s': %s.", name, raw_value, exception)
         return self.property_for_option_name(name)._default
 
-    @abstractmethod
     def migrate(self, version):
-        self.set_value(self.CONFIG_VERSION_OPTION_NAME, version)
+        """
+        Migrate options in backend from a given version to current one.
+
+        @param version: Version to migrate. Can be None if config does not exist or does not contain value for that option.
+
+        @note: Called even when versions match.
+        """
+        self.set_value(self.CONFIG_VERSION_OPTION_NAME, self.CONFIG_VERSION)
 
 #{ Access backend
 
     @abstractmethod
     def get_value(self, name):
         """
-        Return raw value for a given name or None if no value exists and default should be used.
+        Return Raw Value for a given name or None if no value exists and default should be used.
 
         @param name: Name of the option to get.
         @type name: str
@@ -207,7 +260,7 @@ class BaseConfig(metaclass=ABCMeta):
     @abstractmethod
     def set_value(self, name, raw_value):
         """
-        Set new value for a given name.
+        Set new Raw Value for a given name.
 
         @param name: Name of the option to set.
         @type name: str
@@ -230,7 +283,7 @@ class BaseConfig(metaclass=ABCMeta):
     @abstractmethod
     def get_array_value(self, name):
         """
-        Return an array of raw values for a given name.
+        Return an array of Raw Values for a given name.
 
         @param name: Name of the array option to get.
         @type name: str
@@ -242,7 +295,7 @@ class BaseConfig(metaclass=ABCMeta):
     @abstractmethod
     def set_array_value(self, name, value):
         """
-        Set new value for a given name.
+        Set new value which is an array of Raw Values for a given name.
 
         @param name: Name of the array option to set.
         @type name: str
@@ -255,7 +308,7 @@ class BaseConfig(metaclass=ABCMeta):
     @abstractmethod
     def get_dict_value(self, name):
         """
-        Return a dict of raw values for a given name.
+        Return a dict of Raw Values for a given name.
 
         @param name: Name of the dict option to get.
         @type name: str
@@ -267,7 +320,7 @@ class BaseConfig(metaclass=ABCMeta):
     @abstractmethod
     def set_dict_value(self, name, value):
         """
-        Set new value for a given name.
+        Set new value which is a dict of Raw Values for a given name.
 
         @param name: Name of the dict option to set.
         @type name: str
