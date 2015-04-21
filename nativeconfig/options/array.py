@@ -5,22 +5,22 @@ from nativeconfig.options.base import BaseOption
 
 class ArrayOption(BaseOption):
     """
-    ArrayOption represents Python float in config.
+    ArrayOption represents Python arrays in config. ArrayOption can contain other Options as elements
 
     """
 
-    def __init__(self, name, container_type=None, **kwargs):
+    def __init__(self, name, value_option=None, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
         """
         super().__init__(name, **kwargs)
-        self._container_type = container_type
+        self._value_option = value_option
 
     def serialize(self, value):
         serializable_list = []
-        if isinstance(self._container_type, BaseOption):
+        if isinstance(self._value_option, BaseOption):
             for i in value:
-                serializable_list.append(self._container_type.serialize(i))
+                serializable_list.append(self._value_option.serialize(i))
             return str(serializable_list)
         else:
             return str(value)
@@ -31,10 +31,10 @@ class ArrayOption(BaseOption):
         else:
             try:
                 raw_list = list(eval(raw_value))
-                if isinstance(self._container_type, BaseOption):
+                if isinstance(self._value_option, BaseOption):
                     deserizlized_list = []
                     for i in raw_list:
-                        deserizlized_list.append(self._container_type.deserialize(i))
+                        deserizlized_list.append(self._value_option.deserialize(i))
                     value = deserizlized_list
                 else:
                     value = raw_list
@@ -45,9 +45,9 @@ class ArrayOption(BaseOption):
 
     def serialize_json(self, value):
         serializable_list = []
-        if isinstance(self._container_type, BaseOption):
+        if isinstance(self._value_option, BaseOption):
             for i in value:
-                serializable_list.append(self._container_type.serialize(i))
+                serializable_list.append(self._value_option.serialize(i))
             return json.dumps(serializable_list)
         else:
             return json.dumps(value)

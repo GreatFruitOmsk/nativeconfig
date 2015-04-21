@@ -13,7 +13,7 @@ from test.options import TestOptionMixin
 
 class MyConfig(DummyMemoryConfig):
     test_dict = DictOption('TestDict', env_name='TEST_DICT', default={"key1": "value1", "key2": "value2"})
-    path_dict = DictOption('PathDict', container_type=PathOption('PathOption'))
+    path_dict = DictOption('PathDict', value_option=PathOption('PathOption'))
     a = PathOption('A', default=Path('test'))
 
 

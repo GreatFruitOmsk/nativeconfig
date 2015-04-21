@@ -5,22 +5,22 @@ from nativeconfig.options.base import BaseOption
 
 class DictOption(BaseOption):
     """
-    DictOption represents Python dict in config.
+    DictOption represents Python dict in config. DictOption can contain other Options as values of dict.
 
     """
 
-    def __init__(self, name, container_type=None, **kwargs):
+    def __init__(self, name, value_option=None, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
         """
         super().__init__(name, **kwargs)
-        self._container_type = container_type
+        self.value_option = value_option
 
     def serialize(self, value):
         serializable_dict = {}
-        if isinstance(self._container_type, BaseOption):
+        if isinstance(self.value_option, BaseOption):
             for k, v in value.items():
-                serialized_v = self._container_type.serialize(v)
+                serialized_v = self.value_option.serialize(v)
                 serializable_dict.update({k: serialized_v})
             return json.dumps(serializable_dict)
         else:
@@ -32,10 +32,10 @@ class DictOption(BaseOption):
         else:
             try:
                 raw_dict = json.loads(raw_value)
-                if isinstance(self._container_type, BaseOption):
+                if isinstance(self.value_option, BaseOption):
                     deserialized_dict = {}
                     for k, v in raw_dict.items():
-                        deserialized_dict.update({k: self._container_type.deserialize(v)})
+                        deserialized_dict.update({k: self.value_option.deserialize(v)})
                     value = deserialized_dict
                 else:
                     value = raw_dict
@@ -46,9 +46,9 @@ class DictOption(BaseOption):
 
     def serialize_json(self, value):
         serializable_dict = {}
-        if isinstance(self._container_type, BaseOption):
+        if isinstance(self.value_option, BaseOption):
             for k, v in value.items():
-                serialized_v = self._container_type.serialize(v)
+                serialized_v = self.value_option.serialize(v)
                 serializable_dict.update({k: serialized_v})
             return json.dumps(serializable_dict)
         else:

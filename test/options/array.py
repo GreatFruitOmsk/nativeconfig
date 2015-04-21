@@ -13,7 +13,7 @@ from test.options import TestOptionMixin
 
 class MyConfig(DummyMemoryConfig):
     test_array = ArrayOption('TestArray', env_name='TEST_ARRAY', default=["1", "2", "3"])
-    path_array = ArrayOption('PathArray', container_type=PathOption('PathContainer', choices=[Path("."), Path("..")]))
+    path_array = ArrayOption('PathArray', value_option=PathOption('PathContainer', choices=[Path("."), Path("..")]))
     path_option = PathOption('PathOption', default=Path('.'))
 
 
