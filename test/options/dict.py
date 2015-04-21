@@ -1,8 +1,10 @@
 import os
+from pathlib import PurePath
 import unittest
 from unittest.mock import patch
 
 from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
+from nativeconfig.options import PathOption
 from nativeconfig.options.dict import DictOption
 
 from test import DummyMemoryConfig
@@ -11,6 +13,8 @@ from test.options import TestOptionMixin
 
 class MyConfig(DummyMemoryConfig):
     test_dict = DictOption('TestDict', env_name='TEST_DICT', default={"key1": "value1", "key2": "value2"})
+    path_dict = DictOption('PathDict', container_type=PathOption('PathOption'))
+    a = PathOption('A', default=PurePath('test'))
 
 
 class TestDictOption(unittest.TestCase, TestOptionMixin):
@@ -60,8 +64,8 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
 
     def test_serialize_json(self):
         c = MyConfig.get_instance()
-        c.test_dict = {"key1": "value1"}
-        self.assertEqual(c.get_value_for_option_name('TestDict'), '{"key1": "value1"}')
+        c.path_dict = {"key1": PurePath(".")}
+        self.assertEqual(c.get_value_for_option_name('PathDict'), '{"key1": "."}')
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
