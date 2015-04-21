@@ -5,7 +5,9 @@ from unittest.mock import patch
 
 from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
 from nativeconfig.options.array import ArrayOption
+from nativeconfig.options.dict import DictOption
 from nativeconfig.options.path import PathOption
+from nativeconfig.options.string import StringOption
 
 from test import DummyMemoryConfig
 from test.options import TestOptionMixin
@@ -13,8 +15,8 @@ from test.options import TestOptionMixin
 
 class MyConfig(DummyMemoryConfig):
     test_array = ArrayOption('TestArray', env_name='TEST_ARRAY', default=["1", "2", "3"])
-    path_array = ArrayOption('PathArray', value_option=PathOption('PathContainer', choices=[Path("."), Path("..")]))
-    path_option = PathOption('PathOption', default=Path('.'))
+    path_array = ArrayOption('PathArray', value_option=PathOption('PathContainer', path_type=Path, choices=[Path("."), Path("..")]))
+    path_option = PathOption('PathOption', path_type=Path, default=Path('.'))
 
 
 class TestArrayOption(unittest.TestCase, TestOptionMixin):
@@ -31,6 +33,21 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
             pass
 
 #{ Custom
+
+    def test_value_option_must_be_instance_of_base_option(self):
+        with self.assertRaises(InitializationError):
+            c = MyConfig.get_instance()
+            c.array_option = self.OPTION_TYPE('ArrayOption1', value_option=str)
+        c = MyConfig.get_instance()
+        c.array_option = self.OPTION_TYPE('ArrayOption1', value_option=StringOption("test"))
+
+    def test_value_option_must_not_be_array_or_dict(self):
+        with self.assertRaises(InitializationError):
+            c = MyConfig.get_instance()
+            c.array_option = self.OPTION_TYPE('ArrayOption2', value_option=ArrayOption('test'))
+        with self.assertRaises(InitializationError):
+            c = MyConfig.get_instance()
+            c.array_option = self.OPTION_TYPE('ArrayOption2', value_option=DictOption('test'))
 
 
 #{ TestOptionMixin

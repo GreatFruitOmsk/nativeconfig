@@ -1,5 +1,5 @@
 import json
-from nativeconfig.exceptions import DeserializationError, ValidationError
+from nativeconfig.exceptions import DeserializationError, ValidationError, InitializationError
 from nativeconfig.options.base import BaseOption
 
 
@@ -14,11 +14,22 @@ class ArrayOption(BaseOption):
         Accepts all the arguments of BaseConfig except choices.
         """
         super().__init__(name, **kwargs)
-        self._value_option = value_option
+        if value_option:
+            from nativeconfig.options.dict import DictOption
+
+            if isinstance(value_option, BaseOption) \
+            and not isinstance(value_option, ArrayOption) \
+            and not isinstance(value_option, DictOption):
+                self._value_option = value_option
+            else:
+                raise InitializationError("Value option must be instance of one of base options except array and dict")
+        else:
+            self._value_option = None
+
 
     def serialize(self, value):
         serializable_list = []
-        if isinstance(self._value_option, BaseOption):
+        if self._value_option:
             for i in value:
                 serializable_list.append(self._value_option.serialize(i))
             return str(serializable_list)
@@ -31,7 +42,7 @@ class ArrayOption(BaseOption):
         else:
             try:
                 raw_list = list(eval(raw_value))
-                if isinstance(self._value_option, BaseOption):
+                if self._value_option:
                     deserizlized_list = []
                     for i in raw_list:
                         deserizlized_list.append(self._value_option.deserialize(i))
@@ -45,7 +56,7 @@ class ArrayOption(BaseOption):
 
     def serialize_json(self, value):
         serializable_list = []
-        if isinstance(self._value_option, BaseOption):
+        if self._value_option:
             for i in value:
                 serializable_list.append(self._value_option.serialize(i))
             return json.dumps(serializable_list)

@@ -1,5 +1,5 @@
 import json
-from nativeconfig.exceptions import DeserializationError, ValidationError
+from nativeconfig.exceptions import DeserializationError, ValidationError, InitializationError
 from nativeconfig.options.base import BaseOption
 
 
@@ -14,13 +14,23 @@ class DictOption(BaseOption):
         Accepts all the arguments of BaseConfig except choices.
         """
         super().__init__(name, **kwargs)
-        self.value_option = value_option
+        if value_option:
+            from nativeconfig.options import ArrayOption
+
+            if isinstance(value_option, BaseOption) \
+            and not isinstance(value_option, ArrayOption) \
+            and not isinstance(value_option, DictOption):
+                self._value_option = value_option
+            else:
+                raise InitializationError("Value option must be instance of one of base options except array and dict")
+        else:
+            self._value_option = None
 
     def serialize(self, value):
         serializable_dict = {}
-        if isinstance(self.value_option, BaseOption):
+        if isinstance(self._value_option, BaseOption):
             for k, v in value.items():
-                serialized_v = self.value_option.serialize(v)
+                serialized_v = self._value_option.serialize(v)
                 serializable_dict.update({k: serialized_v})
             return json.dumps(serializable_dict)
         else:
@@ -32,10 +42,10 @@ class DictOption(BaseOption):
         else:
             try:
                 raw_dict = json.loads(raw_value)
-                if isinstance(self.value_option, BaseOption):
+                if isinstance(self._value_option, BaseOption):
                     deserialized_dict = {}
                     for k, v in raw_dict.items():
-                        deserialized_dict.update({k: self.value_option.deserialize(v)})
+                        deserialized_dict.update({k: self._value_option.deserialize(v)})
                     value = deserialized_dict
                 else:
                     value = raw_dict
@@ -46,9 +56,9 @@ class DictOption(BaseOption):
 
     def serialize_json(self, value):
         serializable_dict = {}
-        if isinstance(self.value_option, BaseOption):
+        if isinstance(self._value_option, BaseOption):
             for k, v in value.items():
-                serialized_v = self.value_option.serialize(v)
+                serialized_v = self._value_option.serialize(v)
                 serializable_dict.update({k: serialized_v})
             return json.dumps(serializable_dict)
         else:
