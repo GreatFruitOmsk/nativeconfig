@@ -32,7 +32,7 @@ class DictOption(BaseOption):
         else:
             try:
                 raw_dict = json.loads(raw_value)
-                if self._container_type is not None:
+                if isinstance(self._container_type, BaseOption):
                     deserialized_dict = {}
                     for k, v in raw_dict.items():
                         deserialized_dict.update({k: self._container_type.deserialize(v)})
