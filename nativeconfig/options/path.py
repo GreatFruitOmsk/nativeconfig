@@ -1,6 +1,7 @@
 import json
-from pathlib import PurePath, PurePosixPath, PureWindowsPath
-from nativeconfig.exceptions import DeserializationError, ValidationError
+from pathlib import WindowsPath, PosixPath, Path
+
+from nativeconfig.exceptions import ValidationError
 from nativeconfig.options.base import BaseOption
 
 
@@ -20,22 +21,17 @@ class PathOption(BaseOption):
         return str(value)
 
     def deserialize(self, raw_value):
-        try:
-            value = PurePath(raw_value)
-        except ValueError:
-            raise DeserializationError("Unable to deserialize '{}' into path.".format(raw_value), raw_value)
-        else:
-            return value
+        return Path(raw_value)
 
     def serialize_json(self, value):
         return json.dumps(str(value))
 
     def deserialize_json(self, json_value):
-        return PurePath(json.loads(json_value))
+        return Path(json.loads(json_value))
 
     def validate(self, value):
         super().validate(value)
-        if type(value) == PurePosixPath or type(value) == PureWindowsPath:
+        if type(value) == PosixPath or type(value) == WindowsPath:
             return
         else:
             raise ValidationError("Invalid path '{}'.".format(value), value)

@@ -1,5 +1,5 @@
 import os
-from pathlib import PurePath
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -14,7 +14,7 @@ from test.options import TestOptionMixin
 class MyConfig(DummyMemoryConfig):
     test_dict = DictOption('TestDict', env_name='TEST_DICT', default={"key1": "value1", "key2": "value2"})
     path_dict = DictOption('PathDict', container_type=PathOption('PathOption'))
-    a = PathOption('A', default=PurePath('test'))
+    a = PathOption('A', default=Path('test'))
 
 
 class TestDictOption(unittest.TestCase, TestOptionMixin):
@@ -64,7 +64,9 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
 
     def test_serialize_json(self):
         c = MyConfig.get_instance()
-        c.path_dict = {"key1": PurePath(".")}
+        c.test_dict = {"Key1": "some_value"}
+        self.assertEqual(c.get_value_for_option_name('TestDict'), '{"Key1": "some_value"}')
+        c.path_dict = {"key1": Path(".")}
         self.assertEqual(c.get_value_for_option_name('PathDict'), '{"key1": "."}')
 
     def test_deserialize_json(self):

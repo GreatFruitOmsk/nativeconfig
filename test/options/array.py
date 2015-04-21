@@ -1,5 +1,5 @@
 import os
-from pathlib import PurePath
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -13,8 +13,8 @@ from test.options import TestOptionMixin
 
 class MyConfig(DummyMemoryConfig):
     test_array = ArrayOption('TestArray', env_name='TEST_ARRAY', default=["1", "2", "3"])
-    path_array = ArrayOption('PathArray', container_type=PathOption('PathContainer', choices=[PurePath("."), PurePath("..")]))
-    path_option = PathOption('PathOption', default=PurePath('.'))
+    path_array = ArrayOption('PathArray', container_type=PathOption('PathContainer', choices=[Path("."), Path("..")]))
+    path_option = PathOption('PathOption', default=Path('.'))
 
 
 class TestArrayOption(unittest.TestCase, TestOptionMixin):
@@ -70,7 +70,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         c.test_array = [1, 2, 3]
         self.assertEqual(c.get_value_for_option_name('TestArray'), '[1, 2, 3]')
-        c.path_array = [PurePath("."), PurePath("..")]
+        c.path_array = [Path("."), Path("..")]
         self.assertEqual(c.get_value_for_option_name('PathArray'), '[".", ".."]')
 
     def test_deserialize_json(self):
