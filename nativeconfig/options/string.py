@@ -19,12 +19,12 @@ class StringOption(BaseOption):
 
     def deserialize(self, raw_value):
         if raw_value == "":
-            raise DeserializationError("Unable to deserialize '{}' into string value.".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize \"{}\" into string value!".format(raw_value), raw_value)
         else:
             try:
                 value = eval(raw_value).decode('utf-8')
             except (ValueError, TypeError):
-                raise DeserializationError("Unable to deserialize '{}' into string value.".format(raw_value), raw_value)
+                raise DeserializationError("Unable to deserialize \"{}\" into string value!".format(raw_value), raw_value)
             else:
                 return value
 
@@ -33,4 +33,4 @@ class StringOption(BaseOption):
         if type(python_value) == str:
             return
         else:
-            raise ValidationError("Invalid string value '{}'.".format(python_value), python_value)
+            raise ValidationError("Invalid string value \"{}\"!".format(python_value), python_value)

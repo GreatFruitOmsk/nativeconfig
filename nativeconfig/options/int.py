@@ -21,11 +21,11 @@ class IntOption(BaseOption):
         try:
             return int(raw_value)
         except ValueError:
-            raise DeserializationError("Unable to deserialize '{}' into int value.".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize \"{}\" into int value!".format(raw_value), raw_value)
 
     def validate(self, python_value):
         super().validate(python_value)
         try:
             valid_val = int(python_value)
         except ValueError as e:
-            raise ValidationError("Invalid int value '{}'.".format(python_value), python_value)
+            raise ValidationError("Invalid int value \"{}\"!".format(python_value), python_value)

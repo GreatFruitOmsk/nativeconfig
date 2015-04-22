@@ -3,6 +3,7 @@ from collections import OrderedDict
 import inspect
 import logging
 import threading
+from warnings import warn
 
 from nativeconfig.options.base import BaseOption
 from nativeconfig.options import StringOption
@@ -94,7 +95,7 @@ class BaseConfig(metaclass=_OrderedClass):
         for attribute_name, attribute_value in inspect.getmembers(cls, inspect.isdatadescriptor):
             if isinstance(attribute_value, BaseOption):
                 if attribute_value._name in properties:
-                    raise AttributeError("Duplication of property named {}!".format(attribute_value._name))
+                    raise AttributeError("Duplication of option named \"{}\"!".format(attribute_value._name))
                 else:
                     properties.add(attribute_value._name)
 
@@ -124,7 +125,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if attribute:
             return attribute.serialize_json(attribute.fget(self))
         else:
-            LOG.warning("No option named '%s'.", name)
+            warn("No option named \"{}\".".format(name))
 
     def set_value_for_option_name(self, name, json_value):
         """
@@ -141,7 +142,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if attribute:
             attribute.fset(self, attribute.deserialize_json(json_value))
         else:
-            LOG.warning("No option named '%s'.", name)
+            warn("No option named \"{}\".".format(name))
 
     def set_one_shot_value_for_option_name(self, name, json_value):
         """
@@ -158,7 +159,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if attribute:
             attribute.fset(self, attribute.deserialize_json(json_value))
         else:
-            LOG.warning("No option named '%s'.", name)
+            warn("No option named \"{}\".".format(name))
 
     def del_value_for_option_name(self, name):
         """
@@ -172,7 +173,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if attribute:
             attribute.fdel(self)
         else:
-            LOG.warning("No option named '%s'.", name)
+            warn("No option named \"{}\".".format(name))
 
     def snapshot(self):
         """
@@ -230,7 +231,7 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @return: Value to be used based on raw value.
         """
-        LOG.error("Unable to deserialize value of '%s' from '%s': %s.", name, raw_value, exception)
+        LOG.error("Unable to deserialize value of \"%s\" from \"%s\": %s.", name, raw_value, exception)
         return self.property_for_option_name(name)._default
 
     def migrate(self, version):

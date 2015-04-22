@@ -22,7 +22,7 @@ class DictOption(BaseOption):
             and not isinstance(value_option, DictOption):
                 self._value_option = value_option
             else:
-                raise InitializationError("Value option must be instance of one of base options except array and dict")
+                raise InitializationError("Value option must be instance of one of base options except array and dict!")
         else:
             self._value_option = None
 
@@ -50,7 +50,7 @@ class DictOption(BaseOption):
                 else:
                     value = raw_dict
             except ValueError:
-                raise DeserializationError("Unable to deserialize '{}' into dict.".format(raw_value), raw_value)
+                raise DeserializationError("Unable to deserialize \"{}\" into dict!".format(raw_value), raw_value)
             else:
                 return value
 
@@ -69,4 +69,4 @@ class DictOption(BaseOption):
         try:
             valid_val = dict(value)
         except (ValueError, TypeError):
-            raise ValidationError("Invalid dict '{}'.".format(value), value)
+            raise ValidationError("Invalid dict \"{}\"!".format(value), value)

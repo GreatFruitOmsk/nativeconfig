@@ -31,4 +31,4 @@ class BooleanOption(BaseOption):
         elif raw_value.upper() in self.FALSE_RAW_VALUES:
             return False
         else:
-            raise DeserializationError("Value '{}' must be one of {}.".format(raw_value, self.ALLOWED_RAW_VALUES), raw_value)
+            raise DeserializationError("Value \"{}\" must be one of {}!".format(raw_value, self.ALLOWED_RAW_VALUES), raw_value)

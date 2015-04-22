@@ -18,7 +18,7 @@ def all_casings(input_string):
 class DummyMemoryConfig(MemoryConfig):
     def resolve_value(self, exception, name, raw_value):
         if raw_value == "":
-            return self.property_for_option_name(name)._default
+            return self.option_for_name(name)._default
         else:
             raise exception
 

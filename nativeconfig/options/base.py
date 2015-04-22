@@ -72,13 +72,13 @@ class BaseOption(property, metaclass=ABCMeta):
         self._one_shot_value = None
 
         if not name:
-            raise InitializationError("'name' cannot be empty.")
+            raise InitializationError("\"name\" cannot be empty!")
 
         if env_name is not None and len(env_name) == 0:
-            raise InitializationError("'env_name' cannot be empty.")
+            raise InitializationError("\"env_name\" cannot be empty!")
 
         if choices is not None and len(choices) == 0:
-            raise InitializationError("'choices' cannot be empty.")
+            raise InitializationError("\"choices\" cannot be empty!")
 
         if choices is not None:
             for c in choices:
@@ -111,7 +111,7 @@ class BaseOption(property, metaclass=ABCMeta):
             return
 
         if self._choices is not None and python_value not in self._choices:
-            raise ValidationError("Value '{}' is not one of the choices {}.".format(python_value, self._choices), python_value)
+            raise ValidationError("Value \"{}\" is not one of the choices {}!".format(python_value, self._choices), python_value)
 
 #{ Serialization and deserialization
 
@@ -168,7 +168,7 @@ class BaseOption(property, metaclass=ABCMeta):
         if self._env_name:
             raw_v = os.getenv(self._env_name)
             if raw_v is not None:
-                LOG.debug("value of '%s' is overridden by environment variable: %s", self._name, raw_v)
+                LOG.debug("value of \"%s\" is overridden by environment variable: %s", self._name, raw_v)
                 raw_v = self.deserialize_json(raw_v)
 
         if raw_v is None:
@@ -178,7 +178,7 @@ class BaseOption(property, metaclass=ABCMeta):
             raw_v = getattr(enclosing_self, self._getter)(self._name)
 
         if raw_v is None:
-            LOG.debug("No value is set for '%s', use default.", self._name)
+            LOG.debug("No value is set for \"%s\", use default.", self._name)
             return self._default
         else:
             try:
@@ -204,17 +204,17 @@ class BaseOption(property, metaclass=ABCMeta):
         if python_value is not None:
             self.validate(python_value)
             raw_value = self.serialize(python_value)
-            LOG.debug("Value of '%s' is set to '%s'.", self._name, raw_value)
+            LOG.debug("Value of \"%s\" is set to \"%s\".", self._name, raw_value)
             getattr(enclosing_self, self._setter)(self._name, raw_value)
         else:
             self.fdel(enclosing_self)
 
     def fdel(self, enclosing_self):
         """
-        Delete Raw Value from the storage.
+        Delete Raw Value from the config.
 
         @param enclosing_self: Instance of class that defines this property.
         """
-        LOG.debug("Delete value of '%s'.", self._name)
+        LOG.debug("Delete value of \"%s\".", self._name)
         getattr(enclosing_self, self._deleter)(self._name)
 #}

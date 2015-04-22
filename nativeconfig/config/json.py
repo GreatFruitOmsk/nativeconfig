@@ -34,7 +34,7 @@ class JSONConfig(BaseConfig):
                     if key in conf:
                         return conf[key]
                     else:
-                        self.LOG.info("Config file doesn't contain the key '%s'.", key)
+                        self.LOG.info("Config file doesn't contain the key \"%s\".", key)
                 except ValueError:
                     self.LOG.exception("Config file isn't valid:")
         except:

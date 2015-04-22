@@ -36,4 +36,4 @@ class PathOption(BaseOption):
     def validate(self, python_value):
         super().validate(python_value)
         if not isinstance(python_value, self._path_type):
-            raise ValidationError("Invalid path '{}'.".format(python_value), python_value)
+            raise ValidationError("Invalid path \"{}\"!".format(python_value), python_value)
