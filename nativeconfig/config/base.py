@@ -32,14 +32,15 @@ class _OrderedClass(ABCMeta):
 
         for k, v in classdict.items():
             if inspect.isdatadescriptor(v):
+                # Subclass may redefine an option. Reposition it appropriately.
                 try:
-                    i = result.ordered_options.index(v._name)
+                    i = result.ordered_options.index(v)
                 except ValueError:
                     pass
                 else:
                     del result.ordered_options[i]
 
-                result.ordered_options.append(v._name)
+                result.ordered_options.append(v)
 
         return result
 
@@ -120,7 +121,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @return: JSON Value. None if such option does not exist.
         @rtype: str or dict or list or None
         """
-        attribute = self.property_for_option_name(name)
+        attribute = self.option_for_name(name)
 
         if attribute:
             return attribute.serialize_json(attribute.fget(self))
@@ -137,7 +138,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @param json_value: JSON value.
         @type json_value: str
         """
-        attribute = self.property_for_option_name(name)
+        attribute = self.option_for_name(name)
 
         if attribute:
             attribute.fset(self, attribute.deserialize_json(json_value))
@@ -154,7 +155,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @param json_value: JSON value.
         @type json_value: str or dict or list or None
         """
-        attribute = self.property_for_option_name(name)
+        attribute = self.option_for_name(name)
 
         if attribute:
             attribute.fset(self, attribute.deserialize_json(json_value))
@@ -168,7 +169,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @param name: Name of the option.
         @type name: str
         """
-        attribute = self.property_for_option_name(name)
+        attribute = self.option_for_name(name)
 
         if attribute:
             attribute.fdel(self)
@@ -195,20 +196,18 @@ class BaseConfig(metaclass=_OrderedClass):
 
 #{ Introspection
 
-    def property_for_option_name(self, name):
+    def option_for_name(self, name):
         """
-        Return property object for an option name. Useful for introspection.
+        Return option (property object) for name.
 
         @param name: Name of an option.
         @type name: str
 
         @rtype: BaseOption or None
         """
-        for attribute_name in dir(type(self)):
-            attribute = getattr(type(self), attribute_name)
-
-            if isinstance(attribute, BaseOption) and attribute._name == name:
-                return attribute
+        for option in self.ordered_options:
+            if option._name == name:
+                return option
         else:
             return None
 
@@ -232,7 +231,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @return: Value to be used based on raw value.
         """
         LOG.error("Unable to deserialize value of \"%s\" from \"%s\": %s.", name, raw_value, exception)
-        return self.property_for_option_name(name)._default
+        return self.option_for_name(name)._default
 
     def migrate(self, version):
         """
