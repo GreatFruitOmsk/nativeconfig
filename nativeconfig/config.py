@@ -579,10 +579,10 @@ class JSONConfig(BaseConfig):
 
     def get_value(self, key):
         v = self._get_json_value(key)
-        return str(v) if v is not None else None
+        return v if v is not None else None
 
-    def set_value(self, key, value):
-        self._set_json_value(key, str(value))
+    def set_value(self, key, raw_value):
+        self._set_json_value(key, raw_value)
 
     def del_value(self, key):
         try:
