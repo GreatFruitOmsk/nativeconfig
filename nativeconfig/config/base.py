@@ -49,16 +49,14 @@ class BaseConfig(metaclass=_OrderedClass):
     """
     Base class for all configs.
 
-    Users are supposed to subclass for each config backend and then instantiate singleton via the get_instance method.
+    Methods that work with options by name does not fail explicitly but use warnings.warn.
 
     @cvar CONFIG_VERSION: Version of the config. Used during migrations and usually should be identical to app's __version__.
     @cvar CONFIG_VERSION_OPTION_NAME: Name of the option that represents config version in backend.
-    @cvar CREATE_IF_NEEDED: Whether entity should be created during initialization of config. E.g. file or registry record.
     @cvar CONFIG_PATH: Implementation-dependent path to config file. See docstring of concrete implementation.
     """
     CONFIG_VERSION = '1.0'
     CONFIG_VERSION_OPTION_NAME = "ConfigVersion"
-    CREATE_IF_NEEDED = True
     CONFIG_PATH = None
 
     _instances = {}

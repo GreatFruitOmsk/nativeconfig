@@ -18,7 +18,7 @@ class JSONConfig(BaseConfig):
     LOG = LOG.getChild('JSONConfig')
 
     def __init__(self):
-        if self.CREATE_IF_NEEDED and not Path(self.CONFIG_PATH).is_file():
+        if not Path(self.CONFIG_PATH).is_file():
             with open(self.CONFIG_PATH, 'w+', encoding='utf-8') as f:
                 f.write(json.dumps({}))
 
