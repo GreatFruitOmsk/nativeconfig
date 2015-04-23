@@ -105,7 +105,7 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         os.environ['TEST_DICT'] = '\"FORTYTWO\"'
 
-        with self.assertRaises(DeserializationError):
+        with self.assertRaises(ValidationError):
             test_dict = c.test_dict
 
         with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
