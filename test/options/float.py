@@ -23,7 +23,11 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.height
         del c.width
-        os.unsetenv('WIDTH')
+        try:
+            del os.environ['WIDTH']
+        except KeyError:
+            pass
+
 
 #{ Custom
 

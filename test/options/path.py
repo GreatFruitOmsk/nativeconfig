@@ -23,7 +23,10 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
     def tearDown(self):
         c = MyConfig.get_instance()
         del c.my_path
-        os.unsetenv('MY_PATH')
+        try:
+            del os.environ['MY_PATH']
+        except KeyError:
+            pass
 
     def test_choices_cannot_be_empty(self):
         c = MyConfig.get_instance()

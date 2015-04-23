@@ -24,7 +24,10 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.name
         del c.surname
-        os.unsetenv('SURNAME')
+        try:
+            del os.environ['SURNAME']
+        except KeyError:
+            pass
 
 #{ Custom
 

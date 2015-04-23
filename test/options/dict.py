@@ -25,7 +25,10 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
     def tearDown(self):
         c = MyConfig.get_instance()
         del c.test_dict
-        os.unsetenv('TEST_DICT')
+        try:
+            del os.environ['TEST_DICT']
+        except KeyError:
+            pass
 
 #{ Custom
 

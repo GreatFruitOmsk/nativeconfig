@@ -25,7 +25,10 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.boolean_true
         del c.boolean_false
-        os.unsetenv('BOOLEAN_TRUE')
+        try:
+            del os.environ['BOOLEAN_TRUE']
+        except KeyError:
+            pass
 
 #{ Custom
 

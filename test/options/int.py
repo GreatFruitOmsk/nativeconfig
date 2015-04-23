@@ -25,7 +25,11 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.fortytwo
         del c.age
-        os.unsetenv('FORTY_TWO')
+        try:
+            del os.environ['FORTY_TWO']
+        except KeyError:
+            pass
+
 
     def test_json_serialization_deserialization(self):
         c = MyConfig.get_instance()
