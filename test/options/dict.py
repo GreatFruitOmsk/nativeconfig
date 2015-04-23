@@ -172,4 +172,11 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
 
         mock_deserialize_json.assert_called_with('{"key2": "value2"}')
         mock_deserialize.assert_called_with({"key2": "value2"})
+
+    def test_env_value_must_be_valid_json(self):
+        os.environ['TEST_DICT'] = ']'
+        with self.assertRaises(DeserializationError):
+            c = MyConfig.get_instance()
+            test_dict = c.test_dict
+
 #}

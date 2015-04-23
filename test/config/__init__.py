@@ -63,7 +63,7 @@ class TestConfigMixin(ABC):
         c.set_value_for_option_name('FirstName', json.dumps('Artem'))
         self.assertEqual(c.first_name, 'Artem')
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DeserializationError):
             c.set_value_for_option_name('FirstName', 'Artem')
 
     def test_set_null_value_for_option_name_deletes_value(self):
@@ -97,7 +97,7 @@ class TestConfigMixin(ABC):
         c.set_one_shot_value_for_option_name('FirstName', json.dumps('Artem'))
         self.assertEqual(c.first_name, 'Artem')
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(DeserializationError):
             c.set_one_shot_value_for_option_name('FirstName', 'Artem')
 
     def test_set_one_shot_value_for_option_name_raises_warn_if_option_not_found(self):

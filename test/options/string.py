@@ -158,4 +158,9 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         mock_deserialize_json.assert_called_with('"b\'\\\\xe6\\\\x9d\\\\x8e\'"')
         mock_deserialize.assert_called_with("b\'\\xe6\\x9d\\x8e\'")
 
+    def test_env_value_must_be_valid_json(self):
+        os.environ['SURNAME'] = "]"
+        with self.assertRaises(DeserializationError):
+            c = MyConfig.get_instance()
+            surname = c.surname
 #}

@@ -212,4 +212,11 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         mock_deserialize_json.assert_called_with('\"true\"')
         mock_deserialize.assert_called_with('true')
 
+    def test_env_value_must_be_valid_json(self):
+        os.environ['BOOLEAN_TRUE'] = ']'
+
+        with self.assertRaises(DeserializationError):
+            c = MyConfig.get_instance()
+            boolean_true = c.boolean_true
+
 #}

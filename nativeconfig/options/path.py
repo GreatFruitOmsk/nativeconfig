@@ -1,7 +1,7 @@
 import json
 from pathlib import PurePath, Path
 
-from nativeconfig.exceptions import ValidationError, InitializationError
+from nativeconfig.exceptions import ValidationError, InitializationError, DeserializationError
 from nativeconfig.options.base import BaseOption
 
 
@@ -38,7 +38,12 @@ class PathOption(BaseOption):
         return json.dumps(str(python_value))
 
     def deserialize_json(self, json_value):
-        return self._path_type(json.loads(json_value))
+        try:
+            raw_path = json.loads(json_value)
+        except ValueError:
+            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+        else:
+            return self._path_type(raw_path)
 
     def validate(self, python_value):
         super().validate(python_value)

@@ -1,3 +1,4 @@
+import json
 from nativeconfig.exceptions import DeserializationError, ValidationError
 from nativeconfig.options.base import BaseOption
 
@@ -21,6 +22,14 @@ class StringOption(BaseOption):
 
     def deserialize(self, raw_value):
         return str(raw_value)  # return a copy
+
+    def deserialize_json(self, json_value):
+        try:
+            value = json.loads(json_value)
+        except ValueError:
+            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+        else:
+            return value
 
     def validate(self, python_value):
         super().validate(python_value)

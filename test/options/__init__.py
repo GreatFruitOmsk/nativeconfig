@@ -87,3 +87,7 @@ class TestOptionMixin(ABC):
     @abstractmethod
     def test_env_is_first_json_deserialized_then_deserialized(self):
         pass
+
+    @abstractmethod
+    def test_env_value_must_be_valid_json(self):
+        pass

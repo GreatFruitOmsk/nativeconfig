@@ -59,6 +59,14 @@ class ArrayOption(BaseOption):
         else:
             return json.dumps(value)
 
+    def deserialize_json(self, json_value):
+        try:
+            value = json.loads(json_value)
+        except ValueError:
+            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+        else:
+            return value
+
     def validate(self, value):
         super().validate(value)
         if type(value) == list:

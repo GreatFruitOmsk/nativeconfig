@@ -1,3 +1,4 @@
+import json
 from nativeconfig.exceptions import DeserializationError, ValidationError
 from nativeconfig.options.base import BaseOption
 
@@ -22,6 +23,14 @@ class FloatOption(BaseOption):
             value = float(raw_value)
         except ValueError:
             raise DeserializationError("Unable to deserialize \"{}\" into float value!".format(raw_value), raw_value)
+        else:
+            return value
+
+    def deserialize_json(self, json_value):
+        try:
+            value = json.loads(json_value)
+        except ValueError:
+            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
         else:
             return value
 

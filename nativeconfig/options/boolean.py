@@ -1,3 +1,4 @@
+import json
 from nativeconfig.exceptions import DeserializationError
 from nativeconfig.options.base import BaseOption
 
@@ -32,3 +33,11 @@ class BooleanOption(BaseOption):
             return False
         else:
             raise DeserializationError("Value \"{}\" must be one of {}!".format(raw_value, self.ALLOWED_RAW_VALUES), raw_value)
+
+    def deserialize_json(self, json_value):
+        try:
+            value = json.loads(json_value)
+        except ValueError:
+            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+        else:
+            return value

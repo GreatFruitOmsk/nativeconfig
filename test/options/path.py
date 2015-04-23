@@ -148,3 +148,11 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
 
         mock_deserialize_json.assert_called_with('\"/home/user\"')
         mock_deserialize.assert_called_with(Path('/home/user'))
+
+    def test_env_value_must_be_valid_json(self):
+        os.environ['MY_PATH'] = "]"
+        with self.assertRaises(DeserializationError):
+            c = MyConfig.get_instance()
+            my_path = c.my_path
+
+#}

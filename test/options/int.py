@@ -165,3 +165,11 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
 
         mock_deserialize_json.assert_called_with('\"14\"')
         mock_deserialize.assert_called_with('14')
+
+    def test_env_value_must_be_valid_json(self):
+        os.environ['FORTY_TWO'] = "]"
+        with self.assertRaises(DeserializationError):
+            c = MyConfig.get_instance()
+            fortytwo = c.fortytwo
+
+#}

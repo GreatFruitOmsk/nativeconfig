@@ -177,4 +177,10 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         mock_deserialize_json.assert_called_with('[1]')
         mock_deserialize.assert_called_with([1])
 
+    def test_env_value_must_be_valid_json(self):
+        os.environ['TEST_ARRAY'] = ']'
+
+        with self.assertRaises(DeserializationError):
+            c = MyConfig.get_instance()
+            test_array = c.test_array
 #}
