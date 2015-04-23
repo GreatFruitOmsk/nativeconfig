@@ -173,16 +173,12 @@ class BaseConfig(metaclass=_OrderedClass):
         Get snapshot of current config.
 
         @return: Dict of option: value format.
-        @rtype: dict
+        @rtype: OrderedDict
         """
-        options = {}
+        options = OrderedDict()
 
-        for attribute_name in dir(type(self)):
-            attribute = getattr(type(self), attribute_name)
-
-            if isinstance(attribute, BaseOption):
-                name = attribute._name
-                options[name] = self.get_value_for_option_name(name)
+        for option in self._ordered_options:
+            options[option._name] = self.get_value_for_option_name(option._name)
 
         return options
 
