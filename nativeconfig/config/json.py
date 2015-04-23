@@ -49,6 +49,8 @@ class JSONConfig(BaseConfig):
 
                 if raw_value is None:
                     conf.pop(key, None)
+                else:
+                    conf[key] = raw_value
 
                 ordered_conf = OrderedDict()
                 for m in self._ordered_options:
