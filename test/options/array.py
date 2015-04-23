@@ -85,15 +85,15 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
 
     def test_serialize_json(self):
         c = MyConfig.get_instance()
-        c.test_array = [1, 2, 3]
-        self.assertEqual(c.get_value_for_option_name('TestArray'), '[1, 2, 3]')
+        c.test_array = ["1", "2", "3"]
+        self.assertEqual(c.get_value_for_option_name('TestArray'), '["1", "2", "3"]')
         c.path_array = [Path("."), Path("..")]
         self.assertEqual(c.get_value_for_option_name('PathArray'), '[".", ".."]')
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
-        c.set_value_for_option_name('TestArray', '[1, "2", 3]')
-        self.assertEqual(c.test_array, [1, "2", 3])
+        c.set_value_for_option_name('TestArray', '["1", "2", "3"]')
+        self.assertEqual(c.test_array, ["1", "2", "3"])
 
     def test_value_can_be_overridden_by_env(self):
         os.environ['TEST_ARRAY'] = '[1, 2, "3"]'
@@ -102,14 +102,14 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_can_be_overridden_by_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('TestArray', '[1]')
-        self.assertEqual(c.test_array, [1])
+        c.set_one_shot_value_for_option_name('TestArray', '["1"]')
+        self.assertEqual(c.test_array, ["1"])
 
     def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
         c = MyConfig.get_instance()
         os.environ['TEST_ARRAY'] = '\"FORTYTWO\"'
 
-        with self.assertRaises(DeserializationError):
+        with self.assertRaises(ValidationError):
             test_array = c.test_array
 
         with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
@@ -142,8 +142,8 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         c.set_one_shot_value_for_option_name('TestArray', '["1", "2", 3]')
 
-        c.test_array = [1]
-        self.assertEqual(c.test_array, [1])
+        c.test_array = ["1"]
+        self.assertEqual(c.test_array, ["1"])
 
     def test_setting_invalid_value_raises_exception(self):
         c = MyConfig.get_instance()

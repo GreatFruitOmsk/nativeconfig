@@ -13,7 +13,7 @@ class ArrayOption(BaseOption):
         """
         Accepts all the arguments of BaseConfig except choices.
         """
-        super().__init__(name, **kwargs)
+        super().__init__(name, setter='set_array_value', getter='get_array_value',  **kwargs)
         if value_option:
             from nativeconfig.options.dict import DictOption
 
@@ -26,33 +26,29 @@ class ArrayOption(BaseOption):
         else:
             self._value_option = None
 
-
     def serialize(self, value):
-        serializable_list = []
         if self._value_option:
+            serializable_list = []
             for i in value:
                 serializable_list.append(self._value_option.serialize(i))
-            return str(serializable_list)
+            return serializable_list
         else:
-            return str(value)
+            return value
 
     def deserialize(self, raw_value):
-        if type(raw_value) == list:
-            return raw_value
-        else:
-            try:
-                raw_list = list(eval(raw_value))
-                if self._value_option:
-                    deserizlized_list = []
-                    for i in raw_list:
-                        deserizlized_list.append(self._value_option.deserialize(i))
-                    value = deserizlized_list
-                else:
-                    value = raw_list
-            except (ValueError, TypeError, NameError):
-                raise DeserializationError("Unable to deserialize '{}' into array.".format(raw_value), raw_value)
+        try:
+            if self._value_option:
+                deserialized_list = []
+                for i in raw_value:
+                    deserialized_list.append(self._value_option.deserialize(i))
+
+                value = deserialized_list
             else:
-                return value
+                value = raw_value
+        except (ValueError, TypeError, NameError):
+            raise DeserializationError("Unable to deserialize '{}' into array.".format(raw_value), raw_value)
+        else:
+            return value
 
     def serialize_json(self, value):
         serializable_list = []
