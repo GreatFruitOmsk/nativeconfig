@@ -51,7 +51,7 @@ class JSONConfig(BaseConfig):
                     conf.pop(key, None)
 
                 ordered_conf = OrderedDict()
-                for m in self.ordered_options:
+                for m in self._ordered_options:
                     if m._name in conf:
                         ordered_conf[m._name] = conf.pop(m._name)
 

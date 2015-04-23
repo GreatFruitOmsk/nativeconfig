@@ -193,7 +193,7 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @rtype: BaseOption or None
         """
-        for option in self.ordered_options:
+        for option in self._ordered_options:
             if option._name == name:
                 return option
         else:
