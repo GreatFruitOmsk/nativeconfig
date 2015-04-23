@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PosixPath, WindowsPath
 import unittest
 from unittest.mock import patch
 
@@ -7,12 +7,12 @@ from nativeconfig.exceptions import InitializationError, DeserializationError, V
 from nativeconfig.options.path import PathOption
 
 from test import DummyMemoryConfig
-from test import all_casings
 from test.options import TestOptionMixin
 
 
 class MyConfig(DummyMemoryConfig):
     my_path = PathOption('MyPath', env_name='MY_PATH', default=Path("."))
+    pure_path = PathOption('PurePath', path_type=PurePosixPath, default=PurePosixPath("."))
 
 
 class TestPathOption(unittest.TestCase, TestOptionMixin):
@@ -29,6 +29,16 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         with self.assertRaises(InitializationError):
             c.empty_choices = PathOption('EmptyChoices', choices=[], default=Path("."))
+
+    def test_path_type_must_be_subclass_of_purepath(self):
+        with self.assertRaises(InitializationError):
+            class MyConfig(DummyMemoryConfig):
+                option = self.OPTION_TYPE('Bar', path_type=PathOption)
+
+    def test_path_type_cannot_be_none(self):
+        with self.assertRaises(InitializationError):
+            class MyConfig(DummyMemoryConfig):
+                option = self.OPTION_TYPE('Baz', path_type=None)
 
     def test_default_value_must_be_one_of_choices_if_any(self):
         c = MyConfig.get_instance()

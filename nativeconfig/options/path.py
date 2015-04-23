@@ -1,7 +1,7 @@
 import json
-from pathlib import PurePosixPath, PureWindowsPath
+from pathlib import PurePath, Path
 
-from nativeconfig.exceptions import ValidationError
+from nativeconfig.exceptions import ValidationError, InitializationError
 from nativeconfig.options.base import BaseOption
 
 
@@ -10,16 +10,23 @@ class PathOption(BaseOption):
     PathOption represents pathlib's Path in config.
     """
 
-    def __init__(self, name, *, path_type, **kwargs):
+    def __init__(self, name, *, path_type=Path, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
         """
-        super().__init__(name, **kwargs)
-
-        if not issubclass(path_type, PurePosixPath) and not issubclass(path_type, PureWindowsPath):
-            raise ValidationError()
+        try:
+            if not issubclass(path_type, PurePath):
+                raise InitializationError(
+                    "Path type should be subclass of PurePath")
+        except:
+            raise InitializationError(
+                "Path type should be subclass of PurePath")
 
         self._path_type = path_type
+
+        # call superclass's init() after _path_type initialization because BaseOption's init() calls validate(),
+        # and in validate() we must already have valid _path_type
+        super().__init__(name, **kwargs)
 
     def serialize(self, python_value):
         return str(python_value)
