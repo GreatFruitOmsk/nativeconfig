@@ -1,0 +1,295 @@
+from abc import ABC, abstractmethod
+import json
+import os
+from unittest.mock import MagicMock
+from warnings import catch_warnings
+
+from nativeconfig.options import StringOption, IntOption
+from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
+
+
+class TestConfigMixin(ABC):
+    CONFIG_TYPE = None
+
+    def tearDown(self):
+        if 'FIRST_NAME' in os.environ:
+            del os.environ['FIRST_NAME']
+
+    def test_exception_is_raised_for_duplicate_options(self):
+        with self.assertRaises(AttributeError):
+            class MyConfig(self.CONFIG_TYPE):
+                first_name = StringOption('Name')
+                last_name = StringOption('Name')
+            MyConfig.get_instance()
+
+    def test_default_values_are_not_written_to_config(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        self.assertEqual(MyConfig.get_instance().get_value('FirstName'), None)
+
+    def test_get_value_for_option_name_returns_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        self.assertEqual(json.loads(c.get_value_for_option_name('FirstName')), 'Ilya')
+
+    def test_get_value_for_option_returns_None_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        self.assertEqual(c.get_value_for_option_name('LastName'), None)
+
+    def test_get_value_for_option_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with catch_warnings(record=True) as w:
+            c.get_value_for_option_name('LastName')
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[-1].category, UserWarning)
+            self.assertIn('LastName', str(w[-1].message))
+
+    def test_set_value_for_option_name_accepts_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.set_value_for_option_name('FirstName', json.dumps('Artem'))
+        self.assertEqual(c.first_name, 'Artem')
+
+        with self.assertRaises(ValueError):
+            c.set_value_for_option_name('FirstName', 'Artem')
+
+    def test_set_null_value_for_option_name_deletes_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.first_name = 'Artem'
+        self.assertEqual(c.get_value_for_option_name('FirstName'), '"Artem"')
+        c.set_value_for_option_name('FirstName', json.dumps(None))
+        self.assertEqual(c.get_value('FirstName'), None)
+
+    def test_set_value_for_option_name_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with catch_warnings(record=True) as w:
+            c.set_value_for_option_name('LastName', 'Kulakov')
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[-1].category, UserWarning)
+            self.assertIn('LastName', str(w[-1].message))
+
+    def test_set_one_shot_value_for_option_name_accepts_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Artem'))
+        self.assertEqual(c.first_name, 'Artem')
+
+        with self.assertRaises(ValueError):
+            c.set_one_shot_value_for_option_name('FirstName', 'Artem')
+
+    def test_set_one_shot_value_for_option_name_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with catch_warnings(record=True) as w:
+            c.set_one_shot_value_for_option_name('LastName', 'Kulakov')
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[-1].category, UserWarning)
+            self.assertIn('LastName', str(w[-1].message))
+
+    def test_one_shot_value_overrides_config(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_value_for_option_name('FirstName', json.dumps('Artem'))
+
+        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Ivan'))
+        self.assertEqual(c.first_name, 'Ivan')
+
+    def test_one_shot_value_does_not_override_env(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', env_name='FIRST_NAME')
+
+        c = MyConfig.get_instance()
+        os.environ['FIRST_NAME'] = json.dumps('Ivan')
+        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Artem'))
+        self.assertEqual(c.first_name, 'Ivan')
+
+    def test_one_shot_value_reset_by_set(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Artem'))
+        self.assertEqual(c.first_name, 'Artem')
+        c.first_name = 'Ivan'
+        self.assertEqual(c.first_name, 'Ivan')
+
+    def test_del_value_for_option_name_deletes_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.first_name = 'Ivan'
+        c.del_value_for_option_name('FirstName')
+        self.assertEqual(c.get_value('FirstName'), None)
+
+    def test_del_value_for_option_name_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with catch_warnings(record=True) as w:
+            c.del_value_for_option_name('LastName')
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[-1].category, UserWarning)
+            self.assertIn('LastName', str(w[-1].message))
+
+    def test_snapshot_returns_ordered_dict_of_json_objects(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+            last_name = StringOption('LastName', default='Kulakov')
+
+        c = MyConfig.get_instance()
+        s = c.snapshot()
+        self.assertEqual(list(s.items())[0][0], c._ordered_options[0]._name)
+        self.assertEqual(list(s.items())[1][0], c._ordered_options[1]._name)
+
+    def test_option_for_name_returns_property(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        self.assertEqual(c.option_for_name('FirstName'), getattr(MyConfig, 'first_name'))
+
+    def test_option_for_name_returns_None_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        self.assertEqual(c.option_for_name('LastName'), None)
+
+    def test_resolve_value_is_called_to_resolve_broken_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber')
+
+        c = MyConfig.get_instance()
+        c.resolve_value = MagicMock()
+        c.set_value('LuckyNumber', 'NotANumber')
+        c.lucky_number
+        self.assertEqual(c.resolve_value.call_count, 1)
+        self.assertIsInstance(c.resolve_value.call_args[0][0], DeserializationError)
+        self.assertEqual(c.resolve_value.call_args[0][1], 'LuckyNumber')
+        self.assertEqual(c.resolve_value.call_args[0][2], 'NotANumber')
+
+    def test_get_value_returns_raw_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber')
+
+        c = MyConfig.get_instance()
+        c.lucky_number = 1
+        self.assertEqual(c.get_value('LuckyNumber'), '1')
+
+    def test_get_value_returns_None_if_option_does_not_exist(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber')
+
+        c = MyConfig.get_instance()
+        c.lucky_number = 1
+        self.assertEqual(c.get_value('UnluckyNumber'), None)
+
+    def test_set_value_accepts_raw_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber')
+
+        c = MyConfig.get_instance()
+        c.set_value('LuckyNumber', '2')
+        self.assertEqual(c.lucky_number, 2)
+
+    def test_set_None_value_deletes_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber')
+
+        c = MyConfig.get_instance()
+        c.set_value('LuckyNumber', None)
+        self.assertEqual(c.get_value('LuckyNumber'), None)
+
+    def test_del_value_deletes_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber')
+
+        c = MyConfig.get_instance()
+        c.lucky_number = 1
+        c.del_value('LuckyNumber')
+        self.assertEqual(c.get_value('LuckyNumber'), None)
+
+    def test_get_array_value_returns_list(self):
+        pass
+
+    def test_get_array_value_returns_None_if_option_does_not_exist(self):
+        pass
+
+    def test_set_array_value_accepts_iterable(self):
+        pass
+
+    def test_set_array_value_raises_exception_if_value_is_not_iterable(self):
+        pass
+
+    def test_get_dict_value_returns_dict(self):
+        pass
+
+    def test_get_dict_value_returns_None_if_option_does_not_exist(self):
+        pass
+
+    def test_set_dict_value_accepts_dict(self):
+        pass
+
+    def test_set_dict_value_raises_exception_if_value_is_not_dict(self):
+        pass
+
+    def test_default_value_is_used_when_no_value_in_config(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber', default=42)
+
+        c = MyConfig.get_instance()
+        self.assertEqual(c.lucky_number, 42)
+
+    def test_overriding_base_option_moves_it_the_end(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber', default=42)
+            first_name = StringOption('FirstName')
+            last_name = StringOption('LastName')
+
+        class SubMyConfig(MyConfig):
+            lucky_number = IntOption('LuckyNumber', default=9000)
+
+        old_index = 0
+        for i, option in enumerate(MyConfig._ordered_options):
+            if option._name == 'LuckyNumber':
+                old_index = i
+                break
+
+        new_index = 0
+        for i, option in enumerate(SubMyConfig._ordered_options):
+            if option._name == 'LuckyNumber':
+                new_index = i
+                break
+
+        self.assertNotEqual(old_index, new_index)
