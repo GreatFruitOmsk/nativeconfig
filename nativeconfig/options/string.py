@@ -5,32 +5,28 @@ from nativeconfig.options.base import BaseOption
 class StringOption(BaseOption):
     """
     StringOption represents Python string in config.
-
     """
-
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, *, allow_empty=True, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
+
+        @param allow_empty: Allow values of empty string.
+        @type allow_empty: bool
         """
+        self._allow_empty = allow_empty
         super().__init__(name, **kwargs)
 
     def serialize(self, python_value):
-        return str(python_value).encode('utf-8')
+        return str(python_value)
 
     def deserialize(self, raw_value):
-        if raw_value == "":
-            raise DeserializationError("Unable to deserialize \"{}\" into string value!".format(raw_value), raw_value)
-        else:
-            try:
-                value = eval(raw_value).decode('utf-8')
-            except (ValueError, TypeError):
-                raise DeserializationError("Unable to deserialize \"{}\" into string value!".format(raw_value), raw_value)
-            else:
-                return value
+        return str(raw_value)  # return a copy
 
     def validate(self, python_value):
         super().validate(python_value)
-        if type(python_value) == str:
-            return
-        else:
+
+        if not isinstance(python_value, str):
             raise ValidationError("Invalid string value \"{}\"!".format(python_value), python_value)
+
+        if not self._allow_empty and len(python_value) == 0:
+            raise ValidationError("Empty values are disallowed!", python_value)
