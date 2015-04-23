@@ -118,6 +118,7 @@ class BaseConfig(metaclass=_OrderedClass):
             return attribute.serialize_json(attribute.fget(self))
         else:
             warn("No option named \"{}\".".format(name))
+            return None
 
     def set_value_for_option_name(self, name, json_value):
         """
