@@ -127,7 +127,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @param name: Name of the option.
         @type name: str or dict or list or None
 
-        @param json_value: JSON value.
+        @param json_value: JSON value. If 'null', value will be deleted.
         @type json_value: str
         """
         attribute = self.option_for_name(name)
