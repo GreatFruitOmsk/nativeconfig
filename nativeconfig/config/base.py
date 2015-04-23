@@ -22,25 +22,18 @@ class _OrderedClass(ABCMeta):
 
     def __new__(cls, name, bases, classdict):
         result = type.__new__(cls, name, bases, dict(classdict))
-        result.ordered_options = []
+        result._ordered_options = []
 
         # Get ordered options from base class.
         mro = inspect.getmro(result)
         if len(mro) > 1:
-            if hasattr(mro[1], 'ordered_options'):
-                result.ordered_options.extend(mro[1].ordered_options)
+            if hasattr(mro[1], '_ordered_options'):
+                result._ordered_options.extend(mro[1]._ordered_options)
 
-        for k, v in classdict.items():
-            if inspect.isdatadescriptor(v):
-                # Subclass may redefine an option. Reposition it appropriately.
-                try:
-                    i = result.ordered_options.index(v)
-                except ValueError:
-                    pass
-                else:
-                    del result.ordered_options[i]
-
-                result.ordered_options.append(v)
+        new_options = [v for k, v in classdict.items() if inspect.isdatadescriptor(v)]
+        new_option_names = [o._name for o in new_options]
+        result._ordered_options = [o for o in result._ordered_options if o._name not in new_option_names]
+        result._ordered_options.extend(new_options)
 
         return result
 
