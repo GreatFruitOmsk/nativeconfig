@@ -11,8 +11,9 @@ from test.options import TestOptionMixin
 
 
 class MyConfig(DummyMemoryConfig):
-    name = StringOption('Name', default='Pheoktist')
+    name = StringOption('Name', allow_empty=False, default='Pheoktist')
     surname = StringOption('Surname', env_name='SURNAME')
+    test_string = StringOption('TestString', env_name='TEST_STRING', choices=['str1', 'str2'], default='str1')
 
 
 class TestStringOption(unittest.TestCase, TestOptionMixin):
@@ -31,7 +32,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
 
 #{ Custom
 
-    def test_cannot_be_empty(self):
+    def test_cannot_be_empty_if_disallowed(self):
         c = MyConfig.get_instance()
 
         c.set_value('Name', "")
@@ -81,7 +82,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.name, "Вячеслав")
 
     def test_value_can_be_overridden_by_env(self):
-        os.environ['SURNAME'] = json.dumps(str("李".encode('utf-8')))
+        os.environ['SURNAME'] = json.dumps("李")
         c = MyConfig.get_instance()
         self.assertEqual(c.surname, "李")
 
@@ -92,25 +93,25 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
         c = MyConfig.get_instance()
-        os.environ['SURNAME'] = "1"
+        os.environ['TEST_STRING'] = json.dumps('str3')
 
-        with self.assertRaises(DeserializationError):
-            surname = c.surname
+        with self.assertRaises(ValidationError):
+            test_string = c.test_string
 
         with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
-            surname = c.surname
-            self.assertEqual(surname, 'unresolved')
+            test_string = c.test_string
+            self.assertEqual(test_string, 'unresolved')
 
-            os.environ['SURNAME'] = json.dumps(str("李".encode('utf-8')))
-            surname = c.surname
-            self.assertEqual(surname, "李")
+            os.environ['TEST_STRING'] = json.dumps('str2')
+            test_string = c.test_string
+            self.assertEqual(test_string, 'str2')
 
     def test_invalid_deserialized_value_during_get_calls_resolver(self):
         class StringOptions(DummyMemoryConfig):
              string_option = StringOption('StringOption', choices=["String 1", "String 2"], env_name='STRING_OPTION', default="String 1")
 
         c = StringOptions.get_instance()
-        os.environ['STRING_OPTION'] = json.dumps(str("String 3".encode('utf-8')))
+        os.environ['STRING_OPTION'] = json.dumps("String 3")
 
         with self.assertRaises(ValidationError):
             string_option = c.string_option
@@ -119,7 +120,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
             string_option = c.string_option
             self.assertEqual(string_option, 'unresolved')
 
-            os.environ['STRING_OPTION'] = json.dumps(str("String 2".encode('utf-8')))
+            os.environ['STRING_OPTION'] = json.dumps("String 2")
             string_option = c.string_option
             self.assertEqual(string_option, "String 2")
 
