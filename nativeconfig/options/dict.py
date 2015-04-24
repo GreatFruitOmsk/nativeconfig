@@ -45,7 +45,7 @@ class DictOption(BaseOption):
                 value = deserialized_dict
             else:
                 value = raw_value
-        except ValueError:
+        except DeserializationError:
             raise DeserializationError("Unable to deserialize \"{}\" into dict!".format(raw_value), raw_value)
         else:
             return value

@@ -6,6 +6,7 @@ from unittest.mock import patch
 from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
 from nativeconfig.options import PathOption, StringOption, ArrayOption
 from nativeconfig.options.dict import DictOption
+from nativeconfig.options.float import FloatOption
 
 from test import DummyMemoryConfig
 from test.options import TestOptionMixin
@@ -14,7 +15,7 @@ from test.options import TestOptionMixin
 class MyConfig(DummyMemoryConfig):
     test_dict = DictOption('TestDict', env_name='TEST_DICT', default={"key1": "value1", "key2": "value2"})
     path_dict = DictOption('PathDict', value_option=PathOption('PathOption', path_type=Path))
-    a = PathOption('A', path_type=Path, default=Path('test'))
+    float_dict = DictOption('FloatDict', value_option=FloatOption('FloatOption'))
 
 
 class TestDictOption(unittest.TestCase, TestOptionMixin):
@@ -46,6 +47,12 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(InitializationError):
             c = MyConfig.get_instance()
             c.array_option = self.OPTION_TYPE('DictOption', value_option=DictOption('test'))
+
+    def test_option_raises_deserialization_error_if_value_option_invalid(self):
+        c = MyConfig.get_instance()
+        with self.assertRaises(DeserializationError):
+            c.float_dict = {"Key": "not_float"}
+            float_dict = c.float_dict
 
 #{ TestOptionMixin
 

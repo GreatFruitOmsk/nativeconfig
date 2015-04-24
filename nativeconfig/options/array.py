@@ -45,7 +45,7 @@ class ArrayOption(BaseOption):
                 value = deserialized_list
             else:
                 value = raw_value
-        except (ValueError, TypeError, NameError):
+        except DeserializationError:
             raise DeserializationError("Unable to deserialize '{}' into array.".format(raw_value), raw_value)
         else:
             return value

@@ -6,6 +6,7 @@ from unittest.mock import patch
 from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
 from nativeconfig.options.array import ArrayOption
 from nativeconfig.options.dict import DictOption
+from nativeconfig.options.float import FloatOption
 from nativeconfig.options.path import PathOption
 from nativeconfig.options.string import StringOption
 
@@ -15,8 +16,8 @@ from test.options import TestOptionMixin
 
 class MyConfig(DummyMemoryConfig):
     test_array = ArrayOption('TestArray', env_name='TEST_ARRAY', default=["1", "2", "3"])
-    path_array = ArrayOption('PathArray', value_option=PathOption('PathContainer', path_type=Path, choices=[Path("."), Path("..")]))
-    path_option = PathOption('PathOption', path_type=Path, default=Path('.'))
+    path_array = ArrayOption('PathArray', value_option=PathOption('PathOption', path_type=Path, choices=[Path("."), Path("..")]))
+    float_array = ArrayOption('FloatArray', value_option=FloatOption('FloatOption'))
 
 
 class TestArrayOption(unittest.TestCase, TestOptionMixin):
@@ -49,6 +50,11 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
             c = MyConfig.get_instance()
             c.array_option = self.OPTION_TYPE('ArrayOption2', value_option=DictOption('test'))
 
+    def test_option_raises_deserialization_error_if_value_option_invalid(self):
+        c = MyConfig.get_instance()
+        with self.assertRaises(DeserializationError):
+            c.float_array = ["not_float"]
+            float_array = c.float_array
 
 #{ TestOptionMixin
 
