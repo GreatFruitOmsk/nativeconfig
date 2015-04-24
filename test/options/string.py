@@ -14,6 +14,7 @@ class MyConfig(DummyMemoryConfig):
     name = StringOption('Name', allow_empty=False, default='Pheoktist')
     surname = StringOption('Surname', env_name='SURNAME')
     test_string = StringOption('TestString', env_name='TEST_STRING', choices=['str1', 'str2'], default='str1')
+    empty_string = StringOption('EmptyString')
 
 
 class TestStringOption(unittest.TestCase, TestOptionMixin):
@@ -38,6 +39,11 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         c.set_value('Name', "")
         self.assertEqual(c.name, 'Pheoktist')
 
+    def test_can_be_empty_if_allowed(self):
+        c = MyConfig.get_instance()
+        c.empty_string = ''
+        empty_string = c.empty_string
+        self.assertEqual(empty_string, '')
 
 #{ TestOptionMixin
 
