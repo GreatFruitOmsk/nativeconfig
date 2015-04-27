@@ -293,3 +293,7 @@ class TestConfigMixin(ABC):
                 break
 
         self.assertNotEqual(old_index, new_index)
+
+    @abstractmethod
+    def test_config_is_created_if_not_found(self):
+        pass
