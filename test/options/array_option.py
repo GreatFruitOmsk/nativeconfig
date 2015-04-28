@@ -4,11 +4,11 @@ import unittest
 from unittest.mock import patch
 
 from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
-from nativeconfig.options.array import ArrayOption
-from nativeconfig.options.dict import DictOption
-from nativeconfig.options.float import FloatOption
-from nativeconfig.options.path import PathOption
-from nativeconfig.options.string import StringOption
+from nativeconfig.options.array_option import ArrayOption
+from nativeconfig.options.dict_option import DictOption
+from nativeconfig.options.float_option import FloatOption
+from nativeconfig.options.path_option import PathOption
+from nativeconfig.options.string_option import StringOption
 
 from test import DummyMemoryConfig
 from test.options import TestOptionMixin

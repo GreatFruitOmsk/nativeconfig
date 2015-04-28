@@ -1,4 +1,4 @@
-from nativeconfig.config.base import BaseConfig
+from nativeconfig.config.base_config import BaseConfig
 
 
 class MemoryConfig(BaseConfig):

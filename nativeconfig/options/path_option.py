@@ -2,7 +2,7 @@ import json
 from pathlib import PurePath, Path
 
 from nativeconfig.exceptions import ValidationError, InitializationError, DeserializationError
-from nativeconfig.options.base import BaseOption
+from nativeconfig.options.base_option import BaseOption
 
 
 class PathOption(BaseOption):

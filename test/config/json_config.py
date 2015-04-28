@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from nativeconfig.config.json import JSONConfig
-from nativeconfig.options.string import StringOption
+from nativeconfig.config.json_config import JSONConfig
+from nativeconfig.options.string_option import StringOption
 
 from test.config import TestConfigMixin
 

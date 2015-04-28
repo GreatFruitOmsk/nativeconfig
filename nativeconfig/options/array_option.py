@@ -1,6 +1,6 @@
 import json
 from nativeconfig.exceptions import DeserializationError, ValidationError, InitializationError
-from nativeconfig.options.base import BaseOption
+from nativeconfig.options.base_option import BaseOption
 
 
 class ArrayOption(BaseOption):
@@ -15,7 +15,7 @@ class ArrayOption(BaseOption):
         """
         super().__init__(name, setter='set_array_value', getter='get_array_value',  **kwargs)
         if value_option:
-            from nativeconfig.options.dict import DictOption
+            from nativeconfig.options.dict_option import DictOption
 
             if isinstance(value_option, BaseOption) \
             and not isinstance(value_option, ArrayOption) \

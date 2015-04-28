@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
-from nativeconfig.options.path import PathOption
+from nativeconfig.options.path_option import PathOption
 
 from test import DummyMemoryConfig
 from test.options import TestOptionMixin

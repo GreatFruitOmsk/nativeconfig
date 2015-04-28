@@ -1,30 +1,27 @@
 import json
 from nativeconfig.exceptions import DeserializationError, ValidationError
-from nativeconfig.options.base import BaseOption
+from nativeconfig.options.base_option import BaseOption
 
 
-class FloatOption(BaseOption):
+class StringOption(BaseOption):
     """
-    FloatOption represents Python float in config.
-
+    StringOption represents Python string in config.
     """
-
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, *, allow_empty=True, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
+
+        @param allow_empty: Allow values of empty string.
+        @type allow_empty: bool
         """
+        self._allow_empty = allow_empty
         super().__init__(name, **kwargs)
 
     def serialize(self, python_value):
         return str(python_value)
 
     def deserialize(self, raw_value):
-        try:
-            value = float(raw_value)
-        except ValueError:
-            raise DeserializationError("Unable to deserialize \"{}\" into float value!".format(raw_value), raw_value)
-        else:
-            return value
+        return str(raw_value)  # return a copy
 
     def deserialize_json(self, json_value):
         try:
@@ -36,7 +33,9 @@ class FloatOption(BaseOption):
 
     def validate(self, python_value):
         super().validate(python_value)
-        try:
-            valid_val = float(python_value)
-        except ValueError:
-            raise ValidationError("Invalid float value \"{}\"!".format(python_value), python_value)
+
+        if not isinstance(python_value, str):
+            raise ValidationError("Invalid string value \"{}\"!".format(python_value), python_value)
+
+        if not self._allow_empty and len(python_value) == 0:
+            raise ValidationError("Empty values are disallowed!", python_value)

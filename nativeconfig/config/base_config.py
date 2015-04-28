@@ -5,7 +5,7 @@ import logging
 import threading
 from warnings import warn
 
-from nativeconfig.options.base import BaseOption
+from nativeconfig.options.base_option import BaseOption
 from nativeconfig.options import StringOption
 
 

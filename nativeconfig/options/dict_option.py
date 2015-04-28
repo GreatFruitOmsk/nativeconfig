@@ -1,6 +1,6 @@
 import json
 from nativeconfig.exceptions import DeserializationError, ValidationError, InitializationError
-from nativeconfig.options.base import BaseOption
+from nativeconfig.options.base_option import BaseOption
 
 
 class DictOption(BaseOption):

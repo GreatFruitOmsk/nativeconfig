@@ -1,6 +1,6 @@
 import json
 from nativeconfig.exceptions import DeserializationError
-from nativeconfig.options.base import BaseOption
+from nativeconfig.options.base_option import BaseOption
 
 
 class BooleanOption(BaseOption):
