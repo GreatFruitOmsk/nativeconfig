@@ -7,10 +7,10 @@ nativeconfig
     :target: http://badge.fury.io/py/nativeconfig
 
 
-Developers of cross-platform applications often face problems when they need interact with the system.
+Developers of cross-platform applications often face problems when they need to interact with the system.
 Config files are no exception, since every popular OS has its own format and guidelines.
 
-This package addresses this very problem in an elegant and Pythonic way:
+nativeconfig addresses this problem in an elegant and Pythonic way:
 
 .. code-block:: python
 
@@ -24,3 +24,5 @@ This package addresses this very problem in an elegant and Pythonic way:
         first_name = StringOption('FirstName')
         last_name = StringOption('LastName')
         age = IntOption('Age')
+
+will store config in Registry on Windows, in NSUserDefaults on Mac OS X and in json-formatted file everywhere else.
