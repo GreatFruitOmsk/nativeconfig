@@ -79,13 +79,13 @@ class JSONConfig(BaseConfig):
     def get_array_value(self, key):
         return self.get_value(key)
 
-    def set_array_value(self, key, raw_value):
-        self.set_value(key, raw_value)
+    def set_array_value(self, key, value):
+        self.set_value(key, value)
 
     def get_dict_value(self, key):
         return self.get_value(key)
 
-    def set_dict_value(self, key, raw_value):
-        self.set_value(key, raw_value)
+    def set_dict_value(self, key, value):
+        self.set_value(key, value)
 
 #}
