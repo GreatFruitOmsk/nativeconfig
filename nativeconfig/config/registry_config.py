@@ -1,5 +1,4 @@
 import logging
-import sys
 import winreg
 
 from nativeconfig.config.base_config import BaseConfig
@@ -35,7 +34,7 @@ def traverse_registry_key(key, sub_key):
 
 class RegistryConfig(BaseConfig):
     """
-    Stores config in Windows Registry.
+    Store config in Windows Registry.
 
     @cvar REGISTRY_KEY: Key that followed by CONFIG_PATH points to location of config. I.e. REGISTRY_KEY\CONFIG_PATH is the full path.
     """

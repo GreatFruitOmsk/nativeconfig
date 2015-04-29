@@ -25,6 +25,7 @@ class TestConfigMixin(ABC):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
+        MyConfig.get_instance().del_value_for_option_name('FirstName')
         self.assertEqual(MyConfig.get_instance().get_value('FirstName'), None)
 
     def test_get_value_for_option_name_returns_json(self):
@@ -34,21 +35,14 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
         self.assertEqual(json.loads(c.get_value_for_option_name('FirstName')), 'Ilya')
 
-    def test_get_value_for_option_returns_None_if_option_not_found(self):
-        class MyConfig(self.CONFIG_TYPE):
-            first_name = StringOption('FirstName', default='Ilya')
-
-        c = MyConfig.get_instance()
-        self.assertEqual(c.get_value_for_option_name('LastName'), None)
-
-    def test_get_value_for_option_raises_warn_if_option_not_found(self):
+    def test_get_value_for_option_returns_None_and_raises_warn_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
 
         with self.assertWarns(UserWarning):
-            c.get_value_for_option_name('LastName')
+            self.assertEqual(c.get_value_for_option_name('LastName'), None)
 
     def test_set_value_for_option_name_accepts_json(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -311,6 +305,7 @@ class TestConfigMixin(ABC):
             lucky_number = IntOption('LuckyNumber', default=42)
 
         c = MyConfig.get_instance()
+        c.del_value_for_option_name('LuckyNumber')
         self.assertEqual(c.lucky_number, 42)
 
     def test_overriding_base_option_moves_it_the_end(self):

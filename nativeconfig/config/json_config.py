@@ -11,9 +11,9 @@ LOG = logging.getLogger('nativeconfig')
 
 class JSONConfig(BaseConfig):
     """
-    Stores config in a JSON file as a dictionary. Fields are written in order of definition.
+    Store config in a JSON file as a dictionary. Fields are written in order of definition.
 
-    CONFIG_PATH is should be a path to the config file.
+    CONFIG_PATH should be a path to the config file.
     """
     LOG = LOG.getChild('JSONConfig')
 
