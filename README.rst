@@ -7,22 +7,20 @@ nativeconfig
     :target: http://badge.fury.io/py/nativeconfig
 
 
-Developers of cross-platform applications often face problems when application should interact with the system.  
-And config files are no exception, since every popular OS has its own format and guidelines.
+Developers of cross-platform applications often face problems when they need interact with the system.
+Config files are no exception, since every popular OS has its own format and guidelines.
 
 This package addresses this very problem in an elegant and Pythonic way:
 
 .. code-block:: python
 
     import os
-    from nativeconfig import PreferredConfig, Option, ChoiceOption, IntOption
+    from nativeconfig import PreferredConfig, StringOption, IntOption
 
-    class SuperbConfig(PreferredConfig):
+    class MyConfig(PreferredConfig):
         REGISTRY_PATH = r'Software\MyApp'
         JSON_PATH = os.path.expanduser('~/.config/MyApp/config')
         
-        name = Option('Name')
-        sex = ChoiceOption('Sex', ['male', 'female'], default='female')
-        favorite_number = IntOption('FavoriteNumber', default=42)
-
-We just created a config that will use appropriate locations on Windows, Mac OS X and Linux!
+        first_name = StringOption('FirstName')
+        last_name = StringOption('LastName')
+        age = IntOption('Age')
