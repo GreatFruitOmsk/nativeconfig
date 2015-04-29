@@ -11,14 +11,14 @@ if sys.platform.startswith('win32'):
     from test.config import TestConfigMixin
 
     class MyRegistryConfig(RegistryConfig):
-        CONFIG_PATH = r'Software\test_config'
+        REGISTRY_PATH = r'Software\test_config'
 
     class TestRegistryConfig(unittest.TestCase, TestConfigMixin):
         CONFIG_TYPE = MyRegistryConfig
 
         def tearDown(self):
             try:
-                for k in traverse_registry_key(MyRegistryConfig.REGISTRY_KEY, MyRegistryConfig.CONFIG_PATH):
+                for k in traverse_registry_key(MyRegistryConfig.REGISTRY_KEY, MyRegistryConfig.REGISTRY_PATH):
                     winreg.DeleteKey(MyRegistryConfig.REGISTRY_KEY, k)
             except OSError:
                 pass
@@ -30,8 +30,8 @@ if sys.platform.startswith('win32'):
                 first_name = StringOption('FirstName', default='Ilya')
 
             with self.assertRaises(FileNotFoundError):
-                winreg.OpenKey(MyRegistryConfig.REGISTRY_KEY, MyRegistryConfig.CONFIG_PATH)
+                winreg.OpenKey(MyRegistryConfig.REGISTRY_KEY, MyRegistryConfig.REGISTRY_PATH)
 
             MyConfig.get_instance()
 
-            winreg.OpenKey(MyRegistryConfig.REGISTRY_KEY, MyRegistryConfig.CONFIG_PATH)
+            winreg.OpenKey(MyRegistryConfig.REGISTRY_KEY, MyRegistryConfig.REGISTRY_PATH)

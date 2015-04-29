@@ -36,13 +36,14 @@ class RegistryConfig(BaseConfig):
     """
     Store config in Windows Registry.
 
-    @cvar REGISTRY_KEY: Key that followed by CONFIG_PATH points to location of config. I.e. REGISTRY_KEY\CONFIG_PATH is the full path.
+    @cvar REGISTRY_KEY: Key in the registry where config will be stored.
+    @cvar REGISTRY_PATH: Path relative to REGISTRY_KEY that points to the config.
     """
     LOG = LOG.getChild('RegistryConfig')
     REGISTRY_KEY = winreg.HKEY_CURRENT_USER
 
     def __init__(self):
-        k = winreg.CreateKey(self.REGISTRY_KEY, self.CONFIG_PATH)
+        k = winreg.CreateKey(self.REGISTRY_KEY, self.REGISTRY_PATH)
         winreg.CloseKey(k)
 
         super(RegistryConfig, self).__init__()
@@ -51,7 +52,7 @@ class RegistryConfig(BaseConfig):
 
     def get_value(self, name):
         try:
-            with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH) as app_key:
+            with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
                 try:
                     value, value_type = winreg.QueryValueEx(app_key, name)
 
@@ -69,7 +70,7 @@ class RegistryConfig(BaseConfig):
     def set_value(self, name, raw_value):
         try:
             if raw_value is not None:
-                with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH, 0, winreg.KEY_WRITE) as app_key:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_SZ, raw_value)
             else:
                 self.del_value(name)
@@ -79,17 +80,17 @@ class RegistryConfig(BaseConfig):
     def del_value(self, name):
         try:
             try:
-                for k in traverse_registry_key(self.REGISTRY_KEY, r'{}\{}'.format(self.CONFIG_PATH, name)):
+                for k in traverse_registry_key(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)):
                     winreg.DeleteKey(self.REGISTRY_KEY, k)
             except OSError:
-                with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH, 0, winreg.KEY_ALL_ACCESS) as app_key:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_ALL_ACCESS) as app_key:
                     winreg.DeleteValue(app_key, name)
         except:
             self.LOG.info("Unable to delete \"%s\" from the registry:", name)
 
     def get_array_value(self, name):
         try:
-            with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH) as app_key:
+            with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
                 value, value_type = winreg.QueryValueEx(app_key, name)
 
                 if not value_type == winreg.REG_MULTI_SZ:
@@ -104,7 +105,7 @@ class RegistryConfig(BaseConfig):
     def set_array_value(self, name, value):
         try:
             if value is not None:
-                with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH, 0, winreg.KEY_WRITE) as app_key:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_MULTI_SZ, value)
             else:
                 self.del_value(name)
@@ -113,7 +114,7 @@ class RegistryConfig(BaseConfig):
 
     def get_dict_value(self, name):
         try:
-            with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.CONFIG_PATH, name), 0, winreg.KEY_ALL_ACCESS) as app_key:
+            with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name), 0, winreg.KEY_ALL_ACCESS) as app_key:
                 v = {}
 
                 try:
@@ -143,7 +144,7 @@ class RegistryConfig(BaseConfig):
     def set_dict_value(self, name, value):
         try:
             if value is not None:
-                with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.CONFIG_PATH, name)) as app_key:
+                with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)) as app_key:
                     for k, v in value.items():
                         winreg.SetValueEx(app_key, k, 0, winreg.REG_SZ, v)
             else:

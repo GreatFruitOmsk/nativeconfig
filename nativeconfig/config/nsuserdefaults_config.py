@@ -12,13 +12,15 @@ class NSUserDefaultsConfig(BaseConfig):
     """
     Store config in user defaults.
 
-    CONFIG_PATH should be a name of NSUserDefaultsSuite.
+    @cvar NSUSERDEFAULTS_SUITE: Name of the suite for shared apps.
     """
     LOG = LOG.getChild('NSUserDefaultsConfig')
 
+    NSUSERDEFAULTS_SUITE = None
+
     def __init__(self):
-        if self.CONFIG_PATH is not None:
-            self._user_defaults = objc.lookUpClass('NSUserDefaults').alloc().initWithSuiteName_(self.CONFIG_PATH)
+        if self.NSUSERDEFAULTS_SUITE is not None:
+            self._user_defaults = objc.lookUpClass('NSUserDefaults').alloc().initWithSuiteName_(self.NSUSERDEFAULTS_SUITE)
         else:
             self._user_defaults = objc.lookUpClass('NSUserDefaults').standardUserDefaults()
 

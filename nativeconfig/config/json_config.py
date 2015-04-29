@@ -13,13 +13,15 @@ class JSONConfig(BaseConfig):
     """
     Store config in a JSON file as a dictionary. Fields are written in order of definition.
 
-    CONFIG_PATH should be a path to the config file.
+    @cvar JSON_PATH: Path to the config file.
     """
     LOG = LOG.getChild('JSONConfig')
 
+    JSON_PATH = None
+
     def __init__(self):
-        if not Path(self.CONFIG_PATH).is_file():
-            with open(self.CONFIG_PATH, 'w+', encoding='utf-8') as f:
+        if not Path(self.JSON_PATH).is_file():
+            with open(self.JSON_PATH, 'w+', encoding='utf-8') as f:
                 f.write(json.dumps({}))
 
         super().__init__()
@@ -28,7 +30,7 @@ class JSONConfig(BaseConfig):
 
     def _get_json_value(self, key):
         try:
-            with open(self.CONFIG_PATH, 'r', encoding='utf-8') as f:
+            with open(self.JSON_PATH, 'r', encoding='utf-8') as f:
                 try:
                     conf = json.load(f)
                     if key in conf:
@@ -44,7 +46,7 @@ class JSONConfig(BaseConfig):
 
     def _set_json_value(self, key, raw_value):
         try:
-            with open(self.CONFIG_PATH, 'r+', encoding='utf-8') as f:
+            with open(self.JSON_PATH, 'r+', encoding='utf-8') as f:
                 conf = json.load(f)
 
                 if raw_value is None:

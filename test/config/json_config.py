@@ -9,7 +9,7 @@ from test.config import TestConfigMixin
 
 
 class MyJSONConfig(JSONConfig):
-    CONFIG_PATH = tempfile.mktemp("_test.json")
+    JSON_PATH = tempfile.mktemp("_test.json")
 
 
 class TestJSONConfig(unittest.TestCase, TestConfigMixin):
@@ -17,7 +17,7 @@ class TestJSONConfig(unittest.TestCase, TestConfigMixin):
 
     def tearDown(self):
         try:
-            os.unlink(MyJSONConfig.CONFIG_PATH)
+            os.unlink(MyJSONConfig.JSON_PATH)
         except FileNotFoundError:
             pass
 
@@ -28,7 +28,7 @@ class TestJSONConfig(unittest.TestCase, TestConfigMixin):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        os.unlink(c.CONFIG_PATH)
+        os.unlink(c.JSON_PATH)
         c.first_name = 'Artem'
         self.assertEqual(c.first_name, 'Ilya')
 
@@ -41,7 +41,7 @@ class TestJSONConfig(unittest.TestCase, TestConfigMixin):
         c.first_name = 'Artem'
         self.assertEqual(c.first_name, 'Artem')
 
-        with open(c.CONFIG_PATH, 'w') as f:
+        with open(c.JSON_PATH, 'w') as f:
             f.write("hello world")
             f.flush()
 
@@ -51,6 +51,6 @@ class TestJSONConfig(unittest.TestCase, TestConfigMixin):
         class MyConfig(MyJSONConfig):
             first_name = StringOption('FirstName', default='Ilya')
 
-        self.assertEqual(os.path.isfile(MyConfig.CONFIG_PATH), False)
+        self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), False)
         MyConfig.get_instance()
-        self.assertEqual(os.path.isfile(MyConfig.CONFIG_PATH), True)
+        self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), True)

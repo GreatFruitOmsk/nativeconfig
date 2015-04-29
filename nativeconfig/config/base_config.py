@@ -46,11 +46,9 @@ class BaseConfig(metaclass=_OrderedClass):
 
     @cvar CONFIG_VERSION: Version of the config. Used during migrations and usually should be identical to app's __version__.
     @cvar CONFIG_VERSION_OPTION_NAME: Name of the option that represents config version in backend.
-    @cvar CONFIG_PATH: Implementation-dependent path to config file. See docstring of concrete implementation.
     """
     CONFIG_VERSION = '1.0'
     CONFIG_VERSION_OPTION_NAME = "ConfigVersion"
-    CONFIG_PATH = None
 
     _instances = {}
     _instances_events = {}
