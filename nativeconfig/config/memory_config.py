@@ -7,25 +7,31 @@ class MemoryConfig(BaseConfig):
         super().__init__()
 
     def get_value(self, key):
-        v = self._config.get(key, None)
-        return str(v) if v is not None else None
+        return self._config.get(key, None)
 
     def set_value(self, key, value):
-        self._config[key] = str(value)
+        if value is not None:
+            self._config[key] = value
+        else:
+            self._config.pop(key, None)
 
     def del_value(self, key):
         self._config.pop(key, None)
 
     def get_array_value(self, key):
-        v = self._config.get(key, None)
-        return [str(i) for i in v] if v is not None else None
+        return self._config.get(key, None)
 
     def set_array_value(self, key, value):
-        self._config[key] = [str(v) for v in value]
+        if value is not None:
+            self._config[key] = value
+        else:
+            self._config.pop(key, None)
 
     def get_dict_value(self, key):
-        v = self._config.get(key, None)
-        return {str(k): str(i) for k, i in v.items()} if v is not None else None
+        return self._config.get(key, None)
 
     def set_dict_value(self, key, value):
-        self._config[key] = {str(k): str(v) for k, v in value.items()}
+        if value is not None:
+            self._config[key] = value
+        else:
+            self._config.pop(key, None)
