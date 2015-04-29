@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 if sys.platform.startswith('darwin'):
