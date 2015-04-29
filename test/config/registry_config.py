@@ -29,7 +29,7 @@ if sys.platform.startswith('win32'):
             class MyConfig(MyRegistryConfig):
                 first_name = StringOption('FirstName', default='Ilya')
 
-            with self.assertRaises(OSError):
+            with self.assertRaises(FileNotFoundError):
                 winreg.OpenKey(MyRegistryConfig.REGISTRY_KEY, MyRegistryConfig.CONFIG_PATH)
 
             MyConfig.get_instance()

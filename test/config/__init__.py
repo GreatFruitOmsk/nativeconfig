@@ -2,9 +2,8 @@ from abc import ABC, abstractmethod
 import json
 import os
 from unittest.mock import MagicMock
-from warnings import catch_warnings
 
-from nativeconfig.options import StringOption, IntOption
+from nativeconfig.options import StringOption, IntOption, ArrayOption, DictOption
 from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
 
 
@@ -48,11 +47,8 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        with catch_warnings(record=True) as w:
+        with self.assertWarns(UserWarning):
             c.get_value_for_option_name('LastName')
-            self.assertEqual(len(w), 1)
-            self.assertEqual(w[-1].category, UserWarning)
-            self.assertIn('LastName', str(w[-1].message))
 
     def test_set_value_for_option_name_accepts_json(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -82,11 +78,8 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        with catch_warnings(record=True) as w:
+        with self.assertWarns(UserWarning):
             c.set_value_for_option_name('LastName', 'Kulakov')
-            self.assertEqual(len(w), 1)
-            self.assertEqual(w[-1].category, UserWarning)
-            self.assertIn('LastName', str(w[-1].message))
 
     def test_set_one_shot_value_for_option_name_accepts_json(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -106,11 +99,8 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        with catch_warnings(record=True) as w:
+        with self.assertWarns(UserWarning):
             c.set_one_shot_value_for_option_name('LastName', 'Kulakov')
-            self.assertEqual(len(w), 1)
-            self.assertEqual(w[-1].category, UserWarning)
-            self.assertIn('LastName', str(w[-1].message))
 
     def test_one_shot_value_overrides_config(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -156,11 +146,8 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        with catch_warnings(record=True) as w:
+        with self.assertWarns(UserWarning):
             c.del_value_for_option_name('LastName')
-            self.assertEqual(len(w), 1)
-            self.assertEqual(w[-1].category, UserWarning)
-            self.assertIn('LastName', str(w[-1].message))
 
     def test_snapshot_returns_ordered_dict_of_json_objects(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -228,6 +215,8 @@ class TestConfigMixin(ABC):
             lucky_number = IntOption('LuckyNumber')
 
         c = MyConfig.get_instance()
+        c.lucky_number = 10
+        self.assertEqual(c.get_value('LuckyNumber'), '10')
         c.set_value('LuckyNumber', None)
         self.assertEqual(c.get_value('LuckyNumber'), None)
 
@@ -241,28 +230,81 @@ class TestConfigMixin(ABC):
         self.assertEqual(c.get_value('LuckyNumber'), None)
 
     def test_get_array_value_returns_list(self):
-        pass
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'))
+
+        c = MyConfig.get_instance()
+
+        c.lucky_numbers = [7, 42]
+        self.assertIsInstance(c.get_array_value('LuckyNumber'), list)
 
     def test_get_array_value_returns_None_if_option_does_not_exist(self):
-        pass
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'))
+
+        c = MyConfig.get_instance()
+
+        self.assertEqual(c.get_array_value('FirstName'), None)
 
     def test_set_array_value_accepts_iterable(self):
-        pass
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'))
 
-    def test_set_array_value_raises_exception_if_value_is_not_iterable(self):
-        pass
+        c = MyConfig.get_instance()
+
+        c.set_array_value('LuckyNumber', ['7', '42'])
+        self.assertEqual(c.lucky_numbers, [7, 42])
+
+        c.set_array_value('LuckyNumber', ('7', '42'))
+        self.assertEqual(c.lucky_numbers, [7, 42])
+
+    def test_set_None_array_value_deletes_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'))
+
+        c = MyConfig.get_instance()
+
+        c.lucky_numbers = [7, 42]
+        self.assertEqual(c.lucky_numbers, [7, 42])
+        c.set_array_value('LuckyNumber', None)
+        self.assertEqual(c.lucky_numbers, None)
 
     def test_get_dict_value_returns_dict(self):
-        pass
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'))
+
+        c = MyConfig.get_instance()
+
+        c.lucky_numbers = {'a': 1}
+        self.assertIsInstance(c.get_dict_value('LuckyNumber'), dict)
 
     def test_get_dict_value_returns_None_if_option_does_not_exist(self):
-        pass
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'))
+
+        c = MyConfig.get_instance()
+        self.assertEqual(c.get_dict_value('FirstName'), None)
 
     def test_set_dict_value_accepts_dict(self):
-        pass
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'))
 
-    def test_set_dict_value_raises_exception_if_value_is_not_dict(self):
-        pass
+        c = MyConfig.get_instance()
+
+        c.set_dict_value('LuckyNumber', {'a': '1'})
+        self.assertEqual(c.lucky_numbers, {'a': 1})
+
+    def test_set_None_dict_value_deletes_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'))
+
+        c = MyConfig.get_instance()
+
+        c.set_dict_value('LuckyNumber', {'a': '1'})
+        self.assertEqual(c.lucky_numbers, {'a': 1})
+
+        c.set_dict_value('LuckyNumber', None)
+        self.assertEqual(c.lucky_numbers, None)
 
     def test_default_value_is_used_when_no_value_in_config(self):
         class MyConfig(self.CONFIG_TYPE):

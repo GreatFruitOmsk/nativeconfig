@@ -43,10 +43,10 @@ class RegistryConfig(BaseConfig):
     REGISTRY_KEY = winreg.HKEY_CURRENT_USER
 
     def __init__(self):
-        super(RegistryConfig, self).__init__()
-
         k = winreg.CreateKey(self.REGISTRY_KEY, self.CONFIG_PATH)
         winreg.CloseKey(k)
+
+        super(RegistryConfig, self).__init__()
 
 #{ BaseConfig
 
@@ -69,8 +69,11 @@ class RegistryConfig(BaseConfig):
 
     def set_value(self, name, raw_value):
         try:
-            with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH, 0, winreg.KEY_WRITE) as app_key:
-                winreg.SetValueEx(app_key, name, 0, winreg.REG_SZ, raw_value)
+            if raw_value is not None:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH, 0, winreg.KEY_WRITE) as app_key:
+                    winreg.SetValueEx(app_key, name, 0, winreg.REG_SZ, raw_value)
+            else:
+                self.del_value(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
@@ -101,8 +104,11 @@ class RegistryConfig(BaseConfig):
 
     def set_array_value(self, name, value):
         try:
-            with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH, 0, winreg.KEY_WRITE) as app_key:
+            if value is not None:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.CONFIG_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_MULTI_SZ, value)
+            else:
+                self.del_value(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
@@ -137,9 +143,12 @@ class RegistryConfig(BaseConfig):
 
     def set_dict_value(self, name, value):
         try:
-            with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.CONFIG_PATH, name)) as app_key:
-                for k, v in value.items():
-                    winreg.SetValueEx(app_key, k, 0, winreg.REG_SZ, v)
+            if value is not None:
+                with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.CONFIG_PATH, name)) as app_key:
+                    for k, v in value.items():
+                        winreg.SetValueEx(app_key, k, 0, winreg.REG_SZ, v)
+            else:
+                self.del_value(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 #}
