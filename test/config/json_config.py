@@ -1,4 +1,5 @@
 import os
+import tempfile
 import unittest
 
 from nativeconfig.config.json_config import JSONConfig
@@ -8,7 +9,7 @@ from test.config import TestConfigMixin
 
 
 class MyJSONConfig(JSONConfig):
-    CONFIG_PATH = '/tmp/test_config.json'
+    CONFIG_PATH = tempfile.mktemp("_test.json")
 
 
 class TestJSONConfig(unittest.TestCase, TestConfigMixin):
