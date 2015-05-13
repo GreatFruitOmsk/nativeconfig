@@ -35,7 +35,8 @@ class BaseOption(property, metaclass=ABCMeta):
                  resolver='resolve_value',
                  choices=None,
                  env_name=None,
-                 default=None):
+                 default=None,
+                 doc=None):
         """
         @param name: Name of the property.
         @type name: str
@@ -58,7 +59,7 @@ class BaseOption(property, metaclass=ABCMeta):
         @raise InitializationError: If any of arguments is incorrect. Only handles most obvious errors.
         @raise ValidationError: If default or any of choices is invalid.
         """
-        super(BaseOption, self).__init__(self.fget, self.fset, self.fdel, doc=self.__doc__)
+        super(BaseOption, self).__init__(self.fget, self.fset, self.fdel, doc=doc or self.__doc__)
 
         self._name = name
         self._getter = getter
