@@ -69,6 +69,7 @@ class BaseOption(property, metaclass=ABCMeta):
         self._choices = choices
         self._env_name = env_name
         self._default = default
+        self.__doc__ = doc or self.__doc__
 
         self._one_shot_value = None
 
