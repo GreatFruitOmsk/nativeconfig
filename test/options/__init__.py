@@ -28,6 +28,22 @@ class TestOptionMixin(ABC):
             class MyConfig(DummyMemoryConfig):
                 option = self.OPTION_TYPE('Foo', choices=[])
 
+    def test_doc_passed_from_constructor(self):
+        doc_string = 'Test option'
+
+        class OptionsWithDoc(DummyMemoryConfig):
+            test_array = self.OPTION_TYPE('Foo', doc=doc_string)
+
+        c = OptionsWithDoc.get_instance()
+        self.assertEqual(c.option_for_name('Foo').__doc__, doc_string)
+
+    def test_doc_inherited_from_parent_if_not_passed(self):
+        class OptionsWithDoc(DummyMemoryConfig):
+            test_array = self.OPTION_TYPE('Foo')
+
+        c = OptionsWithDoc.get_instance()
+        self.assertEqual(c.option_for_name('Foo').__doc__, self.OPTION_TYPE.__doc__)
+
     @abstractmethod
     def test_default_value_must_be_one_of_choices_if_any(self):
         pass
