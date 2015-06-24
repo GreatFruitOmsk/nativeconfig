@@ -10,7 +10,7 @@ nativeconfig
 Developers of cross-platform applications often face problems when they need to interact with the system.
 Config files are no exception, since every popular OS has its own format and guidelines.
 
-nativeconfig addresses this problem in an elegant and Pythonic way:
+nativeconfig addresses this problem in an elegant and pythonic way:
 
 .. code-block:: python
 
@@ -31,7 +31,8 @@ will store config in Registry on Windows, in NSUserDefaults on Mac OS X and in j
 
 Versioning
 ----------
-The task that every developer is going to face. Fortunately nativeconfig has everything to assist you.
+The task that every developer is going to face. Fortunately nativeconfig has everything to assist you!
+
 Each config is versioned and default to 1.0. Its version is stored in the config backend under the "ConfigVersion" name which
 can be altered by modifying the CONFIG_VERSION_OPTION_NAME class variable.
 
@@ -67,7 +68,7 @@ Reasonably, but insufficiently. Let's see what we can do:
                 pass
 
 
-            super().migrage(version)  # always call base class implementation at the end!
+            super().migrate(version)  # always call base class implementation at the end!
 
 
 TL;DR three simple rules:
@@ -76,6 +77,33 @@ TL;DR three simple rules:
 2. User `if` instead of `elif`
 3. Call super at the end
 
+
+Error Recovery
+--------------
+When user base is huge, all sorts of weird issues will happen. Unexpected values of options is probably the most common one.
+And nativeconfig has everything you need to recover from such errors!
+
+Whenever config is unable to deserialize value or if deserialized value is unexpected (e.g. you wanted float bug got a path)
+the `resolve_value` method is called. Default implementation logs an error and returns a default. If that's not sufficient
+or you have a better idea of how to recover than using default, you should override this method:
+
+.. code-block:: python
+
+    class MyConfig(PreferredConfig):
+        CONFIG_VERSION = __version__
+        REGISTRY_PATH = r'Software\MyApp'
+        JSON_PATH = os.path.expanduser('~/.config/MyApp/config')
+
+        first_name = StringOption('FirstName')
+        last_name = StringOption('LastName')
+
+        def resolve_value(self, exception, name, raw_value):
+            if name == 'FirstName':
+                # Restore value from Cloud-stored credentials.
+                pass
+
+Pretty basic: you have type of exception (either ValidationError or DeserializationError), name of the option and raw value
+that either cannot be deserialized or which deserialized representation is invalid.
 
 Tests
 -----
