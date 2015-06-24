@@ -30,7 +30,7 @@ class _OrderedClass(ABCMeta):
             if hasattr(mro[1], '_ordered_options'):
                 result._ordered_options.extend(mro[1]._ordered_options)
 
-        new_options = [v for k, v in classdict.items() if inspect.isdatadescriptor(v)]
+        new_options = [v for k, v in classdict.items() if inspect.isdatadescriptor(v) and isinstance(v, BaseOption)]
         new_option_names = [o._name for o in new_options]
         result._ordered_options = [o for o in result._ordered_options if o._name not in new_option_names]
         result._ordered_options.extend(new_options)
@@ -46,6 +46,8 @@ class BaseConfig(metaclass=_OrderedClass):
 
     @cvar CONFIG_VERSION: Version of the config. Used during migrations and usually should be identical to app's __version__.
     @cvar CONFIG_VERSION_OPTION_NAME: Name of the option that represents config version in backend.
+
+    @ivar _ordered_options: Ordered dict of options defined in the order of definition from base class to subclasses.
     """
     CONFIG_VERSION = '1.0'
     CONFIG_VERSION_OPTION_NAME = "ConfigVersion"

@@ -331,6 +331,16 @@ class TestConfigMixin(ABC):
 
         self.assertNotEqual(old_index, new_index)
 
+    def test_custom_properties_are_allowed(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber', default=42)
+
+            @property
+            def custom_property(self):
+                return '9000'
+
+        c = MyConfig.get_instance()
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass
