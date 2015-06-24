@@ -74,3 +74,8 @@ TL;DR three simple rules:
 1. Check from the oldest to the newest version
 2. User `if` instead of `elif`
 3. Call super at the end
+
+
+Tests
+-----
+To run tests, use the `python -m test` command.
