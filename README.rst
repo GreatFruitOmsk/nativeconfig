@@ -40,6 +40,7 @@ Each time config is instantiated the `migrate` method is called. Implementation 
 Reasonably, but insufficiently. Let's see what we can do:
 
 .. code-block:: python
+
     class MyConfig(PreferredConfig):
         CONFIG_VERSION = __version__
         REGISTRY_PATH = r'Software\MyApp'
