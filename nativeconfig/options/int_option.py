@@ -37,4 +37,4 @@ class IntOption(BaseOption):
         try:
             valid_val = int(python_value)
         except ValueError as e:
-            raise ValidationError("Invalid int value \"{}\"!".format(python_value), python_value)
+            raise ValidationError("Invalid value \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)

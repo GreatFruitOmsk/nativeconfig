@@ -73,4 +73,4 @@ class DictOption(BaseOption):
         try:
             valid_val = dict(value)
         except (ValueError, TypeError):
-            raise ValidationError("Invalid dict \"{}\"!".format(value), value)
+            raise ValidationError("Invalid dict \"{}\" for \"{}\"!".format(value, self._name), value, self._name)

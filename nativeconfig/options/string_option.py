@@ -35,7 +35,7 @@ class StringOption(BaseOption):
         super().validate(python_value)
 
         if not isinstance(python_value, str):
-            raise ValidationError("Invalid string value \"{}\"!".format(python_value), python_value)
+            raise ValidationError("Invalid string \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)
 
         if not self._allow_empty and len(python_value) == 0:
-            raise ValidationError("Empty values are disallowed!", python_value)
+            raise ValidationError("Empty values are disallowed for \"{}\"!".format(self._name), python_value, self._name)

@@ -39,4 +39,4 @@ class FloatOption(BaseOption):
         try:
             valid_val = float(python_value)
         except ValueError:
-            raise ValidationError("Invalid float value \"{}\"!".format(python_value), python_value)
+            raise ValidationError("Invalid float \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)

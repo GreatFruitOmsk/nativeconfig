@@ -46,7 +46,7 @@ class ArrayOption(BaseOption):
             else:
                 value = raw_value
         except DeserializationError:
-            raise DeserializationError("Unable to deserialize '{}' into array.".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize \"{}\" into array.".format(raw_value), raw_value)
         else:
             return value
 
@@ -72,4 +72,4 @@ class ArrayOption(BaseOption):
         if type(value) == list:
             return
         else:
-            raise ValidationError("Invalid array '{}'.".format(value), value)
+            raise ValidationError("Invalid array \"{}\" for \"{}\".".format(value, self._name), value, self._name)

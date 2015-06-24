@@ -113,7 +113,7 @@ class BaseOption(property, metaclass=ABCMeta):
             return
 
         if self._choices is not None and python_value not in self._choices:
-            raise ValidationError("Value \"{}\" is not one of the choices {}!".format(python_value, self._choices), python_value)
+            raise ValidationError("Value \"{}\" is not one of the choices {} allowed for \"{}\"!".format(python_value, self._choices, self._name), python_value, self._name)
 
 #{ Serialization and deserialization
 

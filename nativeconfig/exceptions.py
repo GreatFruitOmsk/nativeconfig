@@ -8,8 +8,9 @@ class InitializationError(Error):
 
 
 class ValidationError(Error):
-    def __init__(self, msg, value):
+    def __init__(self, msg, value, option_name):
         self.value = value
+        self.option_name = option_name
         super().__init__(msg)
 
 
