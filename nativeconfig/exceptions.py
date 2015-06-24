@@ -7,20 +7,25 @@ class InitializationError(Error):
         super().__init__(msg)
 
 
-class ValidationError(Error):
-    def __init__(self, msg, value, option_name):
-        self.value = value
+class OptionError(Error):
+    def __init__(self, msg, option_name):
         self.option_name = option_name
         super().__init__(msg)
 
 
-class SerializationError(Error):
-    def __init__(self, msg, value):
+class ValidationError(OptionError):
+    def __init__(self, msg, value, option_name):
         self.value = value
-        super().__init__(msg)
+        super().__init__(msg, option_name)
 
 
-class DeserializationError(Error):
-    def __init__(self, msg, raw_value):
+class SerializationError(OptionError):
+    def __init__(self, msg, value, option_name):
+        self.value = value
+        super().__init__(msg, option_name)
+
+
+class DeserializationError(OptionError):
+    def __init__(self, msg, raw_value, option_name):
         self.raw_value = raw_value
-        super().__init__(msg)
+        super().__init__(msg, option_name)

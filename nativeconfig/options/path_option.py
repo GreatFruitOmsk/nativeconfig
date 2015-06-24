@@ -41,7 +41,7 @@ class PathOption(BaseOption):
         try:
             raw_path = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
             return self._path_type(raw_path)
 

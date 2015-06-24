@@ -46,7 +46,7 @@ class DictOption(BaseOption):
             else:
                 value = raw_value
         except DeserializationError:
-            raise DeserializationError("Unable to deserialize \"{}\" into dict!".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize \"{}\" into dict for \"{}\"!".format(raw_value, self._name), raw_value, self._name)
         else:
             return value
 
@@ -64,7 +64,7 @@ class DictOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
             return value
 

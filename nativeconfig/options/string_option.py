@@ -27,7 +27,7 @@ class StringOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
             return value
 

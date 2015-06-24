@@ -22,7 +22,7 @@ class FloatOption(BaseOption):
         try:
             value = float(raw_value)
         except ValueError:
-            raise DeserializationError("Unable to deserialize \"{}\" into float value!".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize \"{}\" into float for \"{}\"!".format(raw_value, self._name), raw_value, self._name)
         else:
             return value
 
@@ -30,7 +30,7 @@ class FloatOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
             return value
 

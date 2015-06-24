@@ -208,7 +208,7 @@ class BaseConfig(metaclass=_OrderedClass):
         Default implementation logs an exception and returns default value.
 
         @param exception: Exception that was raised during serialization.
-        @type exception: DeserializationError
+        @type exception: DeserializationError or ValidationError
 
         @param name: Name of the option that cannot be deserialized.
         @type name: str

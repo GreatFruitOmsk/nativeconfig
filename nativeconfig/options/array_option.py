@@ -46,7 +46,7 @@ class ArrayOption(BaseOption):
             else:
                 value = raw_value
         except DeserializationError:
-            raise DeserializationError("Unable to deserialize \"{}\" into array.".format(raw_value), raw_value)
+            raise DeserializationError("Unable to deserialize \"{}\" into array for \"{}\"!".format(raw_value, self._name), raw_value, self._name)
         else:
             return value
 
@@ -63,7 +63,7 @@ class ArrayOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json: \"{}\"".format(json_value), json_value)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
             return value
 
@@ -72,4 +72,4 @@ class ArrayOption(BaseOption):
         if type(value) == list:
             return
         else:
-            raise ValidationError("Invalid array \"{}\" for \"{}\".".format(value, self._name), value, self._name)
+            raise ValidationError("Invalid array \"{}\" for \"{}\"!".format(value, self._name), value, self._name)
