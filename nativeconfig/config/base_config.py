@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 import inspect
+import json
 import logging
 import threading
 from warnings import warn
@@ -110,7 +111,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @type name: str
 
         @return: JSON Value. None if such option does not exist.
-        @rtype: str or dict or list or None
+        @rtype: str or None
         """
         attribute = self.option_for_name(name)
 
@@ -125,7 +126,7 @@ class BaseConfig(metaclass=_OrderedClass):
         Set option by its name in backend.
 
         @param name: Name of the option.
-        @type name: str or dict or list or None
+        @type name: str or None
 
         @param json_value: JSON value. If 'null', value will be deleted.
         @type json_value: str
@@ -133,7 +134,7 @@ class BaseConfig(metaclass=_OrderedClass):
         attribute = self.option_for_name(name)
 
         if attribute:
-            attribute.fset(self, attribute.deserialize_json(json_value))
+            self.set_value_for_option(attribute, json_value)
         else:
             warn("No option named \"{}\".".format(name))
 
@@ -150,7 +151,7 @@ class BaseConfig(metaclass=_OrderedClass):
         attribute = self.option_for_name(name)
 
         if attribute:
-            attribute.fset(self, attribute.deserialize_json(json_value))
+            self.set_one_shot_value_for_option(attribute, json_value)
         else:
             warn("No option named \"{}\".".format(name))
 
@@ -164,7 +165,7 @@ class BaseConfig(metaclass=_OrderedClass):
         attribute = self.option_for_name(name)
 
         if attribute:
-            attribute.fdel(self)
+            self.del_value_for_option(attribute)
         else:
             warn("No option named \"{}\".".format(name))
 
@@ -172,15 +173,23 @@ class BaseConfig(metaclass=_OrderedClass):
         """
         Get snapshot of current config.
 
-        @return: Dict of option: value format.
-        @rtype: OrderedDict
+        @return: Ordered JSON dictioary of json-serialized options.
+        @rtype: str
         """
-        options = OrderedDict()
+        return '{' + ', '.join(['{}: {}'.format(json.dumps(o._name), self.get_value_for_option(o)) for o in self._ordered_options]) + '}'
 
-        for option in self._ordered_options:
-            options[option._name] = self.get_value_for_option_name(option._name)
+    def restore_snapshot(self, snapshot):
+        """
+        Set config values for older snapshot.
 
-        return options
+        If option represented in snapshot does not exist, warning will be raised.
+
+        @param snapshot: Snapshot as returned by BaseConfig.snapshot
+        """
+        for k, v in json.loads(snapshot).items():
+            # Additional quotes are needed, because values will be loaded into python strings,
+            # but set_value_for_option_name expects JSON.
+            self.set_value_for_option_name(k, json.dumps(v))
 
 #{ Introspection
 
@@ -198,6 +207,50 @@ class BaseConfig(metaclass=_OrderedClass):
                 return option
         else:
             return None
+
+    def get_value_for_option(self, option):
+        """
+        Return value of a given option.
+
+        @param option: Option's attribute
+        @type option: BaseOption
+
+        @rtype: str
+        """
+        return option.serialize_json(option.fget(self))
+
+    def set_value_for_option(self, option, json_value):
+        """
+        Set option value in backend.
+
+        @param option: Option's attribute.
+        @type option: BaseOption
+
+        @param json_value: JSON value. If 'null', value will be deleted.
+        @type json_value: str
+        """
+        option.fset(self, option.deserialize_json(json_value))
+
+    def set_one_shot_value_for_option(self, option, json_value):
+        """
+        Set One Shot Value for a given option.
+
+        @param option: Option's attribute.
+        @type option: BaseOption
+
+        @param json_value: JSON value.
+        @type json_value: str or dict or list or None
+        """
+        option.fset(self, option.deserialize_json(json_value))
+
+    def del_value_for_option(self, option):
+        """
+        Delete option in backend.
+
+        @param option: Option's attribute.
+        @type option: BaseOption
+        """
+        option.fdel(self)
 
 #{ Recovery and migrations
 

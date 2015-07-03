@@ -28,6 +28,8 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
     def tearDown(self):
         c = MyConfig.get_instance()
         del c.test_array
+        del c.path_array
+        del c.float_array
         try:
             del os.environ['TEST_ARRAY']
         except KeyError:
@@ -55,6 +57,31 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             c.float_array = ["not_float"]
             float_array = c.float_array
+
+    def test_json_serialization_of_None(self):
+        o = ArrayOption('test', value_option=PathOption('_', path_type=Path))
+        self.assertEqual(o.serialize_json(None), 'null')
+
+    def test_json_deserialization_of_null(self):
+        o = ArrayOption('test', value_option=PathOption('_', path_type=Path))
+        self.assertEqual(o.deserialize_json('null'), None)
+
+    def test_json_serialization_deserialization_keeps_value(self):
+        o = ArrayOption('test', value_option=PathOption('_', path_type=Path))
+        v = [Path('.'), Path('..')]
+        j = o.serialize_json(v)
+        self.assertEqual(o.deserialize_json(j), v)
+
+    def test_snapshot_can_be_restored(self):
+        c = MyConfig.get_instance()
+        v = [Path('.'), Path('..')]
+        c.path_array = v
+        s = c.snapshot()
+        del c.path_array
+        self.assertNotEqual(c.path_array, v)
+        c.restore_snapshot(s)
+        self.assertEqual(c.path_array, v)
+        return c
 
 #{ TestOptionMixin
 

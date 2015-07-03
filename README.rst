@@ -29,6 +29,47 @@ nativeconfig addresses this problem in an elegant and pythonic way:
 will store config in Registry on Windows, in NSUserDefaults on Mac OS X and in json-formatted file everywhere else.
 
 
+JSON as universal format
+------------------------
+At some point you will need to provide public interface (e.g. CLI or API) to edit config of your application.
+For this reason there are methods to convert each option individually or whole config into JSON:
+
+.. code-block:: python
+
+    class MyConfig(PreferredConfig):
+        CONFIG_VERSION = __version__
+        REGISTRY_PATH = r'Software\MyApp'
+        JSON_PATH = os.path.expanduser('~/.config/MyApp/config')
+
+        first_name = StringOption('FirstName')
+        last_name = StringOption('LastName')
+
+    MyConfig.get_instance().snapshot()  # will return a JSON dictionary of all options
+    MyConfig.get_instance().restore_snapshot(user_edited_snapshot)  # will update options with from user-edited JSON
+
+
+Introspection
+-------------
+It's always cool when you hack around possible flaws in lib's code. So you have it: API of BasicConfig and BasicOption is carefully designed to be hackable.
+In particular, config's attibutes can be easily inspected via the set of methods grouped under "Introspection" section or by playing with the BasicConfig._ordered_options
+directly. You didn't misread, options are already are ordered in order of definition and even subclassing and even overriding!
+
+.. code-block:: python
+
+    class MyConfig(PreferredConfig):
+        CONFIG_VERSION = __version__
+        REGISTRY_PATH = r'Software\MyApp'
+        JSON_PATH = os.path.expanduser('~/.config/MyApp/config')
+
+        first_name = StringOption('FirstName')
+        last_name = StringOption('LastName')
+
+    MyConfig.get_instance().get_value_for_option_name('FirstName')  # will return JSON encoded value of the FirstName option
+
+    option = MyConfig.get_instance().option_for_name()
+    MyConfig.get_instance().get_value_for_option(option)  # same, but by accessing value via attribute
+
+
 Versioning
 ----------
 The task that every developer is going to face. Fortunately nativeconfig has everything to assist you!
@@ -105,6 +146,11 @@ or you have a better idea of how to recover than using default, you should overr
 Pretty basic: you have type of exception (either ValidationError or DeserializationError), name of the option and raw value
 that either cannot be deserialized or which deserialized representation is invalid.
 
-Tests
------
+Debugging
+---------
+The `warn` module is used in some places, so you're advised to debug your app by turning all warnings into errors as described in `docs <https://docs.python.org/library/warnings.html>`_.
+Various logs are written to the `nativeconfig` logger. You can increase verbosity by advancing the level.
+
+Testing
+-------
 To run tests, use the `python -m test` command.

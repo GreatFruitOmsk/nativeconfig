@@ -26,6 +26,8 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
     def tearDown(self):
         c = MyConfig.get_instance()
         del c.test_dict
+        del c.path_dict
+        del c.float_dict
         try:
             del os.environ['TEST_DICT']
         except KeyError:
@@ -53,6 +55,31 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             c.float_dict = {"Key": "not_float"}
             float_dict = c.float_dict
+
+    def test_json_serialization_deserialization_keeps_value(self):
+        o = DictOption('test', value_option=PathOption('_', path_type=Path))
+        v = {'a': Path('.'), 'b': Path('..')}
+        j = o.serialize_json(v)
+        self.assertEqual(o.deserialize_json(j), v)
+
+    def test_json_serialization_of_None(self):
+        o = DictOption('test', value_option=PathOption('_', path_type=Path))
+        self.assertEqual(o.serialize_json(None), 'null')
+
+    def test_json_deserialization_of_null(self):
+        o = DictOption('test', value_option=PathOption('_', path_type=Path))
+        self.assertEqual(o.deserialize_json('null'), None)
+
+    def test_snapshot_can_be_restored(self):
+        c = MyConfig.get_instance()
+        v = {'a': Path('.'), 'b': Path('..')}
+        c.path_dict = v
+        s = c.snapshot()
+        del c.path_dict
+        self.assertNotEqual(c.path_dict, v)
+        c.restore_snapshot(s)
+        self.assertEqual(c.path_dict, v)
+        return c
 
 #{ TestOptionMixin
 

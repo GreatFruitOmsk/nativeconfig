@@ -143,15 +143,14 @@ class TestConfigMixin(ABC):
         with self.assertWarns(UserWarning):
             c.del_value_for_option_name('LastName')
 
-    def test_snapshot_returns_ordered_dict_of_json_objects(self):
+    def test_snapshot_returns_json_dict(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
             last_name = StringOption('LastName', default='Kulakov')
 
         c = MyConfig.get_instance()
         s = c.snapshot()
-        self.assertEqual(list(s.items())[0][0], c._ordered_options[0]._name)
-        self.assertEqual(list(s.items())[1][0], c._ordered_options[1]._name)
+        self.assertIsInstance(json.loads(s), dict)
 
     def test_option_for_name_returns_property(self):
         class MyConfig(self.CONFIG_TYPE):
