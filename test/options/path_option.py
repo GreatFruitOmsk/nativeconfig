@@ -1,5 +1,6 @@
+import json
 import os
-from pathlib import Path, PurePosixPath, PosixPath, WindowsPath
+from pathlib import Path, PurePosixPath
 import unittest
 from unittest.mock import patch
 
@@ -73,6 +74,10 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         c.my_path = Path(".")
         self.assertEqual(c.get_value_for_option_name('MyPath'), '\".\"')
+
+    def test_serialize_json_None(self):
+        o = PathOption('MyPath')
+        self.assertEqual(o.serialize_json(None), json.dumps(None))
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()

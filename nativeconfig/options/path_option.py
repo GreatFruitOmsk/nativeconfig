@@ -35,7 +35,7 @@ class PathOption(BaseOption):
         return self._path_type(raw_value)
 
     def serialize_json(self, python_value):
-        return json.dumps(str(python_value))
+        return json.dumps(str(python_value) if python_value is not None else None)
 
     def deserialize_json(self, json_value):
         try:
