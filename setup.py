@@ -10,15 +10,15 @@ if platform.startswith('darwin'):
 
 
 with open(os.path.join(os.path.dirname(__file__), 'nativeconfig', 'version.py')) as f:
-    version = None
+    VERSION = None
     code = compile(f.read(), 'version.py', 'exec')
     exec(code)
-    assert version
+    assert VERSION
 
 
 setup(
     name='nativeconfig',
-    version=version,
+    version=VERSION,
     packages=['nativeconfig', 'nativeconfig.options', 'nativeconfig.config'],
     url='https://github.com/GreatFruitOmsk/nativeconfig',
     license='MIT License',
