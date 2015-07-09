@@ -307,7 +307,7 @@ class TestConfigMixin(ABC):
         c.del_value_for_option_name('LuckyNumber')
         self.assertEqual(c.lucky_number, 42)
 
-    def test_overriding_base_option_moves_it_the_end(self):
+    def test_overriding_base_option_moves_it_to_the_end(self):
         class MyConfig(self.CONFIG_TYPE):
             lucky_number = IntOption('LuckyNumber', default=42)
             first_name = StringOption('FirstName')
@@ -339,6 +339,28 @@ class TestConfigMixin(ABC):
                 return '9000'
 
         c = MyConfig.get_instance()
+
+    def test_ordered_options_supports_multiple_inheritance(self):
+        class MyConfigMixin1:
+            first_name = StringOption('FirstName', default='Ilya')
+
+        class MyConfigMixin2:
+            last_name = StringOption('LastName', default='Kulakov')
+
+        class MyConfig(self.CONFIG_TYPE, MyConfigMixin1, MyConfigMixin2):
+            age = IntOption('Age', default=42)
+
+        self.assertIn(MyConfigMixin1.first_name._name, [o._name for o in MyConfig._ordered_options])
+        self.assertIn(MyConfigMixin2.last_name, MyConfig._ordered_options)
+        self.assertIn(MyConfig.age, MyConfig._ordered_options)
+
+    def test_overriding_option_type_raises_warn_if_not_subclass(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        with self.assertWarns(UserWarning):
+            class MyConfig2(MyConfig):
+                first_name = IntOption('FirstName', default=42)
 
     @abstractmethod
     def test_config_is_created_if_not_found(self):

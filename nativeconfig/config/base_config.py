@@ -25,16 +25,31 @@ class _OrderedClass(ABCMeta):
         result = type.__new__(cls, name, bases, dict(classdict))
         result._ordered_options = []
 
+        def add_option(base_class, option):
+            for i, o in enumerate(result._ordered_options):
+                if o._name == option._name:
+                    if not issubclass(option.__class__, o.__class__):
+                        warn("Type (\"{}\") of the \"{}\" option overridden by \"{}\" is different than type (\"{}\") defined by one of super classes.".format(option.__class__.__name__, option._name, base_class.__name__, o.__class__.__name__))
+                    result._ordered_options.pop(i)
+                    break
+            result._ordered_options.append(option)
+
         # Get ordered options from base class.
         mro = inspect.getmro(result)
         if len(mro) > 1:
-            if hasattr(mro[1], '_ordered_options'):
-                result._ordered_options.extend(mro[1]._ordered_options)
+            for base_class in reversed(mro[1:]):
+
+                if hasattr(base_class, '_ordered_options'):
+                    options = base_class._ordered_options
+                else:  # e.g. mixin
+                    options = [o for k, o in base_class.__dict__.items() if isinstance(o, BaseOption)]
+
+                for o in options:
+                    add_option(base_class, o)
 
         new_options = [v for k, v in classdict.items() if inspect.isdatadescriptor(v) and isinstance(v, BaseOption)]
-        new_option_names = [o._name for o in new_options]
-        result._ordered_options = [o for o in result._ordered_options if o._name not in new_option_names]
-        result._ordered_options.extend(new_options)
+        for o in new_options:
+            add_option(result, o)
 
         return result
 
