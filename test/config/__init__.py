@@ -317,6 +317,42 @@ class TestConfigMixin(ABC):
         self.assertEqual(c.first_name, 'Ivan')
         self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
 
+    def test_one_shot_value_reset_by_del(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_one_shot_value_for_option_name('FirstName', 'Artem')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
+        self.assertEqual(c.first_name, 'Artem')
+        del c.first_name
+        self.assertEqual(c.first_name, 'Ilya')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
+    def test_one_shot_raw_value_reset_by_del(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_one_shot_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Artem'))
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
+        self.assertEqual(c.first_name, 'Artem')
+        del c.first_name
+        self.assertEqual(c.first_name, 'Ilya')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
+    def test_one_shot_json_value_reset_by_del(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_one_shot_json_value_for_option_name('FirstName', json.dumps('Artem'))
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
+        self.assertEqual(c.first_name, 'Artem')
+        del c.first_name
+        self.assertEqual(c.first_name, 'Ilya')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
     def test_one_shot_value_set_to_None_forces_default(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')

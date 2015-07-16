@@ -257,6 +257,8 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param enclosing_self: Instance of class that defines this property.
         """
+        self._one_shot_value = None
+        self._is_one_shot_value_set = False
         LOG.debug("Delete value of \"%s\".", self.name)
         getattr(enclosing_self, self._deleter)(self.name)
 #}
