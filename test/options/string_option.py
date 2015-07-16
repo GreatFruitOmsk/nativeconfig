@@ -81,7 +81,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
-        c.set_value_for_option_name('Name', "\"Вячеслав\"")
+        c.set_json_value_for_option_name('Name', "\"Вячеслав\"")
         self.assertEqual(c.name, "Вячеслав")
 
     def test_value_can_be_overridden_by_env(self):
@@ -91,7 +91,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_can_be_overridden_by_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('Name', "\"Валентина\"")
+        c.set_one_shot_json_value_for_option_name('Name', "\"Валентина\"")
         self.assertEqual(c.name, "Валентина")
 
     def test_value_that_cannot_be_deserialized_calls_resolver(self):
@@ -129,7 +129,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
 
     def test_setting_value_resets_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('Name', '\"Владислав\"')
+        c.set_one_shot_json_value_for_option_name('Name', '\"Владислав\"')
 
         c.name = "Вера"
         self.assertEqual(c.name, "Вера")

@@ -35,7 +35,6 @@ class IntOption(BaseOption):
 
     def validate(self, python_value):
         super().validate(python_value)
-        try:
-            valid_val = int(python_value)
-        except ValueError as e:
-            raise ValidationError("Invalid value \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)
+
+        if not isinstance(python_value, int):
+            raise ValidationError("Invalid integer \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)

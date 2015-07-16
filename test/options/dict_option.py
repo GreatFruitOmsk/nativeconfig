@@ -113,13 +113,13 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
     def test_serialize_json(self):
         c = MyConfig.get_instance()
         c.test_dict = {"Key1": "some_value"}
-        self.assertEqual(c.get_value_for_option_name('TestDict'), '{"Key1": "some_value"}')
+        self.assertEqual(c.get_json_value_for_option_name('TestDict'), '{"Key1": "some_value"}')
         c.path_dict = {"key1": Path(".")}
-        self.assertEqual(c.get_value_for_option_name('PathDict'), '{"key1": "."}')
+        self.assertEqual(c.get_json_value_for_option_name('PathDict'), '{"key1": "."}')
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
-        c.set_value_for_option_name('TestDict', '{"key1": "value1"}')
+        c.set_json_value_for_option_name('TestDict', '{"key1": "value1"}')
         self.assertEqual(c.test_dict, {"key1": "value1"})
 
     def test_value_can_be_overridden_by_env(self):
@@ -129,7 +129,7 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_can_be_overridden_by_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('TestDict', '{"key1": "value1"}')
+        c.set_one_shot_json_value_for_option_name('TestDict', '{"key1": "value1"}')
         self.assertEqual(c.test_dict, {"key1": "value1"})
 
     def test_value_that_cannot_be_deserialized_calls_resolver(self):
@@ -167,7 +167,7 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
 
     def test_setting_value_resets_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('TestDict', '{"3": "value1"}')
+        c.set_one_shot_json_value_for_option_name('TestDict', '{"3": "value1"}')
 
         c.test_dict = {"key1": "value1"}
         self.assertEqual(c.test_dict, {"key1": "value1"})

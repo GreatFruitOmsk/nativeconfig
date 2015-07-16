@@ -31,13 +31,13 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
     def test_json_serialization_deserialization(self):
         c = MyConfig.get_instance()
 
-        self.assertEqual(c.get_value_for_option_name('FortyTwo'), '42')
-        self.assertEqual(c.get_value_for_option_name('Age'), '0')
+        self.assertEqual(c.get_json_value_for_option_name('FortyTwo'), '42')
+        self.assertEqual(c.get_json_value_for_option_name('Age'), '0')
 
-        c.set_value_for_option_name('FortyTwo', '45')
+        c.set_json_value_for_option_name('FortyTwo', '45')
         self.assertEqual(c.fortytwo, 45)
 
-        c.set_value_for_option_name('Age', '21')
+        c.set_json_value_for_option_name('Age', '21')
         self.assertEqual(c.age, 21)
 
 
@@ -74,11 +74,11 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
     def test_serialize_json(self):
         c = MyConfig.get_instance()
         c.fortytwo = 43
-        self.assertEqual(c.get_value_for_option_name('FortyTwo'), '43')
+        self.assertEqual(c.get_json_value_for_option_name('FortyTwo'), '43')
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
-        c.set_value_for_option_name('FortyTwo', '41')
+        c.set_json_value_for_option_name('FortyTwo', '41')
         self.assertEqual(c.fortytwo, 41)
 
     def test_value_can_be_overridden_by_env(self):
@@ -88,7 +88,7 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_can_be_overridden_by_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('Age', '21')
+        c.set_one_shot_json_value_for_option_name('Age', '21')
         self.assertEqual(c.age, 21)
 
     def test_value_that_cannot_be_deserialized_calls_resolver(self):
@@ -126,7 +126,7 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
 
     def test_setting_value_resets_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('FortyTwo', '44')
+        c.set_one_shot_json_value_for_option_name('FortyTwo', '44')
 
         c.fortytwo = 43
         self.assertEqual(c.fortytwo, 43)

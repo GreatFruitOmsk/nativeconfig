@@ -28,12 +28,26 @@ class TestConfigMixin(ABC):
         MyConfig.get_instance().del_value_for_option_name('FirstName')
         self.assertEqual(MyConfig.get_instance().get_value('FirstName'), None)
 
-    def test_get_value_for_option_name_returns_json(self):
+    def test_get_value_for_option_name_returns_python(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        self.assertEqual(json.loads(c.get_value_for_option_name('FirstName')), 'Ilya')
+        self.assertEqual(c.get_value_for_option_name('FirstName'), 'Ilya')
+
+    def test_get_raw_value_for_option_name_returns_raw(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        self.assertEqual(c.option_for_name('FirstName').deserialize(c.get_raw_value_for_option_name('FirstName')), 'Ilya')
+
+    def test_get_json_value_for_option_name_returns_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        self.assertEqual(json.loads(c.get_json_value_for_option_name('FirstName')), 'Ilya')
 
     def test_get_value_for_option_returns_None_and_raises_warn_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -44,26 +58,75 @@ class TestConfigMixin(ABC):
         with self.assertWarns(UserWarning):
             self.assertEqual(c.get_value_for_option_name('LastName'), None)
 
-    def test_set_value_for_option_name_accepts_json(self):
+    def test_get_raw_value_for_option_returns_None_and_raises_warn_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
 
-        c.set_value_for_option_name('FirstName', json.dumps('Artem'))
+        with self.assertWarns(UserWarning):
+            self.assertEqual(c.get_raw_value_for_option_name('LastName'), None)
+
+    def test_get_json_value_for_option_returns_None_and_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with self.assertWarns(UserWarning):
+            self.assertEqual(c.get_json_value_for_option_name('LastName'), None)
+
+    def test_set_value_for_option_name_accepts_python(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.set_value_for_option_name('FirstName', 'Artem')
+        self.assertEqual(c.first_name, 'Artem')
+
+    def test_set_raw_value_for_option_name_accepts_raw(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        c.set_raw_value_for_option_name('Age', c.option_for_name('Age').serialize(9000))
+        self.assertEqual(c.age, 9000)
+
+        with self.assertRaises(DeserializationError):
+            c.set_raw_value_for_option_name('Age', 'Artem')
+
+    def test_set_json_value_for_option_name_accepts_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.set_json_value_for_option_name('FirstName', json.dumps('Artem'))
         self.assertEqual(c.first_name, 'Artem')
 
         with self.assertRaises(DeserializationError):
-            c.set_value_for_option_name('FirstName', 'Artem')
+            c.set_json_value_for_option_name('FirstName', 'Artem')
 
-    def test_set_null_value_for_option_name_deletes_value(self):
+    def test_set_None_value_for_option_name_deletes_value(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
         c.first_name = 'Artem'
-        self.assertEqual(c.get_value_for_option_name('FirstName'), '"Artem"')
-        c.set_value_for_option_name('FirstName', json.dumps(None))
+        self.assertEqual(c.get_value_for_option_name('FirstName'), 'Artem')
+        c.set_value_for_option_name('FirstName', None)
+        self.assertEqual(c.get_value('FirstName'), None)
+
+    def test_set_null_json_value_for_option_name_deletes_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.first_name = 'Artem'
+        self.assertEqual(c.get_json_value_for_option_name('FirstName'), '"Artem"')
+        c.set_json_value_for_option_name('FirstName', json.dumps(None))
         self.assertEqual(c.get_value('FirstName'), None)
 
     def test_set_value_for_option_name_raises_warn_if_option_not_found(self):
@@ -75,17 +138,59 @@ class TestConfigMixin(ABC):
         with self.assertWarns(UserWarning):
             c.set_value_for_option_name('LastName', 'Kulakov')
 
-    def test_set_one_shot_value_for_option_name_accepts_json(self):
+    def test_set_raw_value_for_option_name_raises_warn_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
 
-        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Artem'))
+        with self.assertWarns(UserWarning):
+            c.set_json_value_for_option_name('LastName', 'Kulakov')
+
+    def test_set_json_value_for_option_name_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with self.assertWarns(UserWarning):
+            c.set_json_value_for_option_name('LastName', '"Kulakov"')
+
+    def test_set_one_shot_value_for_option_name_accepts_python(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        c.set_one_shot_value_for_option_name('Age', 9000)
+        self.assertEqual(c.age, 9000)
+
+        with self.assertRaises(ValidationError):
+            c.set_one_shot_value_for_option_name('Age', '9000')
+
+    def test_set_one_shot_raw_value_for_option_name_accepts_raw(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        c.set_one_shot_raw_value_for_option_name('Age', c.option_for_name('Age').serialize(9000))
+        self.assertEqual(c.age, 9000)
+
+        with self.assertRaises(DeserializationError):
+            c.set_one_shot_raw_value_for_option_name('Age', 'fortytwo')
+
+    def test_set_one_shot_json_value_for_option_name_accepts_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.set_one_shot_json_value_for_option_name('FirstName', json.dumps('Artem'))
         self.assertEqual(c.first_name, 'Artem')
 
         with self.assertRaises(DeserializationError):
-            c.set_one_shot_value_for_option_name('FirstName', 'Artem')
+            c.set_one_shot_json_value_for_option_name('FirstName', 'Artem')
 
     def test_set_one_shot_value_for_option_name_raises_warn_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -96,15 +201,59 @@ class TestConfigMixin(ABC):
         with self.assertWarns(UserWarning):
             c.set_one_shot_value_for_option_name('LastName', 'Kulakov')
 
+    def test_set_one_shot_raw_value_for_option_name_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with self.assertWarns(UserWarning):
+            c.set_one_shot_raw_value_for_option_name('LastName', c.option_for_name('FirstName').serialize('Kulakov'))
+
+    def test_set_one_shot_json_value_for_option_name_raises_warn_if_option_not_found(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with self.assertWarns(UserWarning):
+            c.set_one_shot_json_value_for_option_name('LastName', '"Kulakov"')
+
     def test_one_shot_value_overrides_config(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        c.set_value_for_option_name('FirstName', json.dumps('Artem'))
+        c.set_value_for_option_name('FirstName', 'Artem')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
 
-        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Ivan'))
+        c.set_one_shot_value_for_option_name('FirstName', 'Ivan')
         self.assertEqual(c.first_name, 'Ivan')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
+
+    def test_one_shot_raw_value_overrides_config(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Artem'))
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
+        c.set_one_shot_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Ivan'))
+        self.assertEqual(c.first_name, 'Ivan')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
+
+    def test_one_shot_json_value_overrides_config(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_json_value_for_option_name('FirstName', json.dumps('Artem'))
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
+        c.set_one_shot_json_value_for_option_name('FirstName', json.dumps('Ivan'))
+        self.assertEqual(c.first_name, 'Ivan')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
 
     def test_one_shot_value_does_not_override_env(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -112,7 +261,25 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
         os.environ['FIRST_NAME'] = json.dumps('Ivan')
-        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Artem'))
+        c.set_one_shot_value_for_option_name('FirstName', 'Artem')
+        self.assertEqual(c.first_name, 'Ivan')
+
+    def test_one_shot_raw_value_does_not_override_env(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', env_name='FIRST_NAME')
+
+        c = MyConfig.get_instance()
+        os.environ['FIRST_NAME'] = json.dumps('Ivan')
+        c.set_one_shot_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Artem'))
+        self.assertEqual(c.first_name, 'Ivan')
+
+    def test_one_shot_json_value_does_not_override_env(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', env_name='FIRST_NAME')
+
+        c = MyConfig.get_instance()
+        os.environ['FIRST_NAME'] = json.dumps('Ivan')
+        c.set_one_shot_json_value_for_option_name('FirstName', json.dumps('Artem'))
         self.assertEqual(c.first_name, 'Ivan')
 
     def test_one_shot_value_reset_by_set(self):
@@ -120,10 +287,56 @@ class TestConfigMixin(ABC):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('FirstName', json.dumps('Artem'))
+        c.set_one_shot_value_for_option_name('FirstName', 'Artem')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
         self.assertEqual(c.first_name, 'Artem')
         c.first_name = 'Ivan'
         self.assertEqual(c.first_name, 'Ivan')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
+    def test_one_shot_raw_value_reset_by_set(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_one_shot_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Artem'))
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
+        self.assertEqual(c.first_name, 'Artem')
+        c.first_name = 'Ivan'
+        self.assertEqual(c.first_name, 'Ivan')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
+    def test_one_shot_json_value_reset_by_set(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.set_one_shot_json_value_for_option_name('FirstName', json.dumps('Artem'))
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, True)
+        self.assertEqual(c.first_name, 'Artem')
+        c.first_name = 'Ivan'
+        self.assertEqual(c.first_name, 'Ivan')
+        self.assertEqual(c.option_for_name('FirstName')._is_one_shot_value_set, False)
+
+    def test_one_shot_value_set_to_None_forces_default(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.first_name = 'Artem'
+        self.assertEqual(c.first_name, 'Artem')
+        c.set_one_shot_value_for_option_name('FirstName', None)
+        self.assertEqual(c.first_name, 'Ilya')
+
+    def test_one_shot_json_value_set_to_null_forces_default(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.first_name = 'Artem'
+        self.assertEqual(c.first_name, 'Artem')
+        c.set_one_shot_json_value_for_option_name('FirstName', json.dumps(None))
+        self.assertEqual(c.first_name, 'Ilya')
 
     def test_del_value_for_option_name_deletes_value(self):
         class MyConfig(self.CONFIG_TYPE):

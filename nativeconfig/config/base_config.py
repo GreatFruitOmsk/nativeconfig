@@ -121,12 +121,51 @@ class BaseConfig(metaclass=_OrderedClass):
 
     def get_value_for_option_name(self, name):
         """
-        Get option's Raw Value by its name in backend.
+        Get option's Python Value by its name.
+
+        Issues a warning if option with a given name does not exist.
 
         @param name: Name of the option.
         @type name: str
 
-        @return: JSON Value. None if such option does not exist.
+        @rtype: str or None
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            return attribute.fget(self)
+        else:
+            warn("No option named \"{}\".".format(name))
+            return None
+
+    def get_raw_value_for_option_name(self, name):
+        """
+        Get option's Raw Value by its name.
+
+        Issues a warning if option with a given name does not exist.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @rtype: str or None
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            return attribute.serialize(attribute.fget(self))
+        else:
+            warn("No option named \"{}\".".format(name))
+            return None
+
+    def get_json_value_for_option_name(self, name):
+        """
+        Get option's JSON Value by its name.
+
+        Issues a warning if option with a given name does not exist.
+
+        @param name: Name of the option.
+        @type name: str
+
         @rtype: str or None
         """
         attribute = self.option_for_name(name)
@@ -137,43 +176,125 @@ class BaseConfig(metaclass=_OrderedClass):
             warn("No option named \"{}\".".format(name))
             return None
 
-    def set_value_for_option_name(self, name, json_value):
+    def set_value_for_option_name(self, name, python_value):
         """
-        Set option by its name in backend.
+        Set option's Raw Value by its name.
+
+        Issues a warning if option with a given name does not exist.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param python_value: Python Value.
+        @type python_value: object or None
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            attribute.fset(self, python_value)
+        else:
+            warn("No option named \"{}\".".format(name))
+
+    def set_raw_value_for_option_name(self, name, raw_value):
+        """
+        Set option's Raw Value by its name.
+
+        Issues a warning if option with a given name does not exist.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param raw_value: Raw Value.
+        @type raw_value: str
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            attribute.fset(self, attribute.deserialize(raw_value))
+        else:
+            warn("No option named \"{}\".".format(name))
+
+    def set_json_value_for_option_name(self, name, json_value):
+        """
+        Set option's JSON Value by its name.
+
+        Issues a warning if option with a given name does not exist.
 
         @param name: Name of the option.
         @type name: str or None
 
-        @param json_value: JSON value. If 'null', value will be deleted.
+        @param json_value: JSON Value. If 'null', value will be deleted.
         @type json_value: str
         """
         attribute = self.option_for_name(name)
 
         if attribute:
-            self.set_value_for_option(attribute, json_value)
+            attribute.fset(self, attribute.deserialize_json(json_value))
         else:
             warn("No option named \"{}\".".format(name))
 
-    def set_one_shot_value_for_option_name(self, name, json_value):
+    def set_one_shot_value_for_option_name(self, name, python_value):
         """
         Set One Shot Value for a given name.
+
+        Issues a warning if option with a given name does not exist.
 
         @param name: Name of the option.
         @type name: str
 
-        @param json_value: JSON value.
+        @param python_value: Python Value.
+        @type python_value: object or None
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            attribute.set_one_shot_value(python_value)
+        else:
+            warn("No option named \"{}\".".format(name))
+
+    def set_one_shot_raw_value_for_option_name(self, name, raw_value):
+        """
+        Set One Shot Value for a given name.
+
+        Issues a warning if option with a given name does not exist.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param raw_value: Raw Value.
+        @type raw_value: str
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            attribute.set_one_shot_value(attribute.deserialize(raw_value))
+        else:
+            warn("No option named \"{}\".".format(name))
+
+    def set_one_shot_json_value_for_option_name(self, name, json_value):
+        """
+        Set One Shot Value for a given name.
+
+        Issues a warning if option with a given name does not exist.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param json_value: JSON Value.
         @type json_value: str or dict or list or None
         """
         attribute = self.option_for_name(name)
 
         if attribute:
-            self.set_one_shot_value_for_option(attribute, json_value)
+            attribute.set_one_shot_value(attribute.deserialize_json(json_value))
         else:
             warn("No option named \"{}\".".format(name))
 
     def del_value_for_option_name(self, name):
         """
-        Delete option by its name in backend.
+        Delete option by its name.
+
+        Issues a warning if option with a given name does not exist.
 
         @param name: Name of the option.
         @type name: str
@@ -181,7 +302,7 @@ class BaseConfig(metaclass=_OrderedClass):
         attribute = self.option_for_name(name)
 
         if attribute:
-            self.del_value_for_option(attribute)
+            attribute.fdel(self)
         else:
             warn("No option named \"{}\".".format(name))
 
@@ -189,10 +310,10 @@ class BaseConfig(metaclass=_OrderedClass):
         """
         Get snapshot of current config.
 
-        @return: Ordered JSON dictioary of json-serialized options.
+        @return: Ordered JSON dict of json-serialized options.
         @rtype: str
         """
-        return '{' + ', '.join(['{}: {}'.format(json.dumps(o._name), self.get_value_for_option(o)) for o in self._ordered_options]) + '}'
+        return '{' + ', '.join(['{}: {}'.format(json.dumps(o._name), o.serialize_json(o.fget(self))) for o in self._ordered_options]) + '}'
 
     def restore_snapshot(self, snapshot):
         """
@@ -205,7 +326,7 @@ class BaseConfig(metaclass=_OrderedClass):
         for k, v in json.loads(snapshot).items():
             # Additional quotes are needed, because values will be loaded into python strings,
             # but set_value_for_option_name expects JSON.
-            self.set_value_for_option_name(k, json.dumps(v))
+            self.set_json_value_for_option_name(k, json.dumps(v))
 
 #{ Introspection
 
@@ -223,50 +344,6 @@ class BaseConfig(metaclass=_OrderedClass):
                 return option
         else:
             return None
-
-    def get_value_for_option(self, option):
-        """
-        Return value of a given option.
-
-        @param option: Option's attribute
-        @type option: BaseOption
-
-        @rtype: str
-        """
-        return option.serialize_json(option.fget(self))
-
-    def set_value_for_option(self, option, json_value):
-        """
-        Set option value in backend.
-
-        @param option: Option's attribute.
-        @type option: BaseOption
-
-        @param json_value: JSON value. If 'null', value will be deleted.
-        @type json_value: str
-        """
-        option.fset(self, option.deserialize_json(json_value))
-
-    def set_one_shot_value_for_option(self, option, json_value):
-        """
-        Set One Shot Value for a given option.
-
-        @param option: Option's attribute.
-        @type option: BaseOption
-
-        @param json_value: JSON value.
-        @type json_value: str or dict or list or None
-        """
-        option.fset(self, option.deserialize_json(json_value))
-
-    def del_value_for_option(self, option):
-        """
-        Delete option in backend.
-
-        @param option: Option's attribute.
-        @type option: BaseOption
-        """
-        option.fdel(self)
 
 #{ Recovery and migrations
 
@@ -288,7 +365,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @param source: Source where value originated from.
         @type source: ValueSource
 
-        @return: Value to be used based on raw value.
+        @return: Value to be used based on Raw Value.
         """
         LOG.error("Unable to deserialize value of \"%s\" from \"%s\" (%s):\n%s.", name, raw_or_json_value, traceback.format_exception(*exc_info))
         return self.option_for_name(name)._default
@@ -308,7 +385,7 @@ class BaseConfig(metaclass=_OrderedClass):
     @abstractmethod
     def get_value(self, name):
         """
-        Return Raw Value for a given name or None if no value exists and default should be used.
+        Extract Raw Value for a given name from the backend.
 
         @param name: Name of the option to get.
         @type name: str
@@ -320,12 +397,12 @@ class BaseConfig(metaclass=_OrderedClass):
     @abstractmethod
     def set_value(self, name, raw_value):
         """
-        Set new Raw Value for a given name.
+        Store Raw Value for a given name in the backend.
 
         @param name: Name of the option to set.
         @type name: str
 
-        @param raw_value: Value to set. Must be serialized.
+        @param raw_value: Value to set.
         @type raw_value: str
         """
         pass
@@ -333,7 +410,7 @@ class BaseConfig(metaclass=_OrderedClass):
     @abstractmethod
     def del_value(self, name):
         """
-        Remove value for a given name.
+        Remove value for a given name from the backend.
 
         @param name: Name of the option to delete.
         @type name: str
@@ -343,7 +420,7 @@ class BaseConfig(metaclass=_OrderedClass):
     @abstractmethod
     def get_array_value(self, name):
         """
-        Return an array of Raw Values for a given name.
+        Extract an array of Raw Values for a given name from the backend.
 
         @param name: Name of the array option to get.
         @type name: str
@@ -355,12 +432,12 @@ class BaseConfig(metaclass=_OrderedClass):
     @abstractmethod
     def set_array_value(self, name, value):
         """
-        Set new value which is an array of Raw Values for a given name.
+        Store new value which is an array of Raw Values for a given name in the backend.
 
         @param name: Name of the array option to set.
         @type name: str
 
-        @param value:  Value to set. Must be a list of serialized values.
+        @param value:  Value to set.
         @type value: list
         """
         pass
@@ -368,7 +445,7 @@ class BaseConfig(metaclass=_OrderedClass):
     @abstractmethod
     def get_dict_value(self, name):
         """
-        Return a dict of Raw Values for a given name.
+        Extract a dict of Raw Values for a given name from the backend.
 
         @param name: Name of the dict option to get.
         @type name: str
@@ -380,7 +457,7 @@ class BaseConfig(metaclass=_OrderedClass):
     @abstractmethod
     def set_dict_value(self, name, value):
         """
-        Set new value which is a dict of Raw Values for a given name.
+        Store new value which is a dict of Raw Values for a given name in the backend.
 
         @param name: Name of the dict option to set.
         @type name: str

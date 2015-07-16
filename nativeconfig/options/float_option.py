@@ -39,7 +39,6 @@ class FloatOption(BaseOption):
 
     def validate(self, python_value):
         super().validate(python_value)
-        try:
-            valid_val = float(python_value)
-        except ValueError:
+
+        if not isinstance(python_value, float):
             raise ValidationError("Invalid float \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)

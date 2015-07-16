@@ -77,7 +77,6 @@ class DictOption(BaseOption):
 
     def validate(self, value):
         super().validate(value)
-        try:
-            valid_val = dict(value)
-        except (ValueError, TypeError):
+
+        if not isinstance(value, dict):
             raise ValidationError("Invalid dict \"{}\" for \"{}\"!".format(value, self._name), value, self._name)

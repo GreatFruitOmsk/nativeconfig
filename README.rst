@@ -65,10 +65,10 @@ directly. You didn't misread, options are already are ordered in order of defini
         first_name = StringOption('FirstName')
         last_name = StringOption('LastName')
 
-    MyConfig.get_instance().get_value_for_option_name('FirstName')  # will return JSON encoded value of the FirstName option
+    MyConfig.get_instance().get_value_for_option_name('FirstName')  # will return python value of the FirstName option
+    MyConfig.get_instance().get_raw_value_for_option_name('FirstName')  # will return raw value of the FirstName option
+    MyConfig.get_instance().get_json_value_for_option_name('FirstName')  # will return JSON encoded value of the FirstName option
 
-    option = MyConfig.get_instance().option_for_name()
-    MyConfig.get_instance().get_value_for_option(option)  # same, but by accessing value via attribute
 
 
 Versioning

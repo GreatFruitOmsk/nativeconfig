@@ -70,7 +70,7 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
     def test_serialize_json(self):
         c = MyConfig.get_instance()
         c.my_path = Path(".")
-        self.assertEqual(c.get_value_for_option_name('MyPath'), '\".\"')
+        self.assertEqual(c.get_json_value_for_option_name('MyPath'), '\".\"')
 
     def test_serialize_json_None(self):
         o = PathOption('MyPath')
@@ -78,7 +78,7 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
-        c.set_value_for_option_name('MyPath', '\".\"')
+        c.set_json_value_for_option_name('MyPath', '\".\"')
         self.assertEqual(c.my_path, Path("."))
 
     def test_value_can_be_overridden_by_env(self):
@@ -88,7 +88,7 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_can_be_overridden_by_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('MyPath', '\"/home/user\"')
+        c.set_one_shot_json_value_for_option_name('MyPath', '\"/home/user\"')
         self.assertEqual(c.my_path, Path('/home/user'))
 
     def test_value_that_cannot_be_deserialized_calls_resolver(self):
@@ -114,7 +114,7 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
 
     def test_setting_value_resets_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('MyPath', '\"/home/user\"')
+        c.set_one_shot_json_value_for_option_name('MyPath', '\"/home/user\"')
 
         c.my_path = Path('/home/none')
         self.assertEqual(c.my_path, Path('/home/none'))

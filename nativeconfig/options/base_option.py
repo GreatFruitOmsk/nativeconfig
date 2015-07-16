@@ -82,6 +82,7 @@ class BaseOption(property, metaclass=ABCMeta):
         self.__doc__ = doc or self.__doc__
 
         self._one_shot_value = None
+        self._is_one_shot_value_set = False  # None is allowed for One Shot Value
 
         if not name:
             raise InitializationError("\"name\" cannot be empty!")
@@ -99,17 +100,18 @@ class BaseOption(property, metaclass=ABCMeta):
         if default is not None:
             self.validate(default)
 
-    def set_one_shot_value(self, json_value):
+    def set_one_shot_value(self, python_value):
         """
         Set One Shot Value of the option that overrides Raw Value from storage but can be reset by set.
 
-        Useful if you want to allow a user to override the option via CLI.
+        Useful if you want to allow a user to temporary override the option via CLI.
 
-        @raise ValidationError: Raise if json_value is not valid.
+        @raise ValidationError: Raise if python_value is not valid.
         """
-        python_value = self.deserialize_json(json_value)
-        self.validate(python_value)
-        self._one_shot_value = json_value
+        if python_value is not None:
+            self.validate(python_value)
+        self._one_shot_value = python_value
+        self._is_one_shot_value_set = True
 
 #{ Validation
 
@@ -169,7 +171,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def read_value(self, enclosing_self):
         """
-        Read value for the option from all supported places.
+        Read value for the option from all supported sources.
 
         @param enclosing_self: Instance of class that defines this property.
 
@@ -191,22 +193,27 @@ class BaseOption(property, metaclass=ABCMeta):
             except (DeserializationError, ValidationError):
                 return getattr(enclosing_self, self._resolver)(sys.exc_info(), self._name, raw_value, source), ValueSource.resolver
 
+        python_value, source = None, None
+
         if self._env_name:
             json_value = os.getenv(self._env_name)
             if json_value is not None:
                 LOG.debug("value of \"%s\" is overridden by environment variable: %s.", self._name, json_value)
-                return make_python_value_from_json_value(json_value, ValueSource.env)
+                python_value, source = make_python_value_from_json_value(json_value, ValueSource.env)
 
-        if self._one_shot_value is not None:
+        if python_value is None and self._is_one_shot_value_set:
             LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self._name, self._one_shot_value)
-            return make_python_value_from_json_value(self._one_shot_value, ValueSource.one_shot)
+            python_value, source = self._one_shot_value, ValueSource.one_shot
+        elif python_value is None:
+            raw_value = getattr(enclosing_self, self._getter)(self._name)
+            if raw_value is not None:
+                python_value, source = make_python_value_from_raw_value(raw_value, ValueSource.config)
 
-        raw_value = getattr(enclosing_self, self._getter)(self._name)
-        if raw_value is not None:
-            return make_python_value_from_raw_value(raw_value, ValueSource.config)
+        if python_value is None:
+            LOG.debug("No value is set for \"%s\", use default.", self._name)
+            python_value, source = self._default, ValueSource.default
 
-        LOG.debug("No value is set for \"%s\", use default.", self._name)
-        return self._default, ValueSource.default
+        return python_value, source
 
     def fget(self, enclosing_self):
         """
@@ -230,6 +237,7 @@ class BaseOption(property, metaclass=ABCMeta):
         @param python_value: Python Value to be set.
         """
         self._one_shot_value = None
+        self._is_one_shot_value_set = False
 
         if python_value is not None:
             self.validate(python_value)

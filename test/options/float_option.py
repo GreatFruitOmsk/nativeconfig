@@ -71,11 +71,11 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
     def test_serialize_json(self):
         c = MyConfig.get_instance()
         c.height = 0.1
-        self.assertEqual(c.get_value_for_option_name('Height'), '0.1')
+        self.assertEqual(c.get_json_value_for_option_name('Height'), '0.1')
 
     def test_deserialize_json(self):
         c = MyConfig.get_instance()
-        c.set_value_for_option_name('Height', '12.5')
+        c.set_json_value_for_option_name('Height', '12.5')
         self.assertEqual(c.height, 12.5)
 
     def test_value_can_be_overridden_by_env(self):
@@ -85,7 +85,7 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
 
     def test_value_can_be_overridden_by_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('Height', '234.5')
+        c.set_one_shot_json_value_for_option_name('Height', '234.5')
         self.assertEqual(c.height, 234.5)
 
     def test_value_that_cannot_be_deserialized_calls_resolver(self):
@@ -123,7 +123,7 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
 
     def test_setting_value_resets_one_shot_value(self):
         c = MyConfig.get_instance()
-        c.set_one_shot_value_for_option_name('Height', '234.5')
+        c.set_one_shot_json_value_for_option_name('Height', '234.5')
 
         c.height = 345.6
         self.assertEqual(c.height, 345.6)

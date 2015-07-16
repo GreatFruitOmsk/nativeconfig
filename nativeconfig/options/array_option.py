@@ -79,7 +79,6 @@ class ArrayOption(BaseOption):
 
     def validate(self, value):
         super().validate(value)
-        if type(value) == list:
-            return
-        else:
+
+        if not isinstance(value, (list, tuple)):
             raise ValidationError("Invalid array \"{}\" for \"{}\"!".format(value, self._name), value, self._name)
