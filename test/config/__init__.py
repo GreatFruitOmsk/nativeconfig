@@ -356,6 +356,75 @@ class TestConfigMixin(ABC):
         with self.assertWarns(UserWarning):
             c.del_value_for_option_name('LastName')
 
+    def test_validate_value_for_option_name_accepts_python(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.validate_value_for_option_name('FirstName', 'Artem')
+
+    def test_validate_raw_value_for_option_name_accepts_raw(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.validate_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Artem'))
+
+    def test_validate_json_value_for_option_name_accepts_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        c.validate_json_value_for_option_name('FirstName', json.dumps('Artem'))
+
+    def test_validate_value_for_option_name_raises_validation_error_for_invalid_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+
+        with self.assertRaises(ValidationError):
+            c.validate_value_for_option_name('FirstName', 42)
+
+    def test_validate_raw_value_for_option_name_raises_validation_error_for_invalid_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', choices=['Ilya', 'Artem'])
+
+        c = MyConfig.get_instance()
+
+        with self.assertRaises(ValidationError):
+            c.validate_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Ivan'))
+
+    def test_validate_json_value_for_option_name_raises_validation_error_for_invalid_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', choices=['Ilya', 'Artem'])
+
+        c = MyConfig.get_instance()
+
+        with self.assertRaises(ValidationError):
+            c.validate_json_value_for_option_name('FirstName', json.dumps('Ivan'))
+
+    def test_validate_raw_value_for_option_name_raises_deserialization_error_for_malformed_raw(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        with self.assertRaises(DeserializationError):
+            c.validate_raw_value_for_option_name('Age', 'fortytwo')
+
+    def test_validate_json_value_for_option_name_raises_deserialization_error_for_malformed_json(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        with self.assertRaises(DeserializationError):
+            c.validate_json_value_for_option_name('Age', '"fortytwo"')
+
     def test_snapshot_returns_json_dict(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')

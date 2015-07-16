@@ -281,7 +281,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @type name: str
 
         @param json_value: JSON Value.
-        @type json_value: str or dict or list or None
+        @type json_value: str
         """
         attribute = self.option_for_name(name)
 
@@ -303,6 +303,65 @@ class BaseConfig(metaclass=_OrderedClass):
 
         if attribute:
             attribute.fdel(self)
+        else:
+            warn("No option named \"{}\".".format(name))
+
+    def validate_value_for_option_name(self, name, python_value):
+        """
+        Validate Python Value for an option with a given name.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param python_value: Python Value.
+        @type python_value: object or None
+
+        @raise ValidationError: Raised if value is invalid.
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            return attribute.validate(python_value)
+        else:
+            warn("No option named \"{}\".".format(name))
+
+    def validate_raw_value_for_option_name(self, name, raw_value):
+        """
+        Validate Raw Value for an option with a given name.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param raw_value: Raw Value.
+        @type raw_value: str
+
+        @raise ValidationError: Raised if value is invalid.
+        @raise DeserializationError: Raised if value cannot be deserialized.
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            return attribute.validate(attribute.deserialize(raw_value))
+        else:
+            warn("No option named \"{}\".".format(name))
+
+    def validate_json_value_for_option_name(self, name, json_value):
+        """
+        Validate Raw Value for an option with a given name.
+
+        @param name: Name of the option.
+        @type name: str
+
+        @param json_value: JSON Value.
+        @type json_value: str
+
+        @raise ValidationError: Raised if value is invalid.
+        @raise DeserializationError: Raised if value cannot be deserialized.
+        """
+        attribute = self.option_for_name(name)
+
+        if attribute:
+            return attribute.validate(attribute.deserialize_json(json_value))
         else:
             warn("No option named \"{}\".".format(name))
 
