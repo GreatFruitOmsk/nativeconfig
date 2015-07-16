@@ -38,11 +38,11 @@ class PathOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, str):
-                    raise DeserializationError("JSON (\"{}\") is not a string!".format(json_value), json_value, self._name)
+                    raise DeserializationError("JSON (\"{}\") is not a string!".format(json_value), json_value, self.name)
                 else:
                     return self._path_type(value)
             else:
@@ -52,4 +52,4 @@ class PathOption(BaseOption):
         super().validate(python_value)
 
         if not isinstance(python_value, self._path_type):
-            raise ValidationError("Invalid path \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)
+            raise ValidationError("Invalid path \"{}\" for \"{}\"!".format(python_value, self.name), python_value, self.name)

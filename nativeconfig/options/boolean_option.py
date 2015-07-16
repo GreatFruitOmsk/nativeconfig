@@ -32,17 +32,17 @@ class BooleanOption(BaseOption):
         elif raw_value.upper() in self.FALSE_RAW_VALUES:
             return False
         else:
-            raise DeserializationError("Value \"{}\" must be one of {} for \"{}\"!".format(raw_value, self.ALLOWED_RAW_VALUES, self._name), raw_value, self._name)
+            raise DeserializationError("Value \"{}\" must be one of {} for \"{}\"!".format(raw_value, self.ALLOWED_RAW_VALUES, self.name), raw_value, self.name)
 
     def deserialize_json(self, json_value):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, bool):
-                    raise DeserializationError("JSON (\"{}\") is not a boolean!".format(json_value), json_value, self._name)
+                    raise DeserializationError("JSON (\"{}\") is not a boolean!".format(json_value), json_value, self.name)
                 else:
                     return bool(value)
             else:

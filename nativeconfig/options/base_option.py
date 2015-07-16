@@ -100,6 +100,10 @@ class BaseOption(property, metaclass=ABCMeta):
         if default is not None:
             self.validate(default)
 
+    @property
+    def name(self):
+        return self._name
+
     def set_one_shot_value(self, python_value):
         """
         Set One Shot Value of the option that overrides Raw Value from storage but can be reset by set.
@@ -125,7 +129,7 @@ class BaseOption(property, metaclass=ABCMeta):
             return
 
         if self._choices is not None and python_value not in self._choices:
-            raise ValidationError("Value \"{}\" is not one of the choices {} allowed for \"{}\"!".format(python_value, self._choices, self._name), python_value, self._name)
+            raise ValidationError("Value \"{}\" is not one of the choices {} allowed for \"{}\"!".format(python_value, self._choices, self.name), python_value, self.name)
 
 #{ Serialization and deserialization
 
@@ -183,7 +187,7 @@ class BaseOption(property, metaclass=ABCMeta):
                 self.validate(python_value)
                 return python_value, source
             except (DeserializationError, ValidationError):
-                return getattr(enclosing_self, self._resolver)(sys.exc_info(), self._name, json_value, source), ValueSource.resolver
+                return getattr(enclosing_self, self._resolver)(sys.exc_info(), self.name, json_value, source), ValueSource.resolver
 
         def make_python_value_from_raw_value(raw_value, source):
             try:
@@ -191,26 +195,26 @@ class BaseOption(property, metaclass=ABCMeta):
                 self.validate(python_value)
                 return python_value, source
             except (DeserializationError, ValidationError):
-                return getattr(enclosing_self, self._resolver)(sys.exc_info(), self._name, raw_value, source), ValueSource.resolver
+                return getattr(enclosing_self, self._resolver)(sys.exc_info(), self.name, raw_value, source), ValueSource.resolver
 
         python_value, source = None, None
 
         if self._env_name:
             json_value = os.getenv(self._env_name)
             if json_value is not None:
-                LOG.debug("value of \"%s\" is overridden by environment variable: %s.", self._name, json_value)
+                LOG.debug("value of \"%s\" is overridden by environment variable: %s.", self.name, json_value)
                 python_value, source = make_python_value_from_json_value(json_value, ValueSource.env)
 
         if python_value is None and self._is_one_shot_value_set:
-            LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self._name, self._one_shot_value)
+            LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self.name, self._one_shot_value)
             python_value, source = self._one_shot_value, ValueSource.one_shot
         elif python_value is None:
-            raw_value = getattr(enclosing_self, self._getter)(self._name)
+            raw_value = getattr(enclosing_self, self._getter)(self.name)
             if raw_value is not None:
                 python_value, source = make_python_value_from_raw_value(raw_value, ValueSource.config)
 
         if python_value is None:
-            LOG.debug("No value is set for \"%s\", use default.", self._name)
+            LOG.debug("No value is set for \"%s\", use default.", self.name)
             python_value, source = self._default, ValueSource.default
 
         return python_value, source
@@ -242,8 +246,8 @@ class BaseOption(property, metaclass=ABCMeta):
         if python_value is not None:
             self.validate(python_value)
             raw_value = self.serialize(python_value)
-            LOG.debug("Value of \"%s\" is set to \"%s\".", self._name, raw_value)
-            getattr(enclosing_self, self._setter)(self._name, raw_value)
+            LOG.debug("Value of \"%s\" is set to \"%s\".", self.name, raw_value)
+            getattr(enclosing_self, self._setter)(self.name, raw_value)
         else:
             self.fdel(enclosing_self)
 
@@ -253,6 +257,6 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param enclosing_self: Instance of class that defines this property.
         """
-        LOG.debug("Delete value of \"%s\".", self._name)
-        getattr(enclosing_self, self._deleter)(self._name)
+        LOG.debug("Delete value of \"%s\".", self.name)
+        getattr(enclosing_self, self._deleter)(self.name)
 #}

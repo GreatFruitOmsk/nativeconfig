@@ -19,7 +19,7 @@ class FloatOption(BaseOption):
         try:
             value = float(raw_value)
         except ValueError:
-            raise DeserializationError("Unable to deserialize \"{}\" into float for \"{}\"!".format(raw_value, self._name), raw_value, self._name)
+            raise DeserializationError("Unable to deserialize \"{}\" into float for \"{}\"!".format(raw_value, self.name), raw_value, self.name)
         else:
             return value
 
@@ -27,11 +27,11 @@ class FloatOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, float):
-                    raise DeserializationError("JSON (\"{}\") is not an float!".format(json_value), json_value, self._name)
+                    raise DeserializationError("JSON (\"{}\") is not an float!".format(json_value), json_value, self.name)
                 else:
                     return float(value)
             else:
@@ -41,4 +41,4 @@ class FloatOption(BaseOption):
         super().validate(python_value)
 
         if not isinstance(python_value, float):
-            raise ValidationError("Invalid float \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)
+            raise ValidationError("Invalid float \"{}\" for \"{}\"!".format(python_value, self.name), python_value, self.name)

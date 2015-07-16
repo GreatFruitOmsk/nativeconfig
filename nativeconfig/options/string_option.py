@@ -21,11 +21,11 @@ class StringOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
+            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, str):
-                    raise DeserializationError("JSON (\"{}\") is not a string!".format(json_value), json_value, self._name)
+                    raise DeserializationError("JSON (\"{}\") is not a string!".format(json_value), json_value, self.name)
                 else:
                     return str(value)
             else:
@@ -35,7 +35,7 @@ class StringOption(BaseOption):
         super().validate(python_value)
 
         if not isinstance(python_value, str):
-            raise ValidationError("Invalid string \"{}\" for \"{}\"!".format(python_value, self._name), python_value, self._name)
+            raise ValidationError("Invalid string \"{}\" for \"{}\"!".format(python_value, self.name), python_value, self.name)
 
         if not self._allow_empty and len(python_value) == 0:
-            raise ValidationError("Empty values are disallowed for \"{}\"!".format(self._name), python_value, self._name)
+            raise ValidationError("Empty values are disallowed for \"{}\"!".format(self.name), python_value, self.name)

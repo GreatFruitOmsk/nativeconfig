@@ -28,9 +28,9 @@ class _OrderedClass(ABCMeta):
 
         def add_option(base_class, option):
             for i, o in enumerate(result._ordered_options):
-                if o._name == option._name:
+                if o.name == option.name:
                     if not issubclass(option.__class__, o.__class__):
-                        warn("Type (\"{}\") of the \"{}\" option overridden by \"{}\" is different than type (\"{}\") defined by one of super classes.".format(option.__class__.__name__, option._name, base_class.__name__, o.__class__.__name__))
+                        warn("Type (\"{}\") of the \"{}\" option overridden by \"{}\" is different than type (\"{}\") defined by one of super classes.".format(option.__class__.__name__, option.name, base_class.__name__, o.__class__.__name__))
                     result._ordered_options.pop(i)
                     break
             result._ordered_options.append(option)
@@ -103,10 +103,10 @@ class BaseConfig(metaclass=_OrderedClass):
 
         for attribute_name, attribute_value in inspect.getmembers(cls, inspect.isdatadescriptor):
             if isinstance(attribute_value, BaseOption):
-                if attribute_value._name in properties:
-                    raise AttributeError("Duplication of option named \"{}\"!".format(attribute_value._name))
+                if attribute_value.name in properties:
+                    raise AttributeError("Duplication of option named \"{}\"!".format(attribute_value.name))
                 else:
-                    properties.add(attribute_value._name)
+                    properties.add(attribute_value.name)
 
     def __init__(self):
         self.validate()
@@ -365,15 +365,24 @@ class BaseConfig(metaclass=_OrderedClass):
         else:
             warn("No option named \"{}\".".format(name))
 
+#{ Enumeration
+
+    def options(self):
+        """
+        Generator to enumerate option names.
+        """
+        for o in self._ordered_options:
+            yield o
+
     def items(self):
         """
         Generator to enumerate options and their Python Values.
 
         Yields option name, Python Value and value's source.
         """
-        for o in self._ordered_options:
+        for o in self.options():
             python_value, source = o.read_value(self)
-            yield o._name, python_value, source
+            yield o.name, python_value, source
 
     def raw_items(self):
         """
@@ -381,9 +390,9 @@ class BaseConfig(metaclass=_OrderedClass):
 
         Yields option name, Raw Value and value's source.
         """
-        for o in self._ordered_options:
+        for o in self.options():
             python_value, source = o.read_value(self)
-            yield o._name, o.serialize(python_value), source
+            yield o.name, o.serialize(python_value), source
 
     def json_items(self):
         """
@@ -391,9 +400,11 @@ class BaseConfig(metaclass=_OrderedClass):
 
         Yields option name, JSON Value and value's source.
         """
-        for o in self._ordered_options:
+        for o in self.options():
             python_value, source = o.read_value(self)
-            yield o._name, o.serialize_json(python_value), source
+            yield o.name, o.serialize_json(python_value), source
+
+#{ Snapshots
 
     def snapshot(self):
         """
@@ -402,7 +413,7 @@ class BaseConfig(metaclass=_OrderedClass):
         @return: Ordered JSON dict of json-serialized options.
         @rtype: str
         """
-        return '{' + ', '.join(['{}: {}'.format(json.dumps(o._name), o.serialize_json(o.fget(self))) for o in self._ordered_options]) + '}'
+        return '{' + ', '.join(['{}: {}'.format(json.dumps(o.name), o.serialize_json(o.fget(self))) for o in self.options()]) + '}'
 
     def restore_snapshot(self, snapshot):
         """
@@ -428,9 +439,9 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @rtype: BaseOption or None
         """
-        for option in self._ordered_options:
-            if option._name == name:
-                return option
+        for o in self.options():
+            if o.name == name:
+                return o
         else:
             return None
 
