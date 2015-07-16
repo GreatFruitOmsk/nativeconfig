@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from unittest.mock import patch
@@ -23,10 +24,7 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.height
         del c.width
-        try:
-            del os.environ['WIDTH']
-        except KeyError:
-            pass
+        os.environ.pop('WIDTH', None)
 
 
 #{ Custom
@@ -90,7 +88,7 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
         c.set_one_shot_value_for_option_name('Height', '234.5')
         self.assertEqual(c.height, 234.5)
 
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         c = MyConfig.get_instance()
         os.environ['WIDTH'] = '\"FORTYTWO\"'
 
@@ -101,16 +99,16 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
             width = c.width
             self.assertEqual(width, 'unresolved')
 
-            os.environ['WIDTH'] = '\"4.2\"'
+            os.environ['WIDTH'] = json.dumps(4.2)
             width = c.width
             self.assertEqual(width, 4.2)
 
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         class Diameters(DummyMemoryConfig):
             hdd_diameter = FloatOption('HddDiameter', choices=[2.5, 3.5], env_name='HDD_DIAMETER', default=3.5)
 
         c = Diameters.get_instance()
-        os.environ['HDD_DIAMETER'] = '\"5.0\"'
+        os.environ['HDD_DIAMETER'] = json.dumps(5.0)
 
         with self.assertRaises(ValidationError):
             diameter = c.hdd_diameter
@@ -119,7 +117,7 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
             diameter = c.hdd_diameter
             self.assertEqual(diameter, 'unresolved')
 
-            os.environ['HDD_DIAMETER'] = '\"3.5\"'
+            os.environ['HDD_DIAMETER'] = json.dumps(3.5)
             diameter = c.hdd_diameter
             self.assertEqual(diameter, 3.5)
 
@@ -146,22 +144,18 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
         del c.height
         self.assertEqual(c.height, 185.5)
 
-    def test_env_is_first_json_deserialized_then_deserialized(self):
-        c = MyConfig.get_instance()
-        os.environ['WIDTH'] = '\"4.2\"'
-        with patch.object(FloatOption, 'deserialize_json', return_value='4.2') as mock_deserialize_json:
-            w = c.width
-
-        with patch.object(FloatOption, 'deserialize', return_value=4.2) as mock_deserialize:
-            w = c.width
-
-        mock_deserialize_json.assert_called_with('\"4.2\"')
-        mock_deserialize.assert_called_with('4.2')
-
     def test_env_value_must_be_valid_json(self):
         os.environ['WIDTH'] = "]"
+
         with self.assertRaises(DeserializationError):
             c = MyConfig.get_instance()
             width = c.width
+
+        os.environ['WIDTH'] = "1.5"
+        self.assertEqual(c.width, 1.5)
+
+    def test_json_value_is_of_expected_type(self):
+        with self.assertRaises(DeserializationError):
+            FloatOption('_').deserialize_json('"fortytwo"')
 
 #}

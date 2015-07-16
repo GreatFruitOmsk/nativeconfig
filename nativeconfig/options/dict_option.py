@@ -64,10 +64,16 @@ class DictOption(BaseOption):
         except ValueError:
             raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
-            if value is not None and self._value_option:
-                return {k: self._value_option.deserialize_json(json.dumps(v)) for k, v in value.items()}
+            if value is not None:
+                if not isinstance(value, dict):
+                    raise DeserializationError("JSON (\"{}\") is not a dict!".format(json_value), json_value, self._name)
+                else:
+                    if self._value_option:
+                        return {k: self._value_option.deserialize_json(json.dumps(v)) for k, v in value.items()}
+                    else:
+                        return value
             else:
-                return value
+                return None
 
     def validate(self, value):
         super().validate(value)

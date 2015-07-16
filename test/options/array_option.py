@@ -30,10 +30,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         del c.test_array
         del c.path_array
         del c.float_array
-        try:
-            del os.environ['TEST_ARRAY']
-        except KeyError:
-            pass
+        os.environ.pop('TEST_ARRAY', None)
 
 #{ Custom
 
@@ -138,11 +135,11 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         c.set_one_shot_value_for_option_name('TestArray', '["1"]')
         self.assertEqual(c.test_array, ["1"])
 
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         c = MyConfig.get_instance()
         os.environ['TEST_ARRAY'] = '\"FORTYTWO\"'
 
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(DeserializationError):
             test_array = c.test_array
 
         with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
@@ -153,7 +150,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
             test_array = c.test_array
             self.assertEqual(test_array, [1, 2, 3])
 
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         class Arrays(DummyMemoryConfig):
             test_array = ArrayOption('TestArray', choices=[[1, 2, 3], [4, 5, 6]], env_name='TEST_ARRAY')
 
@@ -194,26 +191,18 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         del c.test_array
         self.assertEqual(c.test_array, ["1", "2", "3"])
 
-    def test_env_is_first_json_deserialized_then_deserialized(self):
-        class Arrays(DummyMemoryConfig):
-            test_array = ArrayOption('ArrayOption', env_name='TEST_ARRAY')
-
-        os.environ['TEST_ARRAY'] = '[1]'
-        c = Arrays.get_instance()
-
-        with patch.object(ArrayOption, 'deserialize_json', return_value=[1]) as mock_deserialize_json:
-            test_array = c.test_array
-
-        with patch.object(ArrayOption, 'deserialize', return_value=[1]) as mock_deserialize:
-            test_array = c.test_array
-
-        mock_deserialize_json.assert_called_with('[1]')
-        mock_deserialize.assert_called_with([1])
-
     def test_env_value_must_be_valid_json(self):
         os.environ['TEST_ARRAY'] = ']'
 
         with self.assertRaises(DeserializationError):
             c = MyConfig.get_instance()
             test_array = c.test_array
+
+        os.environ['TEST_ARRAY'] = '["4", "5", "6"]'
+        self.assertEqual(c.test_array, ["4", "5", "6"])
+
+    def test_json_value_is_of_expected_type(self):
+        with self.assertRaises(DeserializationError):
+            ArrayOption('_').deserialize_json("1")
+
 #}

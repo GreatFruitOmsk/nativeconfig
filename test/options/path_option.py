@@ -24,10 +24,7 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
     def tearDown(self):
         c = MyConfig.get_instance()
         del c.my_path
-        try:
-            del os.environ['MY_PATH']
-        except KeyError:
-            pass
+        os.environ.pop('MY_PATH', None)
 
     def test_choices_cannot_be_empty(self):
         c = MyConfig.get_instance()
@@ -94,10 +91,10 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
         c.set_one_shot_value_for_option_name('MyPath', '\"/home/user\"')
         self.assertEqual(c.my_path, Path('/home/user'))
 
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         pass  # all valid unicode strings can be interpreted as Path
 
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         class Paths(DummyMemoryConfig):
             path = PathOption('Path', choices=[Path("/"), Path("/home/user")], env_name='PATH_OPTION', default=Path("/"))
 
@@ -138,26 +135,16 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
         del c.my_path
         self.assertEqual(c.my_path, Path("."))
 
-    def test_env_is_first_json_deserialized_then_deserialized(self):
-        class Paths(DummyMemoryConfig):
-            path = PathOption('Path', choices=[Path("C:\\users\\User"), Path("/home/user")], env_name='TEST_PATH', default=Path("C:\\users\\User"))
-
-        c = Paths.get_instance()
-        os.environ['TEST_PATH'] = '\"/home/user\"'
-
-        with patch.object(PathOption, 'deserialize_json', return_value='/home/user') as mock_deserialize_json:
-            my_path = c.path
-
-        with patch.object(PathOption, 'deserialize', return_value=Path('/home/user')) as mock_deserialize:
-            my_path = c.path
-
-        mock_deserialize_json.assert_called_with('\"/home/user\"')
-        mock_deserialize.assert_called_with(Path('/home/user'))
-
     def test_env_value_must_be_valid_json(self):
         os.environ['MY_PATH'] = "]"
+
         with self.assertRaises(DeserializationError):
             c = MyConfig.get_instance()
             my_path = c.my_path
 
-#}
+        os.environ['MY_PATH'] = '".."'
+        self.assertEqual(c.my_path, Path(".."))
+
+    def test_json_value_is_of_expected_type(self):
+        with self.assertRaises(DeserializationError):
+            PathOption('_').deserialize_json("1")

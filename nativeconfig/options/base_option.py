@@ -1,12 +1,22 @@
 from abc import ABCMeta
+from enum import Enum
 import json
 import logging
 import os
+import sys
 
 from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
 
 
 LOG = logging.getLogger('nativeconfig')
+
+
+class ValueSource(Enum):
+    resolver = 1
+    default = 2
+    config = 3
+    one_shot = 4
+    env = 5
 
 
 class BaseOption(property, metaclass=ABCMeta):
@@ -99,7 +109,7 @@ class BaseOption(property, metaclass=ABCMeta):
         """
         python_value = self.deserialize_json(json_value)
         self.validate(python_value)
-        self._one_shot_value = python_value
+        self._one_shot_value = json_value
 
 #{ Validation
 
@@ -157,6 +167,47 @@ class BaseOption(property, metaclass=ABCMeta):
 
 #{ Access backend
 
+    def read_value(self, enclosing_self):
+        """
+        Read value for the option from all supported places.
+
+        @param enclosing_self: Instance of class that defines this property.
+
+        @rtype: (object, ValueSource)
+        """
+        def make_python_value_from_json_value(json_value, source):
+            try:
+                python_value = self.deserialize_json(json_value)
+                self.validate(python_value)
+                return python_value, ValueSource.env
+            except (DeserializationError, ValidationError):
+                return getattr(enclosing_self, self._resolver)(sys.exc_info(), self._name, json_value, source), ValueSource.resolver
+
+        def make_python_value_from_raw_value(raw_value, source):
+            try:
+                python_value = self.deserialize(raw_value)
+                self.validate(python_value)
+                return python_value, ValueSource.env
+            except (DeserializationError, ValidationError):
+                return getattr(enclosing_self, self._resolver)(sys.exc_info(), self._name, raw_value, source), ValueSource.resolver
+
+        if self._env_name:
+            json_value = os.getenv(self._env_name)
+            if json_value is not None:
+                LOG.debug("value of \"%s\" is overridden by environment variable: %s.", self._name, json_value)
+                return make_python_value_from_json_value(json_value, ValueSource.env)
+
+        if self._one_shot_value is not None:
+            LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self._name, self._one_shot_value)
+            return make_python_value_from_json_value(self._one_shot_value, ValueSource.one_shot)
+
+        raw_value = getattr(enclosing_self, self._getter)(self._name)
+        if raw_value is not None:
+            return make_python_value_from_raw_value(raw_value, ValueSource.config)
+
+        LOG.debug("No value is set for \"%s\", use default.", self._name)
+        return self._default, ValueSource.default
+
     def fget(self, enclosing_self):
         """
         Read Raw Value from the storage and deserialized it into Python Value.
@@ -165,30 +216,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param enclosing_self: Instance of class that defines this property.
         """
-        raw_v = None
-
-        if self._env_name:
-            raw_v = os.getenv(self._env_name)
-            if raw_v is not None:
-                LOG.debug("value of \"%s\" is overridden by environment variable: %s", self._name, raw_v)
-                raw_v = self.deserialize_json(raw_v)
-
-        if raw_v is None:
-            raw_v = self._one_shot_value
-
-        if raw_v is None:
-            raw_v = getattr(enclosing_self, self._getter)(self._name)
-
-        if raw_v is None:
-            LOG.debug("No value is set for \"%s\", use default.", self._name)
-            return self._default
-        else:
-            try:
-                value = self.deserialize(raw_v)
-                self.validate(value)
-                return value
-            except (DeserializationError, ValidationError) as e:
-                return getattr(enclosing_self, self._resolver)(e, self._name, raw_v)
+        return self.read_value(enclosing_self)[0]
 
     def fset(self, enclosing_self, python_value):
         """

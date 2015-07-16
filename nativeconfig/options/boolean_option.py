@@ -40,4 +40,10 @@ class BooleanOption(BaseOption):
         except ValueError:
             raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
-            return value
+            if value is not None:
+                if not isinstance(value, bool):
+                    raise DeserializationError("JSON (\"{}\") is not a boolean!".format(json_value), json_value, self._name)
+                else:
+                    return bool(value)
+            else:
+                return None

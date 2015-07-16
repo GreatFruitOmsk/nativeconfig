@@ -4,6 +4,7 @@ import inspect
 import json
 import logging
 import threading
+import traceback
 from warnings import warn
 
 from nativeconfig.options.base_option import BaseOption
@@ -269,24 +270,27 @@ class BaseConfig(metaclass=_OrderedClass):
 
 #{ Recovery and migrations
 
-    def resolve_value(self, exception, name, raw_value):
+    def resolve_value(self, exc_info, name, raw_or_json_value, source):
         """
         Resolve Raw Value that cannot be deserialized or re-raise exception.
 
         Default implementation logs an exception and returns default value.
 
-        @param exception: Exception that was raised during serialization.
-        @type exception: DeserializationError or ValidationError
+        @param exc_info: Exception info extracted in the handler of either DeserializationError or ValidationError.
+        @type exc_info: tuple
 
         @param name: Name of the option that cannot be deserialized.
         @type name: str
 
-        @param raw_value: Raw value that cannot be deserialized.
-        @type raw_value: str
+        @param raw_or_json_value: Raw value that cannot be deserialized.
+        @type raw_or_json_value: str
+
+        @param source: Source where value originated from.
+        @type source: ValueSource
 
         @return: Value to be used based on raw value.
         """
-        LOG.error("Unable to deserialize value of \"%s\" from \"%s\": %s.", name, raw_value, exception)
+        LOG.error("Unable to deserialize value of \"%s\" from \"%s\" (%s):\n%s.", name, raw_or_json_value, traceback.format_exception(*exc_info))
         return self.option_for_name(name)._default
 
     def migrate(self, version):

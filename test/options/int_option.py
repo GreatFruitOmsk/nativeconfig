@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from unittest.mock import patch
@@ -6,7 +7,6 @@ from nativeconfig.exceptions import InitializationError, DeserializationError, V
 from nativeconfig.options import IntOption
 
 from test import DummyMemoryConfig
-from test import all_casings
 from test.options import TestOptionMixin
 
 
@@ -25,10 +25,7 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.fortytwo
         del c.age
-        try:
-            del os.environ['FORTY_TWO']
-        except KeyError:
-            pass
+        os.environ.pop('FORTY_TWO', None)
 
 
     def test_json_serialization_deserialization(self):
@@ -94,7 +91,7 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
         c.set_one_shot_value_for_option_name('Age', '21')
         self.assertEqual(c.age, 21)
 
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         c = MyConfig.get_instance()
         os.environ['FORTY_TWO'] = '\"FORTYTWO\"'
 
@@ -105,16 +102,16 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
             fortytwo = c.fortytwo
             self.assertEqual(fortytwo, 'unresolved')
 
-            os.environ['FORTY_TWO'] = '\"42\"'
+            os.environ['FORTY_TWO'] = json.dumps(42)
             fortytwo = c.fortytwo
             self.assertEqual(fortytwo, 42)
 
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         class Diameters(DummyMemoryConfig):
             lamp_cap_diameter = IntOption('LampCapDiameter', choices=[14, 27], env_name='LAMP_CAP_DIAMETER', default=27)
 
         c = Diameters.get_instance()
-        os.environ['LAMP_CAP_DIAMETER'] = '\"9\"'
+        os.environ['LAMP_CAP_DIAMETER'] = json.dumps(9)
 
         with self.assertRaises(ValidationError):
             diameter = c.lamp_cap_diameter
@@ -123,7 +120,7 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
             diameter = c.lamp_cap_diameter
             self.assertEqual(diameter, 'unresolved')
 
-            os.environ['LAMP_CAP_DIAMETER'] = '\"14\"'
+            os.environ['LAMP_CAP_DIAMETER'] = json.dumps(14)
             diameter = c.lamp_cap_diameter
             self.assertEqual(diameter, 14)
 
@@ -150,26 +147,18 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
         del c.fortytwo
         self.assertEqual(c.fortytwo, 42)
 
-    def test_env_is_first_json_deserialized_then_deserialized(self):
-        class Diameters(DummyMemoryConfig):
-            lamp_cap_diameter = IntOption('LampCapDiameter', choices=[14, 27], env_name='LAMP_CAP_DIAMETER', default=27)
-
-        c = Diameters.get_instance()
-        os.environ['LAMP_CAP_DIAMETER'] = '\"14\"'
-
-        with patch.object(IntOption, 'deserialize_json', return_value='14') as mock_deserialize_json:
-            diameter = c.lamp_cap_diameter
-
-        with patch.object(IntOption, 'deserialize', return_value=14) as mock_deserialize:
-            diameter = c.lamp_cap_diameter
-
-        mock_deserialize_json.assert_called_with('\"14\"')
-        mock_deserialize.assert_called_with('14')
-
     def test_env_value_must_be_valid_json(self):
         os.environ['FORTY_TWO'] = "]"
+
         with self.assertRaises(DeserializationError):
             c = MyConfig.get_instance()
             fortytwo = c.fortytwo
+
+        os.environ['FORTY_TWO'] = "84"
+        self.assertEqual(c.fortytwo, 84)
+
+    def test_json_value_is_of_expected_type(self):
+        with self.assertRaises(DeserializationError):
+            IntOption('_').deserialize_json('"fortytwo"')
 
 #}

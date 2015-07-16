@@ -28,10 +28,7 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         del c.test_dict
         del c.path_dict
         del c.float_dict
-        try:
-            del os.environ['TEST_DICT']
-        except KeyError:
-            pass
+        os.environ.pop('TEST_DICT', None)
 
 #{ Custom
 
@@ -135,11 +132,11 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         c.set_one_shot_value_for_option_name('TestDict', '{"key1": "value1"}')
         self.assertEqual(c.test_dict, {"key1": "value1"})
 
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         c = MyConfig.get_instance()
         os.environ['TEST_DICT'] = '\"FORTYTWO\"'
 
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(DeserializationError):
             test_dict = c.test_dict
 
         with patch.object(DummyMemoryConfig, 'resolve_value', return_value='unresolved'):
@@ -150,7 +147,7 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
             test_dict = c.test_dict
             self.assertEqual(test_dict, {"key1": "value1"})
 
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         class Dicts(DummyMemoryConfig):
             dict_option = DictOption('DictOption', choices=[{"key1": "value1"}, {"key2": "value2"}], env_name='DICT_OPTION')
 
@@ -191,26 +188,18 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         del c.test_dict
         self.assertEqual(c.test_dict, {"key1": "value1", "key2": "value2"})
 
-    def test_env_is_first_json_deserialized_then_deserialized(self):
-        class Dicts(DummyMemoryConfig):
-            dict_option = DictOption('DictOption', env_name='DICT_OPTION')
-
-        os.environ['DICT_OPTION'] = '{"key2": "value2"}'
-        c = Dicts.get_instance()
-
-        with patch.object(DictOption, 'deserialize_json', return_value={"key2": "value2"}) as mock_deserialize_json:
-            dict_option = c.dict_option
-
-        with patch.object(DictOption, 'deserialize', return_value={"key2": "value2"}) as mock_deserialize:
-            dict_option = c.dict_option
-
-        mock_deserialize_json.assert_called_with('{"key2": "value2"}')
-        mock_deserialize.assert_called_with({"key2": "value2"})
-
     def test_env_value_must_be_valid_json(self):
         os.environ['TEST_DICT'] = ']'
+
         with self.assertRaises(DeserializationError):
             c = MyConfig.get_instance()
             test_dict = c.test_dict
+
+        os.environ['TEST_DICT'] = '{"key3": "value3"}'
+        self.assertEqual(c.test_dict, {"key3": "value3"})
+
+    def test_json_value_is_of_expected_type(self):
+        with self.assertRaises(DeserializationError):
+            DictOption('_').deserialize_json("1")
 
 #}

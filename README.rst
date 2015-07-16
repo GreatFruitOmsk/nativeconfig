@@ -29,8 +29,8 @@ nativeconfig addresses this problem in an elegant and pythonic way:
 will store config in Registry on Windows, in NSUserDefaults on Mac OS X and in json-formatted file everywhere else.
 
 
-JSON as universal format
-------------------------
+JSON as a universal format
+--------------------------
 At some point you will need to provide public interface (e.g. CLI or API) to edit config of your application.
 For this reason there are methods to convert each option individually or whole config into JSON:
 
@@ -44,6 +44,7 @@ For this reason there are methods to convert each option individually or whole c
         first_name = StringOption('FirstName')
         last_name = StringOption('LastName')
 
+    MyConfig.get_instance().get_value_for_option_name('FirstName')  # will return JSON version of first_name's value
     MyConfig.get_instance().snapshot()  # will return a JSON dictionary of all options
     MyConfig.get_instance().restore_snapshot(user_edited_snapshot)  # will update options with from user-edited JSON
 
@@ -138,13 +139,13 @@ or you have a better idea of how to recover than using default, you should overr
         first_name = StringOption('FirstName')
         last_name = StringOption('LastName')
 
-        def resolve_value(self, exception, name, raw_value):
+        def resolve_value(self, exc_info, name, raw_or_json_value, source):
             if name == 'FirstName':
-                # Restore value from Cloud-stored credentials.
+                # E.g. restore value from Cloud-stored credentials.
                 pass
 
-Pretty basic: you have type of exception (either ValidationError or DeserializationError), name of the option and raw value
-that either cannot be deserialized or which deserialized representation is invalid.
+Pretty basic: you have exc_info extracted where problem happened (either ValidationError or DeserializationError), name of the option, raw or json value and
+source that explains where error happened.
 
 Debugging
 ---------

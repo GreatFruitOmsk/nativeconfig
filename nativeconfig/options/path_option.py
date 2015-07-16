@@ -28,9 +28,6 @@ class PathOption(BaseOption):
         # and in validate() we must already have valid _path_type
         super().__init__(name, **kwargs)
 
-    def serialize(self, python_value):
-        return str(python_value)
-
     def deserialize(self, raw_value):
         return self._path_type(raw_value)
 
@@ -39,11 +36,17 @@ class PathOption(BaseOption):
 
     def deserialize_json(self, json_value):
         try:
-            raw_path = json.loads(json_value)
+            value = json.loads(json_value)
         except ValueError:
             raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
-            return self._path_type(raw_path)
+            if value is not None:
+                if not isinstance(value, str):
+                    raise DeserializationError("JSON (\"{}\") is not a string!".format(json_value), json_value, self._name)
+                else:
+                    return self._path_type(value)
+            else:
+                return None
 
     def validate(self, python_value):
         super().validate(python_value)

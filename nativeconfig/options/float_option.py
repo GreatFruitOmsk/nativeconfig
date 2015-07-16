@@ -15,9 +15,6 @@ class FloatOption(BaseOption):
         """
         super().__init__(name, **kwargs)
 
-    def serialize(self, python_value):
-        return str(python_value)
-
     def deserialize(self, raw_value):
         try:
             value = float(raw_value)
@@ -32,7 +29,13 @@ class FloatOption(BaseOption):
         except ValueError:
             raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
-            return value
+            if value is not None:
+                if not isinstance(value, float):
+                    raise DeserializationError("JSON (\"{}\") is not an float!".format(json_value), json_value, self._name)
+                else:
+                    return float(value)
+            else:
+                return None
 
     def validate(self, python_value):
         super().validate(python_value)

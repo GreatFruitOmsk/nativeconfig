@@ -5,18 +5,13 @@ from nativeconfig.options.base_option import BaseOption
 
 class IntOption(BaseOption):
     """
-    FloatOption represents Python float in config.
-
+    IntOption represents Python int in config.
     """
-
     def __init__(self, name, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
         """
         super().__init__(name, **kwargs)
-
-    def serialize(self, python_value):
-        return str(python_value)
 
     def deserialize(self, raw_value):
         try:
@@ -30,7 +25,13 @@ class IntOption(BaseOption):
         except ValueError:
             raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
-            return value
+            if value is not None:
+                if not isinstance(value, int):
+                    raise DeserializationError("JSON (\"{}\") is not an integer!".format(json_value), json_value, self._name)
+                else:
+                    return int(value)
+            else:
+                return None
 
     def validate(self, python_value):
         super().validate(python_value)

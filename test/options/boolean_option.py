@@ -1,9 +1,10 @@
 from itertools import chain
+import json
 import os
 import unittest
 from unittest.mock import patch
 
-from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
+from nativeconfig.exceptions import DeserializationError, ValidationError
 from nativeconfig.options import BooleanOption
 
 from test import DummyMemoryConfig
@@ -25,10 +26,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.boolean_true
         del c.boolean_false
-        try:
-            del os.environ['BOOLEAN_TRUE']
-        except KeyError:
-            pass
+        os.environ.pop('BOOLEAN_TRUE', None)
 
 #{ Custom
 
@@ -145,7 +143,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.boolean_true, False)
 
     def test_value_can_be_overridden_by_env(self):
-        os.environ['BOOLEAN_TRUE'] = '\"0\"'
+        os.environ['BOOLEAN_TRUE'] = 'false'
         c = MyConfig.get_instance()
         self.assertEqual(c.boolean_true, False)
 
@@ -154,7 +152,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         c.set_one_shot_value_for_option_name('BooleanTrue', 'false')
         self.assertEqual(c.boolean_true, False)
 
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         c = MyConfig.get_instance()
         os.environ['BOOLEAN_TRUE'] = '\"Not true\"'
 
@@ -165,11 +163,11 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
             boolean_true = c.boolean_true
             self.assertEqual(boolean_true, 'unresolved')
 
-            os.environ['BOOLEAN_TRUE'] = '\"False\"'
+            os.environ['BOOLEAN_TRUE'] = json.dumps(False)
             boolean_true = c.boolean_true
             self.assertEqual(boolean_true, False)
 
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         pass  # never get ValidationError after boolean deserialization
 
     def test_setting_value_resets_one_shot_value(self):
@@ -196,27 +194,19 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         del c.boolean_true
         self.assertEqual(c.boolean_true, True)
 
-    def test_env_is_first_json_deserialized_then_deserialized(self):
-        class ArduinoLEDStates(DummyMemoryConfig):
-            green_led_on = BooleanOption('GreenLEDOn', env_name='GREEN_LED_ON', default=False)
-
-        c = ArduinoLEDStates.get_instance()
-        os.environ['GREEN_LED_ON'] = '\"true\"'
-
-        with patch.object(BooleanOption, 'deserialize_json', return_value='False') as mock_deserialize_json:
-            diameter = c.green_led_on
-
-        with patch.object(BooleanOption, 'deserialize', return_value=False) as mock_deserialize:
-            diameter = c.green_led_on
-
-        mock_deserialize_json.assert_called_with('\"true\"')
-        mock_deserialize.assert_called_with('true')
-
     def test_env_value_must_be_valid_json(self):
         os.environ['BOOLEAN_TRUE'] = ']'
 
         with self.assertRaises(DeserializationError):
             c = MyConfig.get_instance()
             boolean_true = c.boolean_true
+
+        os.environ['BOOLEAN_TRUE'] = 'true'
+
+        self.assertEqual(c.boolean_true, True)
+
+    def test_json_value_is_of_expected_type(self):
+        with self.assertRaises(DeserializationError):
+            BooleanOption('_').deserialize_json('"fortytwo"')
 
 #}

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
+from nativeconfig.exceptions import InitializationError
 
 from test import DummyMemoryConfig
 
@@ -77,11 +77,11 @@ class TestOptionMixin(ABC):
         pass
 
     @abstractmethod
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         pass
 
     @abstractmethod
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         pass
 
     @abstractmethod
@@ -101,9 +101,9 @@ class TestOptionMixin(ABC):
         pass
 
     @abstractmethod
-    def test_env_is_first_json_deserialized_then_deserialized(self):
+    def test_env_value_must_be_valid_json(self):
         pass
 
     @abstractmethod
-    def test_env_value_must_be_valid_json(self):
+    def test_json_value_is_of_expected_type(self):
         pass

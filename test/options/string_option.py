@@ -26,10 +26,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         c = MyConfig.get_instance()
         del c.name
         del c.surname
-        try:
-            del os.environ['SURNAME']
-        except KeyError:
-            pass
+        os.environ.pop('SURNAME', None)
 
 #{ Custom
 
@@ -97,7 +94,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         c.set_one_shot_value_for_option_name('Name', "\"Валентина\"")
         self.assertEqual(c.name, "Валентина")
 
-    def test_value_that_cannot_be_deserialized_during_get_calls_resolver(self):
+    def test_value_that_cannot_be_deserialized_calls_resolver(self):
         c = MyConfig.get_instance()
         os.environ['TEST_STRING'] = json.dumps('str3')
 
@@ -112,7 +109,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
             test_string = c.test_string
             self.assertEqual(test_string, 'str2')
 
-    def test_invalid_deserialized_value_during_get_calls_resolver(self):
+    def test_invalid_deserialized_value_calls_resolver(self):
         class StringOptions(DummyMemoryConfig):
              string_option = StringOption('StringOption', choices=["String 1", "String 2"], env_name='STRING_OPTION', default="String 1")
 
@@ -153,21 +150,18 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         del c.name
         self.assertEqual(c.name, "Pheoktist")
 
-    def test_env_is_first_json_deserialized_then_deserialized(self):
-        c = MyConfig.get_instance()
-        os.environ['SURNAME'] = json.dumps(str("李".encode('utf-8')))
-        with patch.object(StringOption, 'deserialize_json', return_value="b\'\\xe6\\x9d\\x8e\'") as mock_deserialize_json:
-            surname = c.surname
-
-        with patch.object(StringOption, 'deserialize', return_value="李") as mock_deserialize:
-            surname = c.surname
-
-        mock_deserialize_json.assert_called_with('"b\'\\\\xe6\\\\x9d\\\\x8e\'"')
-        mock_deserialize.assert_called_with("b\'\\xe6\\x9d\\x8e\'")
-
     def test_env_value_must_be_valid_json(self):
         os.environ['SURNAME'] = "]"
+
         with self.assertRaises(DeserializationError):
             c = MyConfig.get_instance()
             surname = c.surname
+
+        os.environ['SURNAME'] = '"Appleseed"'
+        self.assertEqual(c.surname, 'Appleseed')
+
+    def test_json_value_is_of_expected_type(self):
+        with self.assertRaises(DeserializationError):
+            StringOption('_').deserialize_json("1")
+
 #}

@@ -17,19 +17,19 @@ class StringOption(BaseOption):
         self._allow_empty = allow_empty
         super().__init__(name, **kwargs)
 
-    def serialize(self, python_value):
-        return str(python_value)
-
-    def deserialize(self, raw_value):
-        return str(raw_value)  # return a copy
-
     def deserialize_json(self, json_value):
         try:
             value = json.loads(json_value)
         except ValueError:
             raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self._name, json_value), json_value, self._name)
         else:
-            return value
+            if value is not None:
+                if not isinstance(value, str):
+                    raise DeserializationError("JSON (\"{}\") is not a string!".format(json_value), json_value, self._name)
+                else:
+                    return str(value)
+            else:
+                return None
 
     def validate(self, python_value):
         super().validate(python_value)

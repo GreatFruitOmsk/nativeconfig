@@ -175,7 +175,7 @@ class TestConfigMixin(ABC):
         c.set_value('LuckyNumber', 'NotANumber')
         c.lucky_number
         self.assertEqual(c.resolve_value.call_count, 1)
-        self.assertIsInstance(c.resolve_value.call_args[0][0], DeserializationError)
+        self.assertIsInstance(c.resolve_value.call_args[0][0][1], DeserializationError)
         self.assertEqual(c.resolve_value.call_args[0][1], 'LuckyNumber')
         self.assertEqual(c.resolve_value.call_args[0][2], 'NotANumber')
 
