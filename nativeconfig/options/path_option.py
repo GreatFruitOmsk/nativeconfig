@@ -38,11 +38,11 @@ class PathOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
+            raise DeserializationError("Invalid JSON value for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, str):
-                    raise DeserializationError("JSON (\"{}\") is not a string!".format(json_value), json_value, self.name)
+                    raise DeserializationError("\"{}\" is not a JSON string!".format(json_value), json_value, self.name)
                 else:
                     return self._path_type(value)
             else:

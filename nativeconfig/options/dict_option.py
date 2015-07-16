@@ -62,11 +62,11 @@ class DictOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
+            raise DeserializationError("Invalid JSON value for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, dict):
-                    raise DeserializationError("JSON (\"{}\") is not a dict!".format(json_value), json_value, self.name)
+                    raise DeserializationError("\"{}\" is not a JSON dict!".format(json_value), json_value, self.name)
                 else:
                     if self._value_option:
                         return {k: self._value_option.deserialize_json(json.dumps(v)) for k, v in value.items()}

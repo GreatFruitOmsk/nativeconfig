@@ -27,11 +27,11 @@ class FloatOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
+            raise DeserializationError("Invalid JSON value for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, float):
-                    raise DeserializationError("JSON (\"{}\") is not an float!".format(json_value), json_value, self.name)
+                    raise DeserializationError("\"{}\" is not a JSON float!".format(json_value), json_value, self.name)
                 else:
                     return float(value)
             else:

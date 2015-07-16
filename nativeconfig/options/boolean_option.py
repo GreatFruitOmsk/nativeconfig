@@ -38,11 +38,11 @@ class BooleanOption(BaseOption):
         try:
             value = json.loads(json_value)
         except ValueError:
-            raise DeserializationError("Invalid json for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
+            raise DeserializationError("Invalid JSON value for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
         else:
             if value is not None:
                 if not isinstance(value, bool):
-                    raise DeserializationError("JSON (\"{}\") is not a boolean!".format(json_value), json_value, self.name)
+                    raise DeserializationError("\"{}\" is not a JSON boolean!".format(json_value), json_value, self.name)
                 else:
                     return bool(value)
             else:
