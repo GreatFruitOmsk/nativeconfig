@@ -709,6 +709,18 @@ class TestConfigMixin(ABC):
             class MyConfig2(MyConfig):
                 first_name = IntOption('FirstName', default=42)
 
+    def test_reset_deletes_from_config(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_number = IntOption('LuckyNumber', default=42)
+
+        c = MyConfig.get_instance()
+
+        c.lucky_number = 9000
+
+        self.assertEqual(c.get_value('LuckyNumber'), '9000')
+        c.reset()
+        self.assertEqual(c.get_value('LuckyNumber'), None)
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass

@@ -480,6 +480,14 @@ class BaseConfig(metaclass=_OrderedClass):
         """
         self.set_value(self.CONFIG_VERSION_OPTION_NAME, self.CONFIG_VERSION)
 
+    def reset(self):
+        """
+        Reset config be deleting
+        @return:
+        """
+        for o in self.options():
+            o.fdel(self)
+
 #{ Access backend
 
     @abstractmethod
