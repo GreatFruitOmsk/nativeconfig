@@ -3,7 +3,7 @@ import json
 import os
 from unittest.mock import MagicMock
 
-from nativeconfig.options import StringOption, IntOption, ArrayOption, DictOption
+from nativeconfig.options import StringOption, IntOption, ArrayOption, DictOption, ValueSource
 from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
 
 
@@ -11,8 +11,7 @@ class TestConfigMixin(ABC):
     CONFIG_TYPE = None
 
     def tearDown(self):
-        if 'FIRST_NAME' in os.environ:
-            del os.environ['FIRST_NAME']
+        os.environ.pop('FIRST_NAME', None)
 
     def test_exception_is_raised_for_duplicate_options(self):
         with self.assertRaises(AttributeError):
@@ -424,6 +423,36 @@ class TestConfigMixin(ABC):
 
         with self.assertRaises(DeserializationError):
             c.validate_json_value_for_option_name('Age', '"fortytwo"')
+
+    def test_items_enumerates_values(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        for option_name, python_value, value_source in c.items():
+            if option_name == 'Age2':
+                self.assertEqual((option_name, python_value, value_source), ('Age2', 42, ValueSource.default))
+
+    def test_raw_items_enumerates_raw(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        for option_name, raw_value, value_source in c.raw_items():
+            if option_name == 'Age2':
+                self.assertEqual((option_name, raw_value, value_source), ('Age2', '42', ValueSource.default))
+
+    def test_json_items_enumerates_raw(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        for option_name, json_value, value_source in c.json_items():
+            if option_name == 'Age2':
+                self.assertEqual((option_name, json_value, value_source), ('Age2', '42', ValueSource.default))
 
     def test_snapshot_returns_json_dict(self):
         class MyConfig(self.CONFIG_TYPE):

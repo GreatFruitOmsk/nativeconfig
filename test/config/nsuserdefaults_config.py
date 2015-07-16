@@ -10,7 +10,7 @@ if sys.platform.startswith('darwin'):
         pass
 
 
-    class TestMemoryConfig(unittest.TestCase, TestConfigMixin):
+    class TestNSUserDefaultsConfig(unittest.TestCase, TestConfigMixin):
         CONFIG_TYPE = MyNSUserDefaultsConfig
 
         def tearDown(self):

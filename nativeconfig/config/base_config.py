@@ -365,6 +365,36 @@ class BaseConfig(metaclass=_OrderedClass):
         else:
             warn("No option named \"{}\".".format(name))
 
+    def items(self):
+        """
+        Generator to enumerate options and their Python Values.
+
+        Yields option name, Python Value and value's source.
+        """
+        for o in self._ordered_options:
+            python_value, source = o.read_value(self)
+            yield o._name, python_value, source
+
+    def raw_items(self):
+        """
+        Generator to enumerate options and their Raw Values.
+
+        Yields option name, Raw Value and value's source.
+        """
+        for o in self._ordered_options:
+            python_value, source = o.read_value(self)
+            yield o._name, o.serialize(python_value), source
+
+    def json_items(self):
+        """
+        Generator to enumerate options and their JSON Values.
+
+        Yields option name, JSON Value and value's source.
+        """
+        for o in self._ordered_options:
+            python_value, source = o.read_value(self)
+            yield o._name, o.serialize_json(python_value), source
+
     def snapshot(self):
         """
         Get snapshot of current config.

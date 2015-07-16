@@ -181,7 +181,7 @@ class BaseOption(property, metaclass=ABCMeta):
             try:
                 python_value = self.deserialize_json(json_value)
                 self.validate(python_value)
-                return python_value, ValueSource.env
+                return python_value, source
             except (DeserializationError, ValidationError):
                 return getattr(enclosing_self, self._resolver)(sys.exc_info(), self._name, json_value, source), ValueSource.resolver
 
@@ -189,7 +189,7 @@ class BaseOption(property, metaclass=ABCMeta):
             try:
                 python_value = self.deserialize(raw_value)
                 self.validate(python_value)
-                return python_value, ValueSource.env
+                return python_value, source
             except (DeserializationError, ValidationError):
                 return getattr(enclosing_self, self._resolver)(sys.exc_info(), self._name, raw_value, source), ValueSource.resolver
 

@@ -1,3 +1,4 @@
+from nativeconfig.options.base_option import ValueSource
 from nativeconfig.options.array_option import ArrayOption
 from nativeconfig.options.boolean_option import BooleanOption
 from nativeconfig.options.dict_option import DictOption
