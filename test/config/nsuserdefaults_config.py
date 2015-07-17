@@ -16,9 +16,7 @@ if sys.platform.startswith('darwin'):
         def tearDown(self):
             try:
                 c = self.CONFIG_TYPE.get_instance()
-                c.del_value_for_option_name('FirstName')
-                c.del_value_for_option_name('LastName')
-                c.del_value_for_option_name('LuckyNumber')
+                c.reset()
             except OSError:
                 pass
 
