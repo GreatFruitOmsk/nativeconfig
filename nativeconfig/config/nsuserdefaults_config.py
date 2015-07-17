@@ -1,6 +1,7 @@
 import logging
 
 import objc
+import traceback
 
 from nativeconfig.config.base_config import BaseConfig
 
@@ -24,61 +25,80 @@ class NSUserDefaultsConfig(BaseConfig):
         else:
             self._user_defaults = objc.lookUpClass('NSUserDefaults').standardUserDefaults()
 
+        self._nsstring_class = objc.lookUpClass('NSString')
+        self._nsarray_class = objc.lookUpClass('NSArray')
+        self._nsdictionary_class = objc.lookUpClass('NSDictionary')
+
+        self._copy_str = lambda x: self._nsstring_class.stringWithString_(x)
+        self._copy_array = lambda x: self._nsarray_class.arrayWithArray_([self._copy_str(str(v)) for v in x])
+        self._copy_dict = lambda x: self._nsdictionary_class.dictionaryWithDictionary_({self._copy_str(str(k)): self._copy_str(str(v)) for k, v in x.items()})
+
         super(NSUserDefaultsConfig, self).__init__()
 
     def get_value(self, name):
-        try:
-            v = self._user_defaults.stringForKey_(name)
-            return str(v) if v is not None else None
-        except:
-            pass
+        with objc.autorelease_pool():
+            try:
+                v = self._user_defaults.stringForKey_(self._copy_str(name))
+                return str(v) if v is not None else None
+            except:
+                pass
 
         return None
 
     def set_value(self, name, raw_value):
-        try:
-            self._user_defaults.setObject_forKey_(raw_value, name)
-        except:
-            self.LOG.exception("Unable to set '%s' in the user defaults:", name)
+        with objc.autorelease_pool():
+            try:
+                if raw_value is not None:
+                    self._user_defaults.setObject_forKey_(self._copy_str(raw_value), self._copy_str(name))
+                else:
+                    self.del_value(self._copy_str(name))
+            except:
+                self.LOG.exception("Unable to set '%s' in the user defaults:", name)
 
     def del_value(self, name):
-        try:
-            self._user_defaults.removeObjectForKey_(name)
-        except:
-            self.LOG.exception("Unable to delete '%s' from the user defaults:", name)
+        with objc.autorelease_pool():
+            try:
+                self._user_defaults.removeObjectForKey_(self._copy_str(name))
+            except:
+                self.LOG.exception("Unable to delete '%s' from the user defaults:", name)
 
     def get_array_value(self, name):
-        try:
-            v = self._user_defaults.arrayForKey_(name)
-            return [str(i) for i in v] if v is not None else None
-        except:
-            pass
+        with objc.autorelease_pool():
+            try:
+                v = self._user_defaults.arrayForKey_(self._copy_str(name))
+                return [str(i) for i in v] if v is not None else None
+            except:
+                pass
 
         return None
 
     def set_array_value(self, name, value):
-        try:
-            if value is not None:
-                self._user_defaults.setObject_forKey_([str(v) for v in value], name)
-            else:
-                self.del_value(name)
-        except:
-            self.LOG.exception("Unable to set array '%s' in the user defaults:", name)
+        with objc.autorelease_pool():
+            try:
+                if value is not None:
+                    self._user_defaults.setObject_forKey_(self._copy_array(value), self._copy_str(name))
+                else:
+                    self.del_value(self._copy_str(name))
+            except:
+                self.LOG.exception("Unable to set array '%s' in the user defaults:", name)
 
     def get_dict_value(self, name):
-        try:
-            v = self._user_defaults.dictionaryForKey_(name)
-            return {str(k): str(i) for k, i in v.items()} if v is not None else None
-        except:
-            pass
+        with objc.autorelease_pool():
+            try:
+                v = self._user_defaults.dictionaryForKey_(self._copy_str(name))
+                return {str(k): str(i) for k, i in v.items()} if v is not None else None
+            except:
+                pass
 
         return None
 
     def set_dict_value(self, name, value):
-        try:
-            if value is not None:
-                self._user_defaults.setObject_forKey_({str(k): str(v) for k, v in value.items()}, name)
-            else:
-                self.del_value(name)
-        except:
-            self.LOG.exception("Unable to set dict '%s' in the user defaults:", name)
+        print("set_dict_value", name)
+        with objc.autorelease_pool():
+            try:
+                if value is not None:
+                    self._user_defaults.setObject_forKey_(self._copy_dict(value), self._copy_str(name))
+                else:
+                    self.del_value(self._copy_str(name))
+            except:
+                self.LOG.exception("Unable to set dict '%s' in the user defaults:", name)
