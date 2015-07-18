@@ -1,9 +1,11 @@
+import collections
+import json
 import os
 import tempfile
 import unittest
 
 from nativeconfig.config.json_config import JSONConfig
-from nativeconfig.options.string_option import StringOption
+from nativeconfig.options import StringOption, IntOption
 
 from test.config import TestConfigMixin
 
@@ -54,3 +56,21 @@ class TestJSONConfig(unittest.TestCase, TestConfigMixin):
         self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), False)
         MyConfig.get_instance()
         self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), True)
+
+    def test_order_is_preserved_in_json(self):
+        class MyConfig(MyJSONConfig):
+            second_name = StringOption('SecondName', default='Kulakov')
+            age = IntOption('Age', default=42)
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = MyConfig.get_instance()
+        c.first_name = 'Artem'
+        c.second_name = 'Martynovich'
+        c.age = 9000
+
+        d = json.load(open(MyConfig.JSON_PATH, encoding='utf-8'), object_pairs_hook=collections.OrderedDict)
+        keys = list(d.keys())
+
+        i = keys.index('SecondName')
+        self.assertEqual(i + 1, keys.index('Age'))
+        self.assertEqual(i + 2, keys.index('FirstName'))
