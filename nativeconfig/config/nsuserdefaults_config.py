@@ -93,7 +93,6 @@ class NSUserDefaultsConfig(BaseConfig):
         return None
 
     def set_dict_value(self, name, value):
-        print("set_dict_value", name)
         with objc.autorelease_pool():
             try:
                 if value is not None:
