@@ -143,12 +143,11 @@ class RegistryConfig(BaseConfig):
 
     def set_dict_value(self, name, value):
         try:
+            self.del_value(name)
             if value is not None:
                 with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)) as app_key:
                     for k, v in value.items():
                         winreg.SetValueEx(app_key, k, 0, winreg.REG_SZ, v)
-            else:
-                self.del_value(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 #}
