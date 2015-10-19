@@ -618,6 +618,16 @@ class TestConfigMixin(ABC):
         c.lucky_numbers = {'a': 1}
         self.assertIsInstance(c.get_dict_value('LuckyNumber'), dict)
 
+    def test_remove_fields_from_dict(self):
+        class MyConfig(self.CONFIG_TYPE):
+            test_dict = DictOption('TestDict')
+
+        c = MyConfig.get_instance()
+
+        c.test_dict = {"key1": "value1", "key2": "value2"}
+        c.test_dict = {"key2": "value2"}
+        self.assertEqual(c.test_dict, {"key2": "value2"})
+
     def test_get_dict_value_returns_None_if_option_does_not_exist(self):
         class MyConfig(self.CONFIG_TYPE):
             lucky_numbers = DictOption('LuckyNumber', IntOption('_'))
