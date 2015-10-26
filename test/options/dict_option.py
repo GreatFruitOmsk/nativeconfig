@@ -78,6 +78,34 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.path_dict, v)
         return c
 
+    def test_default_value_copied(self):
+        default = {}
+
+        class TestConfig(DummyMemoryConfig):
+            dict_option = DictOption('DictOption', default=default, env_name='DICT_OPTION')
+
+        c = TestConfig.get_instance()
+        self.assertEqual(c.dict_option, {})
+        default['question'] = 42
+        self.assertEqual(c.dict_option, {})
+
+    def test_choices_copied(self):
+        value = {'key': 'value'}
+        value2 = {'another_key': 'another_value'}
+        choices = [value]
+
+        class TestConfig(DummyMemoryConfig):
+            dict_option = DictOption('DictOption', choices=choices, env_name='DICT_OPTION')
+
+        c = TestConfig.get_instance()
+        c.dict_option = {'key': 'value'}
+
+        choices[0] = value2
+        c.dict_option = {'key': 'value'}
+
+        value['key'] = 'another_value'
+        c.dict_option = {'key': 'value'}
+
 #{ TestOptionMixin
 
     def test_choices_cannot_be_empty(self):
@@ -148,10 +176,10 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
             self.assertEqual(test_dict, {"key1": "value1"})
 
     def test_invalid_deserialized_value_calls_resolver(self):
-        class Dicts(DummyMemoryConfig):
+        class TestConfig(DummyMemoryConfig):
             dict_option = DictOption('DictOption', choices=[{"key1": "value1"}, {"key2": "value2"}], env_name='DICT_OPTION')
 
-        c = Dicts.get_instance()
+        c = TestConfig.get_instance()
         os.environ['DICT_OPTION'] = '{"key1": "value2"}'
 
         with self.assertRaises(ValidationError):

@@ -80,6 +80,34 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.path_array, v)
         return c
 
+    def test_default_value_copied(self):
+        default = []
+
+        class TestConfig(DummyMemoryConfig):
+            array_option = ArrayOption('ArrayOption', default=default, env_name='DICT_OPTION')
+
+        c = TestConfig.get_instance()
+        self.assertEqual(c.array_option, [])
+        default.append(42)
+        self.assertEqual(c.array_option, [])
+
+    def test_choices_copied(self):
+        value = ['value']
+        value2 = ['another_value']
+        choices = [value]
+
+        class TestConfig(DummyMemoryConfig):
+            array_option = ArrayOption('ArrayOption', choices=choices, env_name='DICT_OPTION')
+
+        c = TestConfig.get_instance()
+        c.array_option = ['value']
+
+        choices[0] = value2
+        c.array_option = ['value']
+
+        value[0] = 'another_value'
+        c.array_option = ['value']
+
 #{ TestOptionMixin
 
     def test_choices_cannot_be_empty(self):

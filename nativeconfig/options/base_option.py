@@ -1,4 +1,5 @@
 from abc import ABCMeta
+import copy
 from enum import Enum
 import json
 import logging
@@ -59,12 +60,12 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param resolver: Name of the resolver of the enclosing class to resolve value that cannot be serialized.
 
-        @param choices: List of allowed Python Values for the option.
+        @param choices: List of allowed Python Values for the option. Deep copied.
 
         @param env_name: Name of the env variable that contains JSON Value that can override value of the option.
         @type env_name: str
 
-        @param default: Default Python Value of the option.
+        @param default: Default Python Value of the option. Deep copied.
 
         @raise InitializationError: If any of arguments is incorrect. Only handles most obvious errors.
         @raise ValidationError: If default or any of choices is invalid.
@@ -76,9 +77,9 @@ class BaseOption(property, metaclass=ABCMeta):
         self._setter = setter
         self._deleter = deleter
         self._resolver = resolver
-        self._choices = choices
+        self._choices = copy.deepcopy(choices) if choices is not None else choices
         self._env_name = env_name
-        self._default = default
+        self._default = copy.deepcopy(default) if default is not None else default
         self.__doc__ = doc or self.__doc__
 
         self._one_shot_value = None
