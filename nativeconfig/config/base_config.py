@@ -115,7 +115,7 @@ class BaseConfig(metaclass=_OrderedClass):
 
 #{ Default options
 
-    config_version = StringOption(CONFIG_VERSION_OPTION_NAME, default=CONFIG_VERSION)
+    config_version = StringOption(CONFIG_VERSION_OPTION_NAME, default=CONFIG_VERSION, doc="Version of the config.")
 
 #{ Access options by name
 
