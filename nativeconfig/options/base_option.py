@@ -105,6 +105,14 @@ class BaseOption(property, metaclass=ABCMeta):
     def name(self):
         return self._name
 
+    @property
+    def choices(self):
+        return copy.deepcopy(self._choices)
+
+    @property
+    def default(self):
+        return copy.deepcopy(self._default)
+
     def set_one_shot_value(self, python_value):
         """
         Set One Shot Value of the option that overrides Raw Value from storage but can be reset by set.
