@@ -488,6 +488,29 @@ class BaseConfig(metaclass=_OrderedClass):
         for o in self.options():
             o.fdel(self)
 
+    def rename_option(self, old_name, new_name, transform=None):
+        """
+        Rename option by preserving its value and optionally transforming it.
+
+        You should call this method during migration in migrate.
+
+        @param old_name: Old name of the option.
+        @type old_name: str
+
+        @param new_name: New name of the option.
+        @type new_name: str
+
+        @param transform: Optional callable that accepts current raw value and returns new raw value.
+        @type transform: Callable or None
+        """
+
+        value = self.get_value(old_name)
+
+        if value is not None:
+            self.set_value(new_name, transform(value) if transform else value)
+
+        self.del_value(old_name)
+
 #{ Access backend
 
     @abstractmethod
