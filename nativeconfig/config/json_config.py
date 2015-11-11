@@ -3,13 +3,13 @@ import json
 import logging
 from pathlib import Path
 
-from nativeconfig.config.base_config import BaseConfig
+from nativeconfig.config.memory_config import MemoryConfig
 
 
 LOG = logging.getLogger('nativeconfig')
 
 
-class JSONConfig(BaseConfig):
+class JSONConfig(MemoryConfig):
     """
     Store config in a JSON file as a dictionary. Fields are written in order of definition.
 
@@ -24,9 +24,14 @@ class JSONConfig(BaseConfig):
             with open(self.JSON_PATH, 'w+', encoding='utf-8') as f:
                 f.write(json.dumps({}))
 
-        super().__init__()
+            _config = None
+        else:
+            with open(self.JSON_PATH, 'r', encoding='utf-8') as f:
+                _config = json.load(f)
 
-#{ Private
+        super().__init__(initial_config=_config)
+
+    #{ Private
 
     def _get_json_value(self, key):
         try:
@@ -67,27 +72,43 @@ class JSONConfig(BaseConfig):
 
         return None
 
-#{ BaseConfig
+    #{ BaseConfig
 
-    def get_value(self, key):
-        return self._get_json_value(key)
+    def get_value(self, name, allow_cache=False):
+        if allow_cache:
+            return super().get_value(name, allow_cache)
+        else:
+            return self._get_json_value(name)
 
-    def set_value(self, key, raw_value):
-        self._set_json_value(key, raw_value)
+    def set_value(self, name, raw_value):
+        super().set_value(name, raw_value)
+        self._set_json_value(name, raw_value)
 
-    def del_value(self, key):
-        self._set_json_value(key, None)
+    def del_value(self, name):
+        super().del_value(name)
+        self._set_json_value(name, None)
 
-    def get_array_value(self, key):
-        return self.get_value(key)
+    def get_array_value(self, name, allow_cache=False):
+        if allow_cache:
+            return super().get_array_value(name, allow_cache)
+        else:
+            return self.get_value(name)
 
-    def set_array_value(self, key, value):
-        self.set_value(key, value)
+    def set_array_value(self, name, value):
+        super().set_array_value(name, value)
+        self.set_value(name, value)
 
-    def get_dict_value(self, key):
-        return self.get_value(key)
+    def get_dict_value(self, name, allow_cache=False):
+        if allow_cache:
+            return super().get_dict_value(name, allow_cache)
+        else:
+            return self.get_value(name)
 
-    def set_dict_value(self, key, value):
-        self.set_value(key, value)
+    def set_dict_value(self, name, value):
+        super().set_dict_value(name, value)
+        self.set_value(name, value)
 
-#}
+    def reset_cache(self):
+        super().reset_cache()
+
+    #}
