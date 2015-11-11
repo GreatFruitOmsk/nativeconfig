@@ -13,6 +13,8 @@ class NSUserDefaultsConfig(BaseConfig):
     """
     Store config in user defaults.
 
+    allow_cache is ignored, since NSUserDefaults already provides caching.
+
     @cvar NSUSERDEFAULTS_SUITE: Name of the suite for shared apps.
     """
     LOG = LOG.getChild('NSUserDefaultsConfig')
@@ -35,7 +37,7 @@ class NSUserDefaultsConfig(BaseConfig):
 
         super(NSUserDefaultsConfig, self).__init__()
 
-    def get_value(self, name):
+    def get_value(self, name, allow_cache=False):
         with objc.autorelease_pool():
             try:
                 v = self._user_defaults.stringForKey_(self._copy_str(name))
@@ -64,7 +66,7 @@ class NSUserDefaultsConfig(BaseConfig):
             except:
                 self.LOG.exception("Unable to delete '%s' from the user defaults:", name)
 
-    def get_array_value(self, name):
+    def get_array_value(self, name, allow_cache=False):
         with objc.autorelease_pool():
             try:
                 v = self._user_defaults.arrayForKey_(self._copy_str(name))
@@ -85,7 +87,7 @@ class NSUserDefaultsConfig(BaseConfig):
             except:
                 self.LOG.exception("Unable to set array '%s' in the user defaults:", name)
 
-    def get_dict_value(self, name):
+    def get_dict_value(self, name, allow_cache=False):
         with objc.autorelease_pool():
             try:
                 v = self._user_defaults.dictionaryForKey_(self._copy_str(name))
@@ -105,3 +107,6 @@ class NSUserDefaultsConfig(BaseConfig):
                     self.del_value(self._copy_str(name))
             except:
                 self.LOG.exception("Unable to set dict '%s' in the user defaults:", name)
+
+    def reset_cache(self):
+        pass
