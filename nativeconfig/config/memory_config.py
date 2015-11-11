@@ -15,6 +15,11 @@ class MemoryConfig(BaseConfig):
         self._config = deepcopy(initial_config) if initial_config else {}
         super().__init__()
 
+    def has_value(self, name):
+        return name in self._config
+
+    #{ BaseConfig
+
     def get_value(self, name, allow_cache=False):
         return self._config.get(name, None)
 
@@ -47,3 +52,5 @@ class MemoryConfig(BaseConfig):
 
     def reset_cache(self):
         self._config = {}
+
+    #}
