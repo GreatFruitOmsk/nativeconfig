@@ -51,7 +51,7 @@ class RegistryConfig(MemoryConfig):
     #{ BaseConfig
 
     def get_value(self, name, allow_cache=False):
-        if allow_cache and super().has_value(name):
+        if allow_cache and super().has_cached_value(name):
             return super().get_value(name, allow_cache)
         else:
             try:
@@ -98,7 +98,7 @@ class RegistryConfig(MemoryConfig):
             self.LOG.info("Unable to delete \"%s\" from the registry:", name)
 
     def get_array_value(self, name, allow_cache=False):
-        if allow_cache and super().has_value(name):
+        if allow_cache and super().has_cached_value(name):
             return super().get_array_value(name, allow_cache)
         else:
             try:
@@ -128,7 +128,7 @@ class RegistryConfig(MemoryConfig):
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
     def get_dict_value(self, name, allow_cache=False):
-        if allow_cache and super().has_value(name):
+        if allow_cache and super().has_cached_value(name):
             return super().get_dict_value(name, allow_cache)
         else:
             try:
@@ -171,4 +171,8 @@ class RegistryConfig(MemoryConfig):
                 super().set_dict_value(name, value)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
+
+    def reset_cache(self):
+        super().reset_cache()
+
     #}
