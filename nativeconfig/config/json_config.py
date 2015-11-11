@@ -111,4 +111,7 @@ class JSONConfig(MemoryConfig):
     def reset_cache(self):
         super().reset_cache()
 
+        with open(self.JSON_PATH, 'r', encoding='utf-8') as f:
+            super().set_cached_config(json.load(f))
+
     #}
