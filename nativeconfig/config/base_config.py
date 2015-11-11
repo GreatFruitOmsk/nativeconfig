@@ -514,12 +514,15 @@ class BaseConfig(metaclass=_OrderedClass):
 #{ Access backend
 
     @abstractmethod
-    def get_value(self, name):
+    def get_value(self, name, allow_cache=False):
         """
         Extract Raw Value for a given name from the backend.
 
         @param name: Name of the option to get.
         @type name: str
+
+        @param allow_cache: If True, config will return internal copy instead of escalating call to underlying backend.
+        @type allow_cache: bool
 
         @rtype: str or None
         """
@@ -532,6 +535,9 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param name: Name of the option to set.
         @type name: str
+
+        @param allow_cache: See get_value.
+        @type allow_cache: bool
 
         @param raw_value: Value to set.
         @type raw_value: str
@@ -549,12 +555,15 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def get_array_value(self, name):
+    def get_array_value(self, name, allow_cache=False):
         """
         Extract an array of Raw Values for a given name from the backend.
 
         @param name: Name of the array option to get.
         @type name: str
+
+        @param allow_cache: See get_value.
+        @type allow_cache: bool
 
         @rtype: list or None
         """
@@ -574,12 +583,15 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def get_dict_value(self, name):
+    def get_dict_value(self, name, allow_cache=False):
         """
         Extract a dict of Raw Values for a given name from the backend.
 
         @param name: Name of the dict option to get.
         @type name: str
+
+        @param allow_cache: See get_value.
+        @type allow_cache: bool
 
         @rtype: dict or None
         """
@@ -597,4 +609,12 @@ class BaseConfig(metaclass=_OrderedClass):
         @type value: dict
         """
         pass
+
+    @abstractmethod
+    def reset_cache(self):
+        """
+        Reset internal cache if any.
+        """
+        self._cache = {}
+
 #}
