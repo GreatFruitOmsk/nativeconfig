@@ -81,12 +81,12 @@ class JSONConfig(MemoryConfig):
             return self._get_json_value(name)
 
     def set_value(self, name, raw_value):
-        super().set_value(name, raw_value)
         self._set_json_value(name, raw_value)
+        super().set_value(name, raw_value)
 
     def del_value(self, name):
-        super().del_value(name)
         self._set_json_value(name, None)
+        super().del_value(name)
 
     def get_array_value(self, name, allow_cache=False):
         if allow_cache:
@@ -95,8 +95,8 @@ class JSONConfig(MemoryConfig):
             return self.get_value(name)
 
     def set_array_value(self, name, value):
-        super().set_array_value(name, value)
         self.set_value(name, value)
+        super().set_array_value(name, value)
 
     def get_dict_value(self, name, allow_cache=False):
         if allow_cache:
@@ -105,8 +105,8 @@ class JSONConfig(MemoryConfig):
             return self.get_value(name)
 
     def set_dict_value(self, name, value):
-        super().set_dict_value(name, value)
         self.set_value(name, value)
+        super().set_dict_value(name, value)
 
     def reset_cache(self):
         super().reset_cache()
