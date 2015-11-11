@@ -1,7 +1,7 @@
 import logging
 import winreg
 
-from nativeconfig.config.base_config import BaseConfig
+from nativeconfig.config.memory_config import MemoryConfig
 
 
 LOG = logging.getLogger('nativeconfig')
@@ -32,7 +32,7 @@ def traverse_registry_key(key, sub_key):
         yield sub_key
 
 
-class RegistryConfig(BaseConfig):
+class RegistryConfig(MemoryConfig):
     """
     Store config in Windows Registry.
 
@@ -48,36 +48,43 @@ class RegistryConfig(BaseConfig):
 
         super(RegistryConfig, self).__init__()
 
-#{ BaseConfig
+    #{ BaseConfig
 
-    def get_value(self, name):
-        try:
-            with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
-                try:
-                    value, value_type = winreg.QueryValueEx(app_key, name)
+    def get_value(self, name, allow_cache=False):
+        if allow_cache and super().has_value(name):
+            return super().get_value(name, allow_cache)
+        else:
+            try:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
+                    try:
+                        value, value_type = winreg.QueryValueEx(app_key, name)
 
-                    if not value_type == winreg.REG_SZ:
-                        raise ValueError("Value must be of REG_SZ type!")
+                        if not value_type == winreg.REG_SZ:
+                            raise ValueError("Value must be of REG_SZ type!")
 
-                    return value
-                except OSError:
-                    pass
-        except:
-            self.LOG.exception("Unable to get \"%s\" from the registry:", name)
+                        super().set_value(name, value)
+                        return value
+                    except OSError:
+                        pass
+            except:
+                self.LOG.exception("Unable to get \"%s\" from the registry:", name)
 
-        return None
+            return None
 
     def set_value(self, name, raw_value):
         try:
             if raw_value is not None:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_SZ, raw_value)
+
+                super().set_value(name, raw_value)
             else:
                 self.del_value(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
     def del_value(self, name):
+        super().del_value(name)
         try:
             try:
                 for k in traverse_registry_key(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)):
@@ -85,61 +92,73 @@ class RegistryConfig(BaseConfig):
             except OSError:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_ALL_ACCESS) as app_key:
                     winreg.DeleteValue(app_key, name)
+
+            super().del_value(name)
         except:
             self.LOG.info("Unable to delete \"%s\" from the registry:", name)
 
-    def get_array_value(self, name):
-        try:
-            with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
-                value, value_type = winreg.QueryValueEx(app_key, name)
+    def get_array_value(self, name, allow_cache=False):
+        if allow_cache and super().has_value(name):
+            return super().get_array_value(name, allow_cache)
+        else:
+            try:
+                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
+                    value, value_type = winreg.QueryValueEx(app_key, name)
 
-                if not value_type == winreg.REG_MULTI_SZ:
-                    raise ValueError("Value must be of REG_MULTI_SZ type!")
+                    if not value_type == winreg.REG_MULTI_SZ:
+                        raise ValueError("Value must be of REG_MULTI_SZ type!")
 
-                return value
-        except:
-            self.LOG.info("Unable to get array \"%s\" from the registry:", name, exc_info=True)
+                    super().set_array_value(name, value)
+                    return value
+            except:
+                self.LOG.info("Unable to get array \"%s\" from the registry:", name, exc_info=True)
 
-        return None
+            return None
 
     def set_array_value(self, name, value):
         try:
             if value is not None:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_MULTI_SZ, value)
+
+                super().set_array_value(name, value)
             else:
                 self.del_value(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
-    def get_dict_value(self, name):
-        try:
-            with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name), 0, winreg.KEY_ALL_ACCESS) as app_key:
-                v = {}
+    def get_dict_value(self, name, allow_cache=False):
+        if allow_cache and super().has_value(name):
+            return super().get_dict_value(name, allow_cache)
+        else:
+            try:
+                with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name), 0, winreg.KEY_ALL_ACCESS) as app_key:
+                    v = {}
 
-                try:
-                    i = 0
-                    while True:
-                        name, value, value_type = winreg.EnumValue(app_key, i)
+                    try:
+                        i = 0
+                        while True:
+                            name, value, value_type = winreg.EnumValue(app_key, i)
 
-                        if value_type != winreg.REG_SZ:
-                            raise ("Value must be of REG_SZ type!")
+                            if value_type != winreg.REG_SZ:
+                                raise ("Value must be of REG_SZ type!")
 
-                        if value is not None:
-                            v[name] = value
+                            if value is not None:
+                                v[name] = value
 
-                        i += 1
-                except OSError as e:
-                    if e.winerror != ERROR_NO_MORE_ITEMS and e.winerror != ERROR_NO_MORE_FILES:
-                        raise
-                    else:
-                        pass  # end of keys
+                            i += 1
+                    except OSError as e:
+                        if e.winerror != ERROR_NO_MORE_ITEMS and e.winerror != ERROR_NO_MORE_FILES:
+                            raise
+                        else:
+                            pass  # end of keys
 
-                return v
-        except:
-            self.LOG.info("Unable to get dict '%s' from the registry:")
+                    super().set_dict_value(name, v)
+                    return v
+            except:
+                self.LOG.info("Unable to get dict '%s' from the registry:")
 
-        return None
+            return None
 
     def set_dict_value(self, name, value):
         try:
@@ -148,6 +167,8 @@ class RegistryConfig(BaseConfig):
                 with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)) as app_key:
                     for k, v in value.items():
                         winreg.SetValueEx(app_key, k, 0, winreg.REG_SZ, v)
+
+                super().set_dict_value(name, value)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
-#}
+    #}
