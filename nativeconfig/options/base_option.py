@@ -47,6 +47,7 @@ class BaseOption(property, metaclass=ABCMeta):
                  choices=None,
                  env_name=None,
                  default=None,
+                 allow_cache=False,
                  doc=None):
         """
         @param name: Name of the property.
@@ -67,6 +68,9 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param default: Default Python Value of the option. Deep copied.
 
+        @param allow_cache: Whether value can be cached.
+        @type allow_cache: bool
+
         @raise InitializationError: If any of arguments is incorrect. Only handles most obvious errors.
         @raise ValidationError: If default or any of choices is invalid.
         """
@@ -80,6 +84,7 @@ class BaseOption(property, metaclass=ABCMeta):
         self._choices = copy.deepcopy(choices) if choices is not None else choices
         self._env_name = env_name
         self._default = copy.deepcopy(default) if default is not None else default
+        self._allow_cache = allow_cache
         self.__doc__ = doc or self.__doc__
 
         self._one_shot_value = None
@@ -218,7 +223,7 @@ class BaseOption(property, metaclass=ABCMeta):
             LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self.name, self._one_shot_value)
             python_value, source = self._one_shot_value, ValueSource.one_shot
         elif python_value is None:
-            raw_value = getattr(enclosing_self, self._getter)(self.name)
+            raw_value = getattr(enclosing_self, self._getter)(self.name, allow_cache=self._allow_cache)
             if raw_value is not None:
                 python_value, source = make_python_value_from_raw_value(raw_value, ValueSource.config)
 
