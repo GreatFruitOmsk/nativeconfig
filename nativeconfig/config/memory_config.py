@@ -23,31 +23,31 @@ class MemoryConfig(BaseConfig):
 
     #{ BaseConfig
 
-    def get_value(self, name, allow_cache=False):
+    def get_value_lockfree(self, name, allow_cache=False):
         return self._config.get(name, None)
 
-    def set_value(self, name, raw_value):
+    def set_value_lockfree(self, name, raw_value):
         if raw_value is not None:
             self._config[name] = raw_value
         else:
             self._config.pop(name, None)
 
-    def del_value(self, name):
+    def del_value_lockfree(self, name):
         self._config.pop(name, None)
 
-    def get_array_value(self, name, allow_cache=False):
+    def get_array_value_lockfree(self, name, allow_cache=False):
         return self._config.get(name, None)
 
-    def set_array_value(self, name, value):
+    def set_array_value_lockfree(self, name, value):
         if value is not None:
             self._config[name] = value
         else:
             self._config.pop(name, None)
 
-    def get_dict_value(self, name, allow_cache=False):
+    def get_dict_value_lockfree(self, name, allow_cache=False):
         return self._config.get(name, None)
 
-    def set_dict_value(self, name, value):
+    def set_dict_value_lockfree(self, name, value):
         if value is not None:
             self._config[name] = value
         else:

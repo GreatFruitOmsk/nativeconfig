@@ -109,15 +109,16 @@ class BaseConfig(metaclass=_OrderedClass):
                     properties.add(attribute_value.name)
 
     def __init__(self):
+        self._lock = threading.Lock()
         self.validate()
         super().__init__()
         self.migrate(self.config_version)
 
-#{ Default options
+    #{ Default options
 
     config_version = StringOption(CONFIG_VERSION_OPTION_NAME, default=CONFIG_VERSION, doc="Version of the config.")
 
-#{ Access options by name
+    #{ Access options by name
 
     def get_value_for_option_name(self, name):
         """
@@ -365,7 +366,7 @@ class BaseConfig(metaclass=_OrderedClass):
         else:
             warn("No option named \"{}\".".format(name))
 
-#{ Enumeration
+    #{ Enumeration
 
     def options(self):
         """
@@ -404,7 +405,7 @@ class BaseConfig(metaclass=_OrderedClass):
             python_value, source = o.read_value(self)
             yield o.name, o.serialize_json(python_value), source
 
-#{ Snapshots
+    #{ Snapshots
 
     def snapshot(self):
         """
@@ -428,7 +429,7 @@ class BaseConfig(metaclass=_OrderedClass):
             # but set_value_for_option_name expects JSON.
             self.set_json_value_for_option_name(k, json.dumps(v))
 
-#{ Introspection
+    #{ Introspection
 
     def option_for_name(self, name):
         """
@@ -445,7 +446,7 @@ class BaseConfig(metaclass=_OrderedClass):
         else:
             return None
 
-#{ Recovery and migrations
+    #{ Recovery and migrations
 
     def resolve_value(self, exc_info, name, raw_or_json_value, source):
         """
@@ -511,10 +512,38 @@ class BaseConfig(metaclass=_OrderedClass):
 
         self.del_value(old_name)
 
-#{ Access backend
+    #{ Access backend
+
+    def get_value(self, name, allow_cache=False):
+        with self._lock:
+            return self.get_value_lockfree(name, allow_cache)
+
+    def set_value(self, name, raw_value):
+        with self._lock:
+            self.set_value_lockfree(name, raw_value)
+
+    def del_value(self, name):
+        with self._lock:
+            self.del_value_lockfree(name)
+
+    def get_array_value(self, name, allow_cache=False):
+        with self._lock:
+            return self.get_array_value_lockfree(name, allow_cache)
+
+    def set_array_value(self, name, value):
+        with self._lock:
+            self.set_array_value_lockfree(name, value)
+
+    def get_dict_value(self, name, allow_cache=False):
+        with self._lock:
+            return self.get_dict_value_lockfree(name, allow_cache)
+
+    def set_dict_value(self, name, value):
+        with self._lock:
+            self.set_dict_value_lockfree(name, value)
 
     @abstractmethod
-    def get_value(self, name, allow_cache=False):
+    def get_value_lockfree(self, name, allow_cache=False):
         """
         Extract Raw Value for a given name from the backend.
 
@@ -529,7 +558,7 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def set_value(self, name, raw_value):
+    def set_value_lockfree(self, name, raw_value):
         """
         Store Raw Value for a given name in the backend.
 
@@ -545,7 +574,7 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def del_value(self, name):
+    def del_value_lockfree(self, name):
         """
         Remove value for a given name from the backend.
 
@@ -555,7 +584,7 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def get_array_value(self, name, allow_cache=False):
+    def get_array_value_lockfree(self, name, allow_cache=False):
         """
         Extract an array of Raw Values for a given name from the backend.
 
@@ -570,7 +599,7 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def set_array_value(self, name, value):
+    def set_array_value_lockfree(self, name, value):
         """
         Store new value which is an array of Raw Values for a given name in the backend.
 
@@ -583,7 +612,7 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def get_dict_value(self, name, allow_cache=False):
+    def get_dict_value_lockfree(self, name, allow_cache=False):
         """
         Extract a dict of Raw Values for a given name from the backend.
 
@@ -598,7 +627,7 @@ class BaseConfig(metaclass=_OrderedClass):
         pass
 
     @abstractmethod
-    def set_dict_value(self, name, value):
+    def set_dict_value_lockfree(self, name, value):
         """
         Store new value which is a dict of Raw Values for a given name in the backend.
 

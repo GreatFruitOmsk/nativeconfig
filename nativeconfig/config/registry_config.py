@@ -50,9 +50,9 @@ class RegistryConfig(MemoryConfig):
 
     #{ BaseConfig
 
-    def get_value(self, name, allow_cache=False):
+    def get_value_lockfree(self, name, allow_cache=False):
         if allow_cache and super().has_cached_value(name):
-            return super().get_value(name, allow_cache)
+            return super().get_value_lockfree(name, allow_cache)
         else:
             try:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
@@ -62,7 +62,7 @@ class RegistryConfig(MemoryConfig):
                         if not value_type == winreg.REG_SZ:
                             raise ValueError("Value must be of REG_SZ type!")
 
-                        super().set_value(name, value)
+                        super().set_value_lockfree(name, value)
                         return value
                     except OSError:
                         pass
@@ -71,20 +71,20 @@ class RegistryConfig(MemoryConfig):
 
             return None
 
-    def set_value(self, name, raw_value):
+    def set_value_lockfree(self, name, raw_value):
         try:
             if raw_value is not None:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_SZ, raw_value)
 
-                super().set_value(name, raw_value)
+                super().set_value_lockfree(name, raw_value)
             else:
-                self.del_value(name)
+                self.del_value_lockfree(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
-    def del_value(self, name):
-        super().del_value(name)
+    def del_value_lockfree(self, name):
+        super().del_value_lockfree(name)
         try:
             try:
                 for k in traverse_registry_key(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)):
@@ -93,13 +93,13 @@ class RegistryConfig(MemoryConfig):
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_ALL_ACCESS) as app_key:
                     winreg.DeleteValue(app_key, name)
 
-            super().del_value(name)
+            super().del_value_lockfree(name)
         except:
             self.LOG.info("Unable to delete \"%s\" from the registry:", name)
 
-    def get_array_value(self, name, allow_cache=False):
+    def get_array_value_lockfree(self, name, allow_cache=False):
         if allow_cache and super().has_cached_value(name):
-            return super().get_array_value(name, allow_cache)
+            return super().get_array_value_lockfree(name, allow_cache)
         else:
             try:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
@@ -108,28 +108,28 @@ class RegistryConfig(MemoryConfig):
                     if not value_type == winreg.REG_MULTI_SZ:
                         raise ValueError("Value must be of REG_MULTI_SZ type!")
 
-                    super().set_array_value(name, value)
+                    super().set_array_value_lockfree(name, value)
                     return value
             except:
                 self.LOG.info("Unable to get array \"%s\" from the registry:", name, exc_info=True)
 
             return None
 
-    def set_array_value(self, name, value):
+    def set_array_value_lockfree(self, name, value):
         try:
             if value is not None:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_MULTI_SZ, value)
 
-                super().set_array_value(name, value)
+                super().set_array_value_lockfree(name, value)
             else:
-                self.del_value(name)
+                self.del_value_lockfree(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
-    def get_dict_value(self, name, allow_cache=False):
+    def get_dict_value_lockfree(self, name, allow_cache=False):
         if allow_cache and super().has_cached_value(name):
-            return super().get_dict_value(name, allow_cache)
+            return super().get_dict_value_lockfree(name, allow_cache)
         else:
             try:
                 with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name), 0, winreg.KEY_ALL_ACCESS) as app_key:
@@ -153,22 +153,22 @@ class RegistryConfig(MemoryConfig):
                         else:
                             pass  # end of keys
 
-                    super().set_dict_value(name, v)
+                    super().set_dict_value_lockfree(name, v)
                     return v
             except:
                 self.LOG.info("Unable to get dict '%s' from the registry:")
 
             return None
 
-    def set_dict_value(self, name, value):
+    def set_dict_value_lockfree(self, name, value):
         try:
-            self.del_value(name)
+            self.del_value_lockfree(name)
             if value is not None:
                 with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)) as app_key:
                     for k, v in value.items():
                         winreg.SetValueEx(app_key, k, 0, winreg.REG_SZ, v)
 
-                super().set_dict_value(name, value)
+                super().set_dict_value_lockfree(name, value)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
