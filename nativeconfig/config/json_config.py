@@ -74,39 +74,39 @@ class JSONConfig(MemoryConfig):
 
     #{ BaseConfig
 
-    def get_value(self, name, allow_cache=False):
+    def get_value_lockfree(self, name, allow_cache=False):
         if allow_cache:
-            return super().get_value(name, allow_cache)
+            return super().get_value_lockfree(name, allow_cache)
         else:
             return self._get_json_value(name)
 
-    def set_value(self, name, raw_value):
+    def set_value_lockfree(self, name, raw_value):
         self._set_json_value(name, raw_value)
-        super().set_value(name, raw_value)
+        super().set_value_lockfree(name, raw_value)
 
-    def del_value(self, name):
+    def del_value_lockfree(self, name):
         self._set_json_value(name, None)
-        super().del_value(name)
+        super().del_value_lockfree(name)
 
-    def get_array_value(self, name, allow_cache=False):
+    def get_array_value_lockfree(self, name, allow_cache=False):
         if allow_cache:
-            return super().get_array_value(name, allow_cache)
+            return super().get_array_value_lockfree(name, allow_cache)
         else:
-            return self.get_value(name)
+            return self.get_value_lockfree(name)
 
-    def set_array_value(self, name, value):
-        self.set_value(name, value)
-        super().set_array_value(name, value)
+    def set_array_value_lockfree(self, name, value):
+        self.set_value_lockfree(name, value)
+        super().set_array_value_lockfree(name, value)
 
-    def get_dict_value(self, name, allow_cache=False):
+    def get_dict_value_lockfree(self, name, allow_cache=False):
         if allow_cache:
-            return super().get_dict_value(name, allow_cache)
+            return super().get_dict_value_lockfree(name, allow_cache)
         else:
-            return self.get_value(name)
+            return self.get_value_lockfree(name)
 
-    def set_dict_value(self, name, value):
-        self.set_value(name, value)
-        super().set_dict_value(name, value)
+    def set_dict_value_lockfree(self, name, value):
+        self.set_value_lockfree(name, value)
+        super().set_dict_value_lockfree(name, value)
 
     def reset_cache(self):
         super().reset_cache()
