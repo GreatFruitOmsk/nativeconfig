@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
+import contextlib
 import inspect
 import json
 import logging
@@ -59,7 +60,10 @@ class BaseConfig(metaclass=_OrderedClass):
     """
     Base class for all configs.
 
-    Methods that work with options by name does not fail explicitly but use warnings.warn.
+    Methods that work with options by name does not fail explicitly but use warnings.warn
+
+    Back end can be accessed by 2 groups of methods: thread safe and lock free. Context management
+    is also implemented so you can lock once for multiple accesses.
 
     @cvar CONFIG_VERSION: Version of the config. Used during migrations and usually should be identical to app's __version__.
     @cvar CONFIG_VERSION_OPTION_NAME: Name of the option that represents config version in backend.
@@ -113,6 +117,13 @@ class BaseConfig(metaclass=_OrderedClass):
         self.validate()
         super().__init__()
         self.migrate(self.config_version)
+
+    def __enter__(self):
+        self._lock.acquire()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        with contextlib.suppress(RuntimeError):
+            self._lock.release()
 
     #{ Default options
 
