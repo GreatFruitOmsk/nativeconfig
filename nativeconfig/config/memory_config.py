@@ -7,53 +7,44 @@ class MemoryConfig(BaseConfig):
     """
     Store config in in-memory dict.
     """
-    def __init__(self, initial_config=None):
+    def __init__(self):
         """
         @param initial_config: Initial state of the memory config.
         @type initial_config: dict or None
         """
-        self._config = deepcopy(initial_config) if initial_config else {}
+        self._config = {}
         super().__init__()
-
-    def has_cached_value(self, name):
-        return name in self._config
-
-    def set_cached_config(self, config):
-        self._config = deepcopy(config)
 
     #{ BaseConfig
 
-    def get_value_lockfree(self, name, allow_cache=False):
+    def get_value_cache_free(self, name):
         return self._config.get(name, None)
 
-    def set_value_lockfree(self, name, raw_value):
+    def set_value_cache_free(self, name, raw_value):
         if raw_value is not None:
             self._config[name] = raw_value
         else:
             self._config.pop(name, None)
 
-    def del_value_lockfree(self, name):
+    def del_value_cache_free(self, name):
         self._config.pop(name, None)
 
-    def get_array_value_lockfree(self, name, allow_cache=False):
+    def get_array_value_cache_free(self, name):
         return self._config.get(name, None)
 
-    def set_array_value_lockfree(self, name, value):
+    def set_array_value_cache_free(self, name, value):
         if value is not None:
             self._config[name] = value
         else:
             self._config.pop(name, None)
 
-    def get_dict_value_lockfree(self, name, allow_cache=False):
+    def get_dict_value_cache_free(self, name):
         return self._config.get(name, None)
 
-    def set_dict_value_lockfree(self, name, value):
+    def set_dict_value_cache_free(self, name, value):
         if value is not None:
             self._config[name] = value
         else:
             self._config.pop(name, None)
-
-    def reset_cache(self):
-        self._config = {}
 
     #}

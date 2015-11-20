@@ -113,9 +113,12 @@ class BaseConfig(metaclass=_OrderedClass):
                     properties.add(attribute_value.name)
 
     def __init__(self):
-        self._lock = threading.Lock()
         self.validate()
         super().__init__()
+
+        self._lock = threading.Lock()
+        self._cache = self.reset_cache()
+
         self.migrate(self.config_version)
 
     def __enter__(self):
@@ -523,79 +526,63 @@ class BaseConfig(metaclass=_OrderedClass):
 
         self.del_value(old_name)
 
-    #{ Access backend
+    #{ Cache
+
+    def reset_cache(self):
+        """
+        Return reset value for the cache.
+        """
+        return {}
+
+    #{ Backend access
 
     def get_value(self, name, allow_cache=False):
-        with self._lock:
-            return self.get_value_lockfree(name, allow_cache)
-
-    def set_value(self, name, raw_value):
-        with self._lock:
-            self.set_value_lockfree(name, raw_value)
-
-    def del_value(self, name):
-        with self._lock:
-            self.del_value_lockfree(name)
-
-    def get_array_value(self, name, allow_cache=False):
-        with self._lock:
-            return self.get_array_value_lockfree(name, allow_cache)
-
-    def set_array_value(self, name, value):
-        with self._lock:
-            self.set_array_value_lockfree(name, value)
-
-    def get_dict_value(self, name, allow_cache=False):
-        with self._lock:
-            return self.get_dict_value_lockfree(name, allow_cache)
-
-    def set_dict_value(self, name, value):
-        with self._lock:
-            self.set_dict_value_lockfree(name, value)
-
-    @abstractmethod
-    def get_value_lockfree(self, name, allow_cache=False):
         """
         Extract Raw Value for a given name from the backend.
 
         @param name: Name of the option to get.
         @type name: str
 
-        @param allow_cache: If True, config will return internal copy instead of escalating call to underlying backend.
+        @param allow_cache: If True, config will return cached copy if any.
+            If value is not known, it will be read from the backend and cached.
         @type allow_cache: bool
 
         @rtype: str or None
         """
-        pass
+        with self._lock:
+            return self.get_value_lock_free(name, allow_cache)
 
-    @abstractmethod
-    def set_value_lockfree(self, name, raw_value):
+    def set_value(self, name, raw_value, allow_cache=False):
         """
         Store Raw Value for a given name in the backend.
 
         @param name: Name of the option to set.
         @type name: str
 
-        @param allow_cache: See get_value.
+        @param allow_cache: If True, value will only be written to the backend if it's different
+            than cached copy.
         @type allow_cache: bool
 
         @param raw_value: Value to set.
         @type raw_value: str
         """
-        pass
+        with self._lock:
+            self.set_value_lock_free(name, raw_value, allow_cache)
 
-    @abstractmethod
-    def del_value_lockfree(self, name):
+    def del_value(self, name, allow_cache=False):
         """
         Remove value for a given name from the backend.
 
         @param name: Name of the option to delete.
         @type name: str
-        """
-        pass
 
-    @abstractmethod
-    def get_array_value_lockfree(self, name, allow_cache=False):
+        @param allow_cache: If True, value will only be deleted if it exists is known to not exist to cache.
+        @type allow_cache: bool
+        """
+        with self._lock:
+            self.del_value_lock_free(name, allow_cache)
+
+    def get_array_value(self, name, allow_cache=False):
         """
         Extract an array of Raw Values for a given name from the backend.
 
@@ -605,12 +592,12 @@ class BaseConfig(metaclass=_OrderedClass):
         @param allow_cache: See get_value.
         @type allow_cache: bool
 
-        @rtype: list or None
+        @rtype: [str] or None
         """
-        pass
+        with self._lock:
+            return self.get_array_value_lock_free(name, allow_cache)
 
-    @abstractmethod
-    def set_array_value_lockfree(self, name, value):
+    def set_array_value(self, name, value, allow_cache=False):
         """
         Store new value which is an array of Raw Values for a given name in the backend.
 
@@ -618,12 +605,15 @@ class BaseConfig(metaclass=_OrderedClass):
         @type name: str
 
         @param value:  Value to set.
-        @type value: list
-        """
-        pass
+        @type value: [str]
 
-    @abstractmethod
-    def get_dict_value_lockfree(self, name, allow_cache=False):
+        @param allow_cache: See set_value.
+        @type allow_cache: bool
+        """
+        with self._lock:
+            self.set_array_value_lock_free(name, value, allow_cache)
+
+    def get_dict_value(self, name, allow_cache=False):
         """
         Extract a dict of Raw Values for a given name from the backend.
 
@@ -633,12 +623,12 @@ class BaseConfig(metaclass=_OrderedClass):
         @param allow_cache: See get_value.
         @type allow_cache: bool
 
-        @rtype: dict or None
+        @rtype: {str: str} or None
         """
-        pass
+        with self._lock:
+            return self.get_dict_value_lock_free(name, allow_cache)
 
-    @abstractmethod
-    def set_dict_value_lockfree(self, name, value):
+    def set_dict_value(self, name, value, allow_cache=False):
         """
         Store new value which is a dict of Raw Values for a given name in the backend.
 
@@ -646,15 +636,158 @@ class BaseConfig(metaclass=_OrderedClass):
         @type name: str
 
         @param value:  Value to set. Must be a dict of serialized values.
-        @type value: dict
+        @type value: {str: str}
+
+        @param allow_cache: See set_value.
+        @type allow_cache: bool
+        """
+        with self._lock:
+            self.set_dict_value_lock_free(name, value, allow_cache)
+
+    #{ Lock-free backend access
+
+    def get_value_lock_free(self, name, allow_cache=False):
+        """
+        Lock-free version of get_value.
+
+        @see: get_value
+        """
+        if allow_cache and name in self._cache:
+            return self._cache[name]
+        else:
+            v = self.get_value_cache_free(name)
+            self._cache[name] = v
+            return v
+
+    def set_value_lock_free(self, name, raw_value, allow_cache=False):
+        """
+        Lock-free version of set_value.
+
+        @see: set_value
+        """
+        if not allow_cache or self._cache.get(name) != raw_value:
+            self.set_value_cache_free(name, raw_value)
+            self._cache[name] = raw_value
+
+    def del_value_lock_free(self, name, allow_cache=False):
+        """
+        Lock-free version of del_value.
+
+        @see: del_value
+        """
+        if not allow_cache or name not in self._cache or self._cache[name] is not None:
+            self.del_value_cache_free(name)
+            self._cache[name] = None
+
+    def get_array_value_lock_free(self, name, allow_cache=False):
+        """
+        Lock-free version of get_array_value.
+
+        @see: get_array_value
+        """
+        if allow_cache and name in self._cache:
+            return self._cache[name]
+        else:
+            v = self.get_array_value_cache_free(name)
+            self._cache[name] = v
+            return v
+
+    def set_array_value_lock_free(self, name, value, allow_cache=False):
+        """
+        Lock-free version of set_array_value.
+
+        @see: set_array_value
+        """
+        if not allow_cache or self._cache.get(name) != value:
+            self.set_array_value_cache_free(name, value)
+            self._cache[name] = value
+
+    def get_dict_value_lock_free(self, name, allow_cache=False):
+        """
+        Lock-free version of get_dict_value.
+
+        @see: get_dict_value
+        """
+        if allow_cache and name in self._cache:
+            return self._cache[name]
+        else:
+            v = self.get_dict_value_cache_free(name)
+            self._cache[name] = v
+            return v
+
+    def set_dict_value_lock_free(self, name, value, allow_cache=False):
+        """
+        Lock-free version of set_dict_value.
+
+        @see: set_dict_value
+        """
+        if not allow_cache or self._cache[name] != value:
+            self.set_dict_value_cache_free(name, value)
+            self._cache[name] = value
+
+    #{ Cache-free backend access
+
+    @abstractmethod
+    def get_value_cache_free(self, name):
+        """
+        Cache-free version of get_value.
+
+        @see: get_value
         """
         pass
 
     @abstractmethod
-    def reset_cache(self):
+    def set_value_cache_free(self, name, raw_value):
         """
-        Reset internal cache if any.
-        """
-        self._cache = {}
+        Cache-free version of set_value.
 
-#}
+        @see: set_value
+        """
+        pass
+
+    @abstractmethod
+    def del_value_cache_free(self, name):
+        """
+        Cache-free version of del_value.
+
+        @see: del_value
+        """
+        pass
+
+    @abstractmethod
+    def get_array_value_cache_free(self, name):
+        """
+        Cache-free version of get_array_value.
+
+        @see: get_array_value
+        """
+        pass
+
+    @abstractmethod
+    def set_array_value_cache_free(self, name, value):
+        """
+        Cache-free version of set_array_value.
+
+        @see: set_array_value
+        """
+        pass
+
+    @abstractmethod
+    def get_dict_value_cache_free(self, name):
+        """
+        Cache-free version of get_dict_value.
+
+        @see: get_dict_value
+        """
+        pass
+
+    @abstractmethod
+    def set_dict_value_cache_free(self, name, value):
+        """
+        Cache-free version of set_dict_value.
+
+        @see: set_dict_value
+        """
+        pass
+
+    #}

@@ -1,7 +1,7 @@
 import logging
 import winreg
 
-from nativeconfig.config.memory_config import MemoryConfig
+from nativeconfig.config.base_config import BaseConfig
 
 
 LOG = logging.getLogger('nativeconfig')
@@ -32,7 +32,7 @@ def traverse_registry_key(key, sub_key):
         yield sub_key
 
 
-class RegistryConfig(MemoryConfig):
+class RegistryConfig(BaseConfig):
     """
     Store config in Windows Registry.
 
@@ -50,41 +50,34 @@ class RegistryConfig(MemoryConfig):
 
     #{ BaseConfig
 
-    def get_value_lockfree(self, name, allow_cache=False):
-        if allow_cache and super().has_cached_value(name):
-            return super().get_value_lockfree(name, allow_cache)
-        else:
-            try:
-                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
-                    try:
-                        value, value_type = winreg.QueryValueEx(app_key, name)
+    def get_value_cache_free(self, name):
+        try:
+            with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
+                try:
+                    value, value_type = winreg.QueryValueEx(app_key, name)
 
-                        if not value_type == winreg.REG_SZ:
-                            raise ValueError("Value must be of REG_SZ type!")
+                    if not value_type == winreg.REG_SZ:
+                        raise ValueError("Value must be of REG_SZ type!")
 
-                        super().set_value_lockfree(name, value)
-                        return value
-                    except OSError:
-                        pass
-            except:
-                self.LOG.exception("Unable to get \"%s\" from the registry:", name)
+                    return value
+                except OSError:
+                    pass
+        except:
+            self.LOG.exception("Unable to get \"%s\" from the registry:", name)
 
-            return None
+        return None
 
-    def set_value_lockfree(self, name, raw_value):
+    def set_value_cache_free(self, name, raw_value):
         try:
             if raw_value is not None:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_SZ, raw_value)
-
-                super().set_value_lockfree(name, raw_value)
             else:
-                self.del_value_lockfree(name)
+                self.del_value_cache_free(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
-    def del_value_lockfree(self, name):
-        super().del_value_lockfree(name)
+    def del_value_cache_free(self, name):
         try:
             try:
                 for k in traverse_registry_key(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)):
@@ -92,87 +85,69 @@ class RegistryConfig(MemoryConfig):
             except OSError:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_ALL_ACCESS) as app_key:
                     winreg.DeleteValue(app_key, name)
-
-            super().del_value_lockfree(name)
         except:
             self.LOG.info("Unable to delete \"%s\" from the registry:", name)
 
-    def get_array_value_lockfree(self, name, allow_cache=False):
-        if allow_cache and super().has_cached_value(name):
-            return super().get_array_value_lockfree(name, allow_cache)
-        else:
-            try:
-                with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
-                    value, value_type = winreg.QueryValueEx(app_key, name)
+    def get_array_value_cache_free(self, name):
+        try:
+            with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH) as app_key:
+                value, value_type = winreg.QueryValueEx(app_key, name)
 
-                    if not value_type == winreg.REG_MULTI_SZ:
-                        raise ValueError("Value must be of REG_MULTI_SZ type!")
+                if not value_type == winreg.REG_MULTI_SZ:
+                    raise ValueError("Value must be of REG_MULTI_SZ type!")
 
-                    super().set_array_value_lockfree(name, value)
-                    return value
-            except:
-                self.LOG.info("Unable to get array \"%s\" from the registry:", name, exc_info=True)
+                return value
+        except:
+            self.LOG.info("Unable to get array \"%s\" from the registry:", name, exc_info=True)
 
-            return None
+        return None
 
-    def set_array_value_lockfree(self, name, value):
+    def set_array_value_cache_free(self, name, value):
         try:
             if value is not None:
                 with winreg.OpenKey(self.REGISTRY_KEY, self.REGISTRY_PATH, 0, winreg.KEY_WRITE) as app_key:
                     winreg.SetValueEx(app_key, name, 0, winreg.REG_MULTI_SZ, value)
-
-                super().set_array_value_lockfree(name, value)
             else:
-                self.del_value_lockfree(name)
+                self.del_value_cache_free(name)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
 
-    def get_dict_value_lockfree(self, name, allow_cache=False):
-        if allow_cache and super().has_cached_value(name):
-            return super().get_dict_value_lockfree(name, allow_cache)
-        else:
-            try:
-                with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name), 0, winreg.KEY_ALL_ACCESS) as app_key:
-                    v = {}
-
-                    try:
-                        i = 0
-                        while True:
-                            name, value, value_type = winreg.EnumValue(app_key, i)
-
-                            if value_type != winreg.REG_SZ:
-                                raise ("Value must be of REG_SZ type!")
-
-                            if value is not None:
-                                v[name] = value
-
-                            i += 1
-                    except OSError as e:
-                        if e.winerror != ERROR_NO_MORE_ITEMS and e.winerror != ERROR_NO_MORE_FILES:
-                            raise
-                        else:
-                            pass  # end of keys
-
-                    super().set_dict_value_lockfree(name, v)
-                    return v
-            except:
-                self.LOG.info("Unable to get dict '%s' from the registry:")
-
-            return None
-
-    def set_dict_value_lockfree(self, name, value):
+    def get_dict_value_cache_free(self, name):
         try:
-            self.del_value_lockfree(name)
+            with winreg.OpenKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name), 0, winreg.KEY_ALL_ACCESS) as app_key:
+                v = {}
+
+                try:
+                    i = 0
+                    while True:
+                        name, value, value_type = winreg.EnumValue(app_key, i)
+
+                        if value_type != winreg.REG_SZ:
+                            raise ("Value must be of REG_SZ type!")
+
+                        if value is not None:
+                            v[name] = value
+
+                        i += 1
+                except OSError as e:
+                    if e.winerror != ERROR_NO_MORE_ITEMS and e.winerror != ERROR_NO_MORE_FILES:
+                        raise
+                    else:
+                        pass  # end of keys
+
+                return v
+        except:
+            self.LOG.info("Unable to get dict '%s' from the registry:")
+
+        return None
+
+    def set_dict_value_cache_free(self, name, value):
+        try:
             if value is not None:
                 with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)) as app_key:
                     for k, v in value.items():
                         winreg.SetValueEx(app_key, k, 0, winreg.REG_SZ, v)
-
-                super().set_dict_value_lockfree(name, value)
         except:
             self.LOG.exception("Unable to set \"%s\" in the registry:", name)
-
-    def reset_cache(self):
-        super().reset_cache()
 
     #}

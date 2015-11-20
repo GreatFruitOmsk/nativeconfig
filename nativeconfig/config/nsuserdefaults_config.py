@@ -37,7 +37,9 @@ class NSUserDefaultsConfig(BaseConfig):
 
         super(NSUserDefaultsConfig, self).__init__()
 
-    def get_value_lockfree(self, name, allow_cache=False):
+    #{ BaseConfig
+
+    def get_value_cache_free(self, name):
         with objc.autorelease_pool():
             try:
                 v = self._user_defaults.stringForKey_(self._copy_str(name))
@@ -47,24 +49,24 @@ class NSUserDefaultsConfig(BaseConfig):
 
         return None
 
-    def set_value_lockfree(self, name, raw_value):
+    def set_value_cache_free(self, name, raw_value):
         with objc.autorelease_pool():
             try:
                 if raw_value is not None:
                     self._user_defaults.setObject_forKey_(self._copy_str(raw_value), self._copy_str(name))
                 else:
-                    self.del_value_lockfree(self._copy_str(name))
+                    self.del_value_cache_free(self._copy_str(name))
             except:
                 self.LOG.exception("Unable to set '%s' in the user defaults:", name)
 
-    def del_value_lockfree(self, name):
+    def del_value_cache_free(self, name):
         with objc.autorelease_pool():
             try:
                 self._user_defaults.removeObjectForKey_(self._copy_str(name))
             except:
                 self.LOG.exception("Unable to delete '%s' from the user defaults:", name)
 
-    def get_array_value_lockfree(self, name, allow_cache=False):
+    def get_array_value_cache_free(self, name, allow_cache=False):
         with objc.autorelease_pool():
             try:
                 v = self._user_defaults.arrayForKey_(self._copy_str(name))
@@ -74,17 +76,17 @@ class NSUserDefaultsConfig(BaseConfig):
 
         return None
 
-    def set_array_value_lockfree(self, name, value):
+    def set_array_value_cache_free(self, name, value):
         with objc.autorelease_pool():
             try:
                 if value is not None:
                     self._user_defaults.setObject_forKey_(self._copy_array(value), self._copy_str(name))
                 else:
-                    self.del_value_lockfree(self._copy_str(name))
+                    self.del_value_cache_free(self._copy_str(name))
             except:
                 self.LOG.exception("Unable to set array '%s' in the user defaults:", name)
 
-    def get_dict_value_lockfree(self, name, allow_cache=False):
+    def get_dict_value_cache_free(self, name, allow_cache=False):
         with objc.autorelease_pool():
             try:
                 v = self._user_defaults.dictionaryForKey_(self._copy_str(name))
@@ -94,15 +96,14 @@ class NSUserDefaultsConfig(BaseConfig):
 
         return None
 
-    def set_dict_value_lockfree(self, name, value):
+    def set_dict_value_cache_free(self, name, value):
         with objc.autorelease_pool():
             try:
                 if value is not None:
                     self._user_defaults.setObject_forKey_(self._copy_dict(value), self._copy_str(name))
                 else:
-                    self.del_value_lockfree(self._copy_str(name))
+                    self.del_value_cache_free(self._copy_str(name))
             except:
                 self.LOG.exception("Unable to set dict '%s' in the user defaults:", name)
 
-    def reset_cache(self):
-        pass
+    #}
