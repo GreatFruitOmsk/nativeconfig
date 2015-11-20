@@ -261,7 +261,7 @@ class BaseOption(property, metaclass=ABCMeta):
             self.validate(python_value)
             raw_value = self.serialize(python_value)
             LOG.debug("Value of \"%s\" is set to \"%s\".", self.name, raw_value)
-            getattr(enclosing_self, self._setter)(self.name, raw_value)
+            getattr(enclosing_self, self._setter)(self.name, raw_value, allow_cache=self._allow_cache)
         else:
             self.fdel(enclosing_self)
 
@@ -274,5 +274,5 @@ class BaseOption(property, metaclass=ABCMeta):
         self._one_shot_value = None
         self._is_one_shot_value_set = False
         LOG.debug("Delete value of \"%s\".", self.name)
-        getattr(enclosing_self, self._deleter)(self.name)
+        getattr(enclosing_self, self._deleter)(self.name, allow_cache=self._allow_cache)
 #}
