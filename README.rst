@@ -29,6 +29,24 @@ nativeconfig addresses this problem in an elegant and pythonic way:
 will store config in Registry on Windows, in NSUserDefaults on Mac OS X and in json-formatted file everywhere else.
 
 
+Caching
+-------
+Implementations for all platforms support caching which minimizes access to the backend. Specifically value is only read if it's not known to cache
+and written if it's different than cached one.
+
+Simply declare your options with `allow_cache` set to True:
+
+.. code-block:: python
+
+    class MyConfig(PreferredConfig):
+        CONFIG_VERSION = __version__
+        REGISTRY_PATH = r'Software\MyApp'
+        JSON_PATH = os.path.expanduser('~/.config/MyApp/config')
+
+        first_name = StringOption('FirstName', allow_cache=True)
+        last_name = StringOption('LastName', allow_cache=True)
+
+
 JSON as a universal format
 --------------------------
 At some point you will need to provide public interface (e.g. CLI or API) to edit config of your application.
@@ -147,10 +165,12 @@ or you have a better idea of how to recover than using default, you should overr
 Pretty basic: you have exc_info extracted where problem happened (either ValidationError or DeserializationError), name of the option, raw or json value and
 source that explains where error happened.
 
+
 Debugging
 ---------
 The `warn` module is used in some places, so you're advised to debug your app by turning all warnings into errors as described in `docs <https://docs.python.org/library/warnings.html>`_.
 Various logs are written to the `nativeconfig` logger. You can increase verbosity by advancing the level.
+
 
 Testing
 -------
