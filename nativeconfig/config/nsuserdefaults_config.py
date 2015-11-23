@@ -50,6 +50,7 @@ class NSUserDefaultsConfig(BaseConfig):
             try:
                 if raw_value is not None:
                     self._user_defaults.setObject_forKey_(self._copy_str(raw_value), self._copy_str(name))
+                    self._user_defaults.synchronize()
                 else:
                     self.del_value(self._copy_str(name))
             except:
@@ -59,6 +60,7 @@ class NSUserDefaultsConfig(BaseConfig):
         with objc.autorelease_pool():
             try:
                 self._user_defaults.removeObjectForKey_(self._copy_str(name))
+                self._user_defaults.synchronize()
             except:
                 self.LOG.exception("Unable to delete '%s' from the user defaults:", name)
 
@@ -77,6 +79,7 @@ class NSUserDefaultsConfig(BaseConfig):
             try:
                 if value is not None:
                     self._user_defaults.setObject_forKey_(self._copy_array(value), self._copy_str(name))
+                    self._user_defaults.synchronize()
                 else:
                     self.del_value(self._copy_str(name))
             except:
@@ -97,6 +100,7 @@ class NSUserDefaultsConfig(BaseConfig):
             try:
                 if value is not None:
                     self._user_defaults.setObject_forKey_(self._copy_dict(value), self._copy_str(name))
+                    self._user_defaults.synchronize()
                 else:
                     self.del_value(self._copy_str(name))
             except:
