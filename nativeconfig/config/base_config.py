@@ -665,7 +665,7 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @see: set_value
         """
-        if not allow_cache or self._cache.get(name) != raw_value:
+        if not allow_cache or name not in self._cache or self._cache[name] != raw_value:
             self.set_value_cache_free(name, raw_value)
             self._cache[name] = raw_value
 
@@ -698,7 +698,7 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @see: set_array_value
         """
-        if not allow_cache or self._cache.get(name) != value:
+        if not allow_cache or name not in self._cache or self._cache[name] != value:
             self.set_array_value_cache_free(name, value)
             self._cache[name] = value
 
@@ -721,7 +721,7 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @see: set_dict_value
         """
-        if not allow_cache or self._cache[name] != value:
+        if not allow_cache or name not in self._cache or self._cache[name] != value:
             self.set_dict_value_cache_free(name, value)
             self._cache[name] = value
 
