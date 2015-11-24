@@ -34,17 +34,20 @@ Caching
 Implementations for all platforms support caching which minimizes access to the backend. Specifically value is only read if it's not known to cache
 and written if it's different than cached one.
 
-Simply declare your options with `allow_cache` set to True:
+Simply declare your subclass with `ALLOW_CACHE` set to `True`:
 
 .. code-block:: python
 
     class MyConfig(PreferredConfig):
         CONFIG_VERSION = __version__
+        ALLOW_CACHE = True
         REGISTRY_PATH = r'Software\MyApp'
         JSON_PATH = os.path.expanduser('~/.config/MyApp/config')
 
-        first_name = StringOption('FirstName', allow_cache=True)
-        last_name = StringOption('LastName', allow_cache=True)
+        first_name = StringOption('FirstName')
+        last_name = StringOption('LastName')
+
+You can also set this settings per option, by declarding them with `allow_cache` set to `True`.
 
 
 JSON as a universal format
