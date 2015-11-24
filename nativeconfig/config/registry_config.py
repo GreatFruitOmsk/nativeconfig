@@ -143,6 +143,8 @@ class RegistryConfig(BaseConfig):
 
     def set_dict_value_cache_free(self, name, value):
         try:
+            self.del_value_cache_free(name)
+
             if value is not None:
                 with winreg.CreateKey(self.REGISTRY_KEY, r'{}\{}'.format(self.REGISTRY_PATH, name)) as app_key:
                     for k, v in value.items():
