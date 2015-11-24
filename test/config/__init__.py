@@ -731,6 +731,127 @@ class TestConfigMixin(ABC):
         c.reset()
         self.assertEqual(c.get_value('LuckyNumber'), None)
 
+    def test_get_value_is_cached(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.get_value_cache_free = MagicMock(return_value='Ilya')
+
+        c.first_name
+        c.first_name
+        c.first_name
+        self.assertLessEqual(c.get_value_cache_free.call_count, 1)
+
+    def test_set_value_is_cached(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.set_value_cache_free = MagicMock(return_value='Ilya')
+
+        c.first_name = 'Ilya'
+        c.first_name = 'Ilya'
+        c.first_name = 'Ilya'
+        self.assertLessEqual(c.set_value_cache_free.call_count, 1)
+
+    def test_get_array_value_is_cached(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'), default=(1, 2, 3), allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.get_array_value_cache_free = MagicMock(return_value=[1, 2, 3])
+        c.lucky_numbers
+        c.lucky_numbers
+        c.lucky_numbers
+        self.assertLessEqual(c.get_array_value_cache_free.call_count, 1)
+
+    def test_set_array_value_is_cached(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'), default=(1, 2, 3), allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.set_array_value_cache_free = MagicMock(return_value=[1, 2, 3])
+        c.lucky_numbers = [1, 2, 3]
+        c.lucky_numbers = [1, 2, 3]
+        c.lucky_numbers = [1, 2, 3]
+        self.assertLessEqual(c.set_array_value_cache_free.call_count, 1)
+
+    def test_get_dict_value_is_cached(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.get_dict_value_cache_free = MagicMock(return_value={'a': 1, 'b': 2, 'c': 3})
+        c.lucky_numbers
+        c.lucky_numbers
+        c.lucky_numbers
+        self.assertLessEqual(c.get_dict_value_cache_free.call_count, 1)
+
+    def test_set_dict_value_is_cached(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.set_dict_value_cache_free = MagicMock(return_value={'a': 1, 'b': 2, 'c': 3})
+        c.lucky_numbers = {'a': 1, 'b': 2, 'c': 3}
+        c.lucky_numbers = {'a': 1, 'b': 2, 'c': 3}
+        c.lucky_numbers = {'a': 1, 'b': 2, 'c': 3}
+        self.assertLessEqual(c.set_dict_value_cache_free.call_count, 1)
+
+    def test_del_value_is_cached(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.del_value_cache_free = MagicMock()
+
+        del c.lucky_numbers
+        del c.lucky_numbers
+        del c.lucky_numbers
+        self.assertLessEqual(c.del_value_cache_free.call_count, 1)
+
+    def test_set_value_writes_new_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.first_name = 'Artem'
+        c.first_name = 'Konstantin'
+        c.first_name = 'Kirill'
+        self.assertEqual(c.get_value_cache_free('FirstName'), 'Kirill')
+
+    def test_set_array_value_writes_new_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'), default=(1, 2, 3), allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.lucky_numbers = [4, 5, 6]
+        c.lucky_numbers = [7, 8, 9]
+        c.lucky_numbers = [10, 11, 12]
+        self.assertEqual(c.get_array_value_cache_free('LuckyNumber'), ['10', '11', '12'])
+
+    def test_set_dict_value_writes_new_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.lucky_numbers = {'a': 4, 'b': 5, 'c': 6}
+        c.lucky_numbers = {'a': 7, 'b': 8, 'c': 9}
+        c.lucky_numbers = {'a': 10, 'b': 11, 'c': 12}
+        self.assertEqual(c.get_dict_value_cache_free('LuckyNumber'), {'a': '10', 'b': '11', 'c': '12'})
+
+    def test_del_value_writes_new_value(self):
+        class MyConfig(self.CONFIG_TYPE):
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+
+        c = MyConfig.get_instance()
+        c.lucky_numbers = {'a': 4, 'b': 5, 'c': 6}
+        del c.lucky_numbers
+        c.lucky_numbers = {'a': 10, 'b': 11, 'c': 12}
+        del c.lucky_numbers
+        self.assertEqual(c.get_dict_value_cache_free('LuckyNumber'), None)
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass
