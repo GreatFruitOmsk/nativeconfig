@@ -852,6 +852,34 @@ class TestConfigMixin(ABC):
         del c.lucky_numbers
         self.assertEqual(c.get_dict_value_cache_free('LuckyNumber'), None)
 
+    def test_allow_cache(self):
+        class AllowCacheConfig(self.CONFIG_TYPE):
+            ALLOW_CACHE = True
+            first_name = StringOption('FirstName', default='Ilya')
+
+        class DisallowCacheConfig(self.CONFIG_TYPE):
+            ALLOW_CACHE = False
+            first_name = StringOption('FirstName', default='Ilya')
+
+        class DefaultCacheConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya')
+
+        c = AllowCacheConfig.get_instance()
+        c.get_value = MagicMock(return_value='Ilya')
+        c.first_name
+        c.get_value.assert_called_with('FirstName', allow_cache=True)
+
+        c = DisallowCacheConfig.get_instance()
+        c.get_value = MagicMock(return_value='Ilya')
+        c.first_name
+        c.get_value.assert_called_with('FirstName', allow_cache=False)
+
+        c = DefaultCacheConfig.get_instance()
+        c.get_value = MagicMock(return_value='Ilya')
+        c.first_name
+        c.get_value.assert_called_with('FirstName', allow_cache=False)
+
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass

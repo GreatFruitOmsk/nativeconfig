@@ -65,11 +65,13 @@ class BaseConfig(metaclass=_OrderedClass):
     Back end can be accessed by 2 groups of methods: thread safe and lock free. Context management
     is also implemented so you can lock once for multiple accesses.
 
+    @cvar ALLOW_CACHE: Whether options by default will allow cache.
     @cvar CONFIG_VERSION: Version of the config. Used during migrations and usually should be identical to app's __version__.
     @cvar CONFIG_VERSION_OPTION_NAME: Name of the option that represents config version in backend.
 
     @ivar _ordered_options: Ordered dict of options defined in the order of definition from base class to subclasses.
     """
+    ALLOW_CACHE = False
     CONFIG_VERSION = '1.0'
     CONFIG_VERSION_OPTION_NAME = "ConfigVersion"
 
@@ -536,7 +538,7 @@ class BaseConfig(metaclass=_OrderedClass):
 
     #{ Backend access
 
-    def get_value(self, name, allow_cache=False):
+    def get_value(self, name, *, allow_cache=False):
         """
         Extract Raw Value for a given name from the backend.
 
@@ -550,9 +552,9 @@ class BaseConfig(metaclass=_OrderedClass):
         @rtype: str or None
         """
         with self._lock:
-            return self.get_value_lock_free(name, allow_cache)
+            return self.get_value_lock_free(name, allow_cache=allow_cache)
 
-    def set_value(self, name, raw_value, allow_cache=False):
+    def set_value(self, name, raw_value, *, allow_cache=False):
         """
         Store Raw Value for a given name in the backend.
 
@@ -567,9 +569,9 @@ class BaseConfig(metaclass=_OrderedClass):
         @type raw_value: str
         """
         with self._lock:
-            self.set_value_lock_free(name, raw_value, allow_cache)
+            self.set_value_lock_free(name, raw_value, allow_cache=allow_cache)
 
-    def del_value(self, name, allow_cache=False):
+    def del_value(self, name, *, allow_cache=False):
         """
         Remove value for a given name from the backend.
 
@@ -580,9 +582,9 @@ class BaseConfig(metaclass=_OrderedClass):
         @type allow_cache: bool
         """
         with self._lock:
-            self.del_value_lock_free(name, allow_cache)
+            self.del_value_lock_free(name, allow_cache=allow_cache)
 
-    def get_array_value(self, name, allow_cache=False):
+    def get_array_value(self, name, *, allow_cache=False):
         """
         Extract an array of Raw Values for a given name from the backend.
 
@@ -595,9 +597,9 @@ class BaseConfig(metaclass=_OrderedClass):
         @rtype: [str] or None
         """
         with self._lock:
-            return self.get_array_value_lock_free(name, allow_cache)
+            return self.get_array_value_lock_free(name, allow_cache=allow_cache)
 
-    def set_array_value(self, name, value, allow_cache=False):
+    def set_array_value(self, name, value, *, allow_cache=False):
         """
         Store new value which is an array of Raw Values for a given name in the backend.
 
@@ -611,9 +613,9 @@ class BaseConfig(metaclass=_OrderedClass):
         @type allow_cache: bool
         """
         with self._lock:
-            self.set_array_value_lock_free(name, value, allow_cache)
+            self.set_array_value_lock_free(name, value, allow_cache=allow_cache)
 
-    def get_dict_value(self, name, allow_cache=False):
+    def get_dict_value(self, name, *, allow_cache=False):
         """
         Extract a dict of Raw Values for a given name from the backend.
 
@@ -626,9 +628,9 @@ class BaseConfig(metaclass=_OrderedClass):
         @rtype: {str: str} or None
         """
         with self._lock:
-            return self.get_dict_value_lock_free(name, allow_cache)
+            return self.get_dict_value_lock_free(name, allow_cache=allow_cache)
 
-    def set_dict_value(self, name, value, allow_cache=False):
+    def set_dict_value(self, name, value, *, allow_cache=False):
         """
         Store new value which is a dict of Raw Values for a given name in the backend.
 
@@ -642,11 +644,11 @@ class BaseConfig(metaclass=_OrderedClass):
         @type allow_cache: bool
         """
         with self._lock:
-            self.set_dict_value_lock_free(name, value, allow_cache)
+            self.set_dict_value_lock_free(name, value, allow_cache=allow_cache)
 
     #{ Lock-free backend access
 
-    def get_value_lock_free(self, name, allow_cache=False):
+    def get_value_lock_free(self, name, *, allow_cache=False):
         """
         Lock-free version of get_value.
 
@@ -659,7 +661,7 @@ class BaseConfig(metaclass=_OrderedClass):
             self._cache[name] = v
             return v
 
-    def set_value_lock_free(self, name, raw_value, allow_cache=False):
+    def set_value_lock_free(self, name, raw_value, *, allow_cache=False):
         """
         Lock-free version of set_value.
 
@@ -669,7 +671,7 @@ class BaseConfig(metaclass=_OrderedClass):
             self.set_value_cache_free(name, raw_value)
             self._cache[name] = raw_value
 
-    def del_value_lock_free(self, name, allow_cache=False):
+    def del_value_lock_free(self, name, *, allow_cache=False):
         """
         Lock-free version of del_value.
 
@@ -679,7 +681,7 @@ class BaseConfig(metaclass=_OrderedClass):
             self.del_value_cache_free(name)
             self._cache[name] = None
 
-    def get_array_value_lock_free(self, name, allow_cache=False):
+    def get_array_value_lock_free(self, name, *, allow_cache=False):
         """
         Lock-free version of get_array_value.
 
@@ -692,7 +694,7 @@ class BaseConfig(metaclass=_OrderedClass):
             self._cache[name] = v
             return v
 
-    def set_array_value_lock_free(self, name, value, allow_cache=False):
+    def set_array_value_lock_free(self, name, value, *, allow_cache=False):
         """
         Lock-free version of set_array_value.
 
@@ -702,7 +704,7 @@ class BaseConfig(metaclass=_OrderedClass):
             self.set_array_value_cache_free(name, value)
             self._cache[name] = value
 
-    def get_dict_value_lock_free(self, name, allow_cache=False):
+    def get_dict_value_lock_free(self, name, *, allow_cache=False):
         """
         Lock-free version of get_dict_value.
 
@@ -715,7 +717,7 @@ class BaseConfig(metaclass=_OrderedClass):
             self._cache[name] = v
             return v
 
-    def set_dict_value_lock_free(self, name, value, allow_cache=False):
+    def set_dict_value_lock_free(self, name, value, *, allow_cache=False):
         """
         Lock-free version of set_dict_value.
 

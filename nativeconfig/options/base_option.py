@@ -47,7 +47,7 @@ class BaseOption(property, metaclass=ABCMeta):
                  choices=None,
                  env_name=None,
                  default=None,
-                 allow_cache=False,
+                 allow_cache=None,
                  doc=None):
         """
         @param name: Name of the property.
@@ -223,7 +223,8 @@ class BaseOption(property, metaclass=ABCMeta):
             LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self.name, self._one_shot_value)
             python_value, source = self._one_shot_value, ValueSource.one_shot
         elif python_value is None:
-            raw_value = getattr(enclosing_self, self._getter)(self.name, allow_cache=self._allow_cache)
+            allow_cache = self._allow_cache or (hasattr(enclosing_self, 'ALLOW_CACHE') and enclosing_self.ALLOW_CACHE)
+            raw_value = getattr(enclosing_self, self._getter)(self.name, allow_cache=allow_cache)
             if raw_value is not None:
                 python_value, source = make_python_value_from_raw_value(raw_value, ValueSource.config)
 
@@ -261,7 +262,8 @@ class BaseOption(property, metaclass=ABCMeta):
             self.validate(python_value)
             raw_value = self.serialize(python_value)
             LOG.debug("Value of \"%s\" is set to \"%s\".", self.name, raw_value)
-            getattr(enclosing_self, self._setter)(self.name, raw_value, allow_cache=self._allow_cache)
+            allow_cache = self._allow_cache or (hasattr(enclosing_self, 'ALLOW_CACHE') and enclosing_self.ALLOW_CACHE)
+            getattr(enclosing_self, self._setter)(self.name, raw_value, allow_cache=allow_cache)
         else:
             self.fdel(enclosing_self)
 
@@ -274,5 +276,6 @@ class BaseOption(property, metaclass=ABCMeta):
         self._one_shot_value = None
         self._is_one_shot_value_set = False
         LOG.debug("Delete value of \"%s\".", self.name)
-        getattr(enclosing_self, self._deleter)(self.name, allow_cache=self._allow_cache)
+        allow_cache = self._allow_cache or (hasattr(enclosing_self, 'ALLOW_CACHE') and enclosing_self.ALLOW_CACHE)
+        getattr(enclosing_self, self._deleter)(self.name, allow_cache=allow_cache)
 #}
