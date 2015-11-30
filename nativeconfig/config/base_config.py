@@ -670,6 +670,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if not allow_cache or name not in self._cache or self._cache[name] != raw_value:
             self.set_value_cache_free(name, raw_value)
             self._cache[name] = raw_value
+            LOG.debug("Value of \"%s\" is set to \"%s\".", name, raw_value)
 
     def del_value_lock_free(self, name, *, allow_cache=False):
         """
@@ -680,6 +681,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if not allow_cache or name not in self._cache or self._cache[name] is not None:
             self.del_value_cache_free(name)
             self._cache[name] = None
+            LOG.debug("Delete value of \"%s\".", name)
 
     def get_array_value_lock_free(self, name, *, allow_cache=False):
         """
@@ -703,6 +705,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if not allow_cache or name not in self._cache or self._cache[name] != value:
             self.set_array_value_cache_free(name, value)
             self._cache[name] = value
+            LOG.debug("Array value of \"%s\" is set to \"%s\".", name, value)
 
     def get_dict_value_lock_free(self, name, *, allow_cache=False):
         """
@@ -726,6 +729,7 @@ class BaseConfig(metaclass=_OrderedClass):
         if not allow_cache or name not in self._cache or self._cache[name] != value:
             self.set_dict_value_cache_free(name, value)
             self._cache[name] = value
+            LOG.debug("Dict value of \"%s\" is set to \"%s\".", name, value)
 
     #{ Cache-free backend access
 
