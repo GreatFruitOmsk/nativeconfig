@@ -1,8 +1,11 @@
 import sys
 import unittest
 
-if sys.platform.startswith('darwin'):
+try:
     from nativeconfig.config import NSUserDefaultsConfig
+except ImportError:
+    pass
+else:
     from test.config import TestConfigMixin
 
 
