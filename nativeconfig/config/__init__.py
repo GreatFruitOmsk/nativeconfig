@@ -7,7 +7,10 @@ if sys.platform.startswith('win32'):
     from nativeconfig.config.registry_config import RegistryConfig
     PreferredConfig = RegistryConfig
 elif sys.platform.startswith('darwin'):
-    from nativeconfig.config.nsuserdefaults_config import NSUserDefaultsConfig
-    PreferredConfig = NSUserDefaultsConfig
+    try:
+        from nativeconfig.config.nsuserdefaults_config import NSUserDefaultsConfig
+        PreferredConfig = NSUserDefaultsConfig
+    except ImportError:
+        PreferredConfig = JSONConfig
 else:
     PreferredConfig = JSONConfig

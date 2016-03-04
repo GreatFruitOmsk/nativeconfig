@@ -26,7 +26,7 @@ nativeconfig addresses this problem in an elegant and pythonic way:
         last_name = StringOption('LastName')
         age = IntOption('Age')
 
-will store config in Registry on Windows, in NSUserDefaults on Mac OS X and in json-formatted file everywhere else.
+will store config in Registry on Windows, in NSUserDefaults on Mac OS X (if the `pyobjc-core <https://pypi.python.org/pypi/pyobjc-core/3.0.4>`_ module is available) and in json-formatted file everywhere else.
 
 
 Caching

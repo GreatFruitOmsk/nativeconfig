@@ -3,12 +3,6 @@ from setuptools import setup
 from sys import platform
 
 
-REQUIREMENTS = []
-
-if platform.startswith('darwin'):
-    REQUIREMENTS.append('pyobjc-core >= 2.5')
-
-
 with open(os.path.join(os.path.dirname(__file__), 'nativeconfig', 'version.py')) as f:
     VERSION = None
     code = compile(f.read(), 'version.py', 'exec')
@@ -38,6 +32,5 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
     ],
-    install_requires=REQUIREMENTS,
     test_suite='test'
 )
