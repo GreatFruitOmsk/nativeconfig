@@ -484,7 +484,8 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @return: Value to be used based on Raw Value.
         """
-        LOG.error("Unable to deserialize value of \"%s\" from \"%s\" (%s):\n%s.", name, raw_or_json_value, traceback.format_exception(*exc_info))
+        LOG.error("Unable to deserialize value of \"%s\" from \"%s\":\n%s.", name, raw_or_json_value,
+                  traceback.format_exception(*exc_info))
         return self.option_for_name(name)._default
 
     def migrate(self, version):
