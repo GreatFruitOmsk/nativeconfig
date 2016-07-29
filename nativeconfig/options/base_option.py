@@ -68,7 +68,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param default: Default Python Value of the option. Deep copied.
 
-        @param allow_cache: Whether value can be cached.
+        @param allow_cache: Whether value can be cached. If None, default of enclosing config will be used.
         @type allow_cache: bool
 
         @raise InitializationError: If any of arguments is incorrect. Only handles most obvious errors.
@@ -187,6 +187,10 @@ class BaseOption(property, metaclass=ABCMeta):
 
 #{ Access backend
 
+    def allow_cache(self, enclosing_self):
+        return self._allow_cache or \
+               (self._allow_cache is None and hasattr(enclosing_self, 'ALLOW_CACHE') and enclosing_self.ALLOW_CACHE)
+
     def read_value(self, enclosing_self):
         """
         Read value for the option from all supported sources.
@@ -223,8 +227,7 @@ class BaseOption(property, metaclass=ABCMeta):
             LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self.name, self._one_shot_value)
             python_value, source = self._one_shot_value, ValueSource.one_shot
         elif python_value is None:
-            allow_cache = self._allow_cache or (hasattr(enclosing_self, 'ALLOW_CACHE') and enclosing_self.ALLOW_CACHE)
-            raw_value = getattr(enclosing_self, self._getter)(self.name, allow_cache=allow_cache)
+            raw_value = getattr(enclosing_self, self._getter)(self.name, allow_cache=self.allow_cache(enclosing_self))
             if raw_value is not None:
                 python_value, source = make_python_value_from_raw_value(raw_value, ValueSource.config)
 
@@ -261,8 +264,7 @@ class BaseOption(property, metaclass=ABCMeta):
         if python_value is not None:
             self.validate(python_value)
             raw_value = self.serialize(python_value)
-            allow_cache = self._allow_cache or (hasattr(enclosing_self, 'ALLOW_CACHE') and enclosing_self.ALLOW_CACHE)
-            getattr(enclosing_self, self._setter)(self.name, raw_value, allow_cache=allow_cache)
+            getattr(enclosing_self, self._setter)(self.name, raw_value, allow_cache=self.allow_cache(enclosing_self))
         else:
             self.fdel(enclosing_self)
 
@@ -274,6 +276,6 @@ class BaseOption(property, metaclass=ABCMeta):
         """
         self._one_shot_value = None
         self._is_one_shot_value_set = False
-        allow_cache = self._allow_cache or (hasattr(enclosing_self, 'ALLOW_CACHE') and enclosing_self.ALLOW_CACHE)
-        getattr(enclosing_self, self._deleter)(self.name, allow_cache=allow_cache)
+        getattr(enclosing_self, self._deleter)(self.name, allow_cache=self.allow_cache(enclosing_self))
+
 #}

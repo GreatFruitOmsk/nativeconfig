@@ -879,6 +879,24 @@ class TestConfigMixin(ABC):
         c.first_name
         c.get_value.assert_called_with('FirstName', allow_cache=False)
 
+    def test_per_option_allow_cache(self):
+        class AllowCacheConfig(self.CONFIG_TYPE):
+            ALLOW_CACHE = True
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
+
+        class DisallowCacheConfig(self.CONFIG_TYPE):
+            ALLOW_CACHE = False
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=True)
+
+        c = AllowCacheConfig.get_instance()
+        c.get_value = MagicMock(return_value='Ilya')
+        c.first_name
+        c.get_value.assert_called_with('FirstName', allow_cache=False)
+
+        c = DisallowCacheConfig.get_instance()
+        c.get_value = MagicMock(return_value='Ilya')
+        c.first_name
+        c.get_value.assert_called_with('FirstName', allow_cache=True)
 
     @abstractmethod
     def test_config_is_created_if_not_found(self):
