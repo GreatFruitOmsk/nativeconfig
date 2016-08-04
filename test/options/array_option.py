@@ -84,7 +84,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         default = []
 
         class TestConfig(DummyMemoryConfig):
-            array_option = ArrayOption('ArrayOption', default=default, env_name='DICT_OPTION')
+            array_option = ArrayOption('ArrayOption', default=default)
 
         c = TestConfig.get_instance()
         self.assertEqual(c.array_option, [])
@@ -97,7 +97,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         choices = [value]
 
         class TestConfig(DummyMemoryConfig):
-            array_option = ArrayOption('ArrayOption', choices=choices, env_name='DICT_OPTION')
+            array_option = ArrayOption('ArrayOption', choices=choices)
 
         c = TestConfig.get_instance()
         c.array_option = ['value']

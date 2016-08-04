@@ -145,15 +145,16 @@ class BaseConfig(metaclass=_OrderedClass):
         @param name: Name of the option.
         @type name: str
 
-        @rtype: str or None
+        @rtype: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             return attribute.fget(self)
         else:
-            warn("No option named \"{}\".".format(name))
-            return None
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def get_raw_value_for_option_name(self, name):
         """
@@ -164,15 +165,16 @@ class BaseConfig(metaclass=_OrderedClass):
         @param name: Name of the option.
         @type name: str
 
-        @rtype: str or None
+        @rtype: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             return attribute.serialize(attribute.fget(self))
         else:
-            warn("No option named \"{}\".".format(name))
-            return None
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def get_json_value_for_option_name(self, name):
         """
@@ -183,15 +185,16 @@ class BaseConfig(metaclass=_OrderedClass):
         @param name: Name of the option.
         @type name: str
 
-        @rtype: str or None
+        @rtype: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             return attribute.serialize_json(attribute.fget(self))
         else:
-            warn("No option named \"{}\".".format(name))
-            return None
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def set_value_for_option_name(self, name, python_value):
         """
@@ -204,13 +207,15 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param python_value: Python Value.
         @type python_value: object or None
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             attribute.fset(self, python_value)
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def set_raw_value_for_option_name(self, name, raw_value):
         """
@@ -223,13 +228,15 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param raw_value: Raw Value.
         @type raw_value: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             attribute.fset(self, attribute.deserialize(raw_value))
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def set_json_value_for_option_name(self, name, json_value):
         """
@@ -242,13 +249,15 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param json_value: JSON Value. If 'null', value will be deleted.
         @type json_value: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             attribute.fset(self, attribute.deserialize_json(json_value))
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def set_one_shot_value_for_option_name(self, name, python_value):
         """
@@ -261,13 +270,15 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param python_value: Python Value.
         @type python_value: object or None
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             attribute.set_one_shot_value(python_value)
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def set_one_shot_raw_value_for_option_name(self, name, raw_value):
         """
@@ -280,13 +291,15 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param raw_value: Raw Value.
         @type raw_value: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             attribute.set_one_shot_value(attribute.deserialize(raw_value))
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def set_one_shot_json_value_for_option_name(self, name, json_value):
         """
@@ -299,13 +312,15 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param json_value: JSON Value.
         @type json_value: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             attribute.set_one_shot_value(attribute.deserialize_json(json_value))
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def del_value_for_option_name(self, name):
         """
@@ -315,13 +330,15 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @param name: Name of the option.
         @type name: str
+
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             attribute.fdel(self)
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def validate_value_for_option_name(self, name, python_value):
         """
@@ -334,13 +351,14 @@ class BaseConfig(metaclass=_OrderedClass):
         @type python_value: object or None
 
         @raise ValidationError: Raised if value is invalid.
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             return attribute.validate(python_value)
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def validate_raw_value_for_option_name(self, name, raw_value):
         """
@@ -354,13 +372,14 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @raise ValidationError: Raised if value is invalid.
         @raise DeserializationError: Raised if value cannot be deserialized.
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             return attribute.validate(attribute.deserialize(raw_value))
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     def validate_json_value_for_option_name(self, name, json_value):
         """
@@ -374,13 +393,14 @@ class BaseConfig(metaclass=_OrderedClass):
 
         @raise ValidationError: Raised if value is invalid.
         @raise DeserializationError: Raised if value cannot be deserialized.
+        @raise AttributeError: Raised if there is no option with given name.
         """
         attribute = self.option_for_name(name)
 
         if attribute:
             return attribute.validate(attribute.deserialize_json(json_value))
         else:
-            warn("No option named \"{}\".".format(name))
+            raise AttributeError("No option named \"{}\".".format(name))
 
     #{ Enumeration
 
