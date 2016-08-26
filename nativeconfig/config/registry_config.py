@@ -137,7 +137,7 @@ class RegistryConfig(BaseConfig):
 
                 return v
         except:
-            self.LOG.exception("Unable to get dict '%s' from the registry:", name)
+            self.LOG.info("Unable to get dict '%s' from the registry:", name, exc_info=True)
 
         return None
 
