@@ -898,6 +898,59 @@ class TestConfigMixin(ABC):
         c.first_name
         c.get_value.assert_called_with('FirstName', allow_cache=True)
 
+    def test_magic_len(self):
+        class ZeroItemsConfig(self.CONFIG_TYPE):
+            pass
+
+        class OneItemConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
+
+        class TwoItemsConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
+            last_name = StringOption('LastName', default='Kulakov', allow_cache=False)
+
+        self.assertEqual(len(ZeroItemsConfig.get_instance()), len(ZeroItemsConfig._ordered_options))
+        self.assertEqual(len(OneItemConfig.get_instance()), len(OneItemConfig._ordered_options))
+        self.assertEqual(len(TwoItemsConfig.get_instance()), len(TwoItemsConfig._ordered_options))
+
+    def test_magic_getitem(self):
+        class OneItemConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
+
+        c = OneItemConfig.get_instance()
+        self.assertEqual(c['FirstName'], c.first_name)
+
+        with self.assertRaises(KeyError):
+            c['SecondName']
+
+    def test_magic_setitem(self):
+        class OneItemConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
+
+        c = OneItemConfig.get_instance()
+        c['FirstName'] = 'Tamara'
+        self.assertEqual(c.first_name, 'Tamara')
+
+        with self.assertRaises(KeyError):
+            c['LastName'] = 'Fedorova'
+
+    def test_magic_delitem(self):
+        class OneItemConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
+
+        c = OneItemConfig.get_instance()
+        c['FirstName'] = 'Tamara'
+        self.assertEqual(c.first_name, 'Tamara')
+        del c['FirstName']
+        self.assertEqual(c.first_name, 'Ilya')
+
+    def test_magic_iter(self):
+        class OneItemConfig(self.CONFIG_TYPE):
+            first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
+
+        c = OneItemConfig.get_instance()
+        self.assertSetEqual(set(c.keys()), set(iter(c)))
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass

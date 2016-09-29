@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
+from collections import OrderedDict, Mapping
 import contextlib
 import inspect
 import json
@@ -56,7 +56,7 @@ class _OrderedClass(ABCMeta):
         return result
 
 
-class BaseConfig(metaclass=_OrderedClass):
+class BaseConfig(Mapping, metaclass=_OrderedClass):
     """
     Base class for all configs.
 
@@ -831,5 +831,22 @@ class BaseConfig(metaclass=_OrderedClass):
         @see: set_dict_value
         """
         pass
+
+    #{ Dict magic methods
+
+    def __len__(self):
+        return len(self._ordered_options)
+
+    def __getitem__(self, key):
+        return self.get_value_for_option_name(key)
+
+    def __setitem__(self, key, value):
+        self.set_value_for_option_name(key, value)
+
+    def __delitem__(self, key):
+        self.del_value_for_option_name(key)
+
+    def __iter__(self):
+        return self.option_names()
 
     #}
