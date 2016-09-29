@@ -537,7 +537,6 @@ class BaseConfig(metaclass=_OrderedClass):
     def reset(self):
         """
         Reset config be deleting
-        @return:
         """
         for o in self.options():
             o.fdel(self)
