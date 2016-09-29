@@ -99,6 +99,15 @@ class BaseConfig(metaclass=_OrderedClass):
         return cls._instances.get(cls, None)
 
     @classmethod
+    def instance(cls):
+        """
+        Shortcut for get_instance.
+
+        @see: get_instance
+        """
+        return cls.get_instance()
+
+    @classmethod
     def validate(cls):
         """
         Validate config options.
