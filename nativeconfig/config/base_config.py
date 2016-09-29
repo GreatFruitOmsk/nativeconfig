@@ -415,40 +415,47 @@ class BaseConfig(metaclass=_OrderedClass):
 
     def options(self):
         """
-        Generator to enumerate option names.
+        Generator to enumerate options.
         """
         for o in self._ordered_options:
             yield o
 
-    def items(self):
+    def option_names(self):
+        """
+        Generator to enumerate option names.
+        """
+        for o in self._ordered_options:
+            yield o.name
+
+    def python_items(self):
         """
         Generator to enumerate options and their Python Values.
 
-        Yields option name, Python Value and value's source.
+        Yields (option name, (Python Value, value's source)).
         """
         for o in self.options():
             python_value, source = o.read_value(self)
-            yield o.name, python_value, source
+            yield o.name, (python_value, source)
 
     def raw_items(self):
         """
         Generator to enumerate options and their Raw Values.
 
-        Yields option name, Raw Value and value's source.
+        Yields (option name, (Raw Value, value's source)).
         """
         for o in self.options():
             python_value, source = o.read_value(self)
-            yield o.name, o.serialize(python_value), source
+            yield o.name, (o.serialize(python_value), source)
 
     def json_items(self):
         """
         Generator to enumerate options and their JSON Values.
 
-        Yields option name, JSON Value and value's source.
+        Yields (option name, (JSON Value, value's source)).
         """
         for o in self.options():
             python_value, source = o.read_value(self)
-            yield o.name, o.serialize_json(python_value), source
+            yield o.name, (o.serialize_json(python_value), source)
 
     #{ Snapshots
 

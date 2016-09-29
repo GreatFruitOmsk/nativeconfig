@@ -466,9 +466,9 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        for option_name, python_value, value_source in c.items():
+        for option_name, (python_value, value_source) in c.python_items():
             if option_name == 'Age2':
-                self.assertEqual((option_name, python_value, value_source), ('Age2', 42, ValueSource.default))
+                self.assertEqual((option_name, (python_value, value_source)), ('Age2', (42, ValueSource.default)))
 
     def test_raw_items_enumerates_raw(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -476,9 +476,9 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        for option_name, raw_value, value_source in c.raw_items():
+        for option_name, (raw_value, value_source) in c.raw_items():
             if option_name == 'Age2':
-                self.assertEqual((option_name, raw_value, value_source), ('Age2', '42', ValueSource.default))
+                self.assertEqual((option_name, (raw_value, value_source)), ('Age2', ('42', ValueSource.default)))
 
     def test_json_items_enumerates_raw(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -486,9 +486,9 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        for option_name, json_value, value_source in c.json_items():
+        for option_name, (json_value, value_source) in c.json_items():
             if option_name == 'Age2':
-                self.assertEqual((option_name, json_value, value_source), ('Age2', '42', ValueSource.default))
+                self.assertEqual((option_name, (json_value, value_source)), ('Age2', ('42', ValueSource.default)))
 
     def test_snapshot_returns_json_dict(self):
         class MyConfig(self.CONFIG_TYPE):
