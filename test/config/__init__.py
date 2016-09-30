@@ -961,6 +961,16 @@ class TestConfigMixin(ABC):
         c.reset()
         self.assertEqual(c._cache['Age'], None)
 
+    def test_option_mixins(self):
+        class MyConfigMixin:
+            age = IntOption('Age', default=42)
+
+        class MyConfig(MyConfigMixin, self.CONFIG_TYPE):
+            pass
+
+        c = MyConfig()
+        self.assertIn('Age', c)
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass
