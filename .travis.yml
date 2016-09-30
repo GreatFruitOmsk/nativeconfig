@@ -7,5 +7,9 @@ python:
   - "3.5"
 # before install:
   # - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip install https://github.com/GreatFruitOmsk/pyobjc-core/releases/download/v3.0.5.dev0/pyobjc-core-3.0.5.tar.gz          ; fi
-install: python setup.py install
-script: python setup.py test
+install:
+  - pip install codecov
+  - python setup.py install
+script: coverage run -m test
+after_success:
+  - codecov
