@@ -951,6 +951,16 @@ class TestConfigMixin(ABC):
         c = OneItemConfig.get_instance()
         self.assertSetEqual(set(c.keys()), set(iter(c)))
 
+    def test_reset_clears_cache(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig()
+        c.age = 99
+        self.assertEqual(c._cache['Age'], '99')
+        c.reset()
+        self.assertEqual(c._cache['Age'], None)
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass

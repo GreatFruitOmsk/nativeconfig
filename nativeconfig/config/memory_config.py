@@ -7,15 +7,18 @@ class MemoryConfig(BaseConfig):
     """
     Store config in in-memory dict.
     """
-    def __init__(self):
+    def __init__(self, initial_config=None):
         """
         @param initial_config: Initial state of the memory config.
         @type initial_config: dict or None
         """
-        self._config = {}
+        self._config = deepcopy(initial_config) if initial_config else {}
         super().__init__()
 
     #{ BaseConfig
+
+    def make_cache(self):
+        return deepcopy(self._config)
 
     def get_value_cache_free(self, name):
         return self._config.get(name, None)

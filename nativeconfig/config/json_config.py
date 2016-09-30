@@ -69,7 +69,7 @@ class JSONConfig(BaseConfig):
 
     #{ BaseConfig
 
-    def reset_cache(self):
+    def make_cache(self):
         with open(self.JSON_PATH, 'r', encoding='utf-8') as f:
             return json.load(f)
 

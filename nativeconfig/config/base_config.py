@@ -128,7 +128,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         super().__init__()
 
         self._lock = threading.Lock()
-        self._cache = self.reset_cache()
+        self._cache = self.make_cache()
 
         self.migrate(self.config_version)
 
@@ -566,9 +566,12 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
     #{ Cache
 
-    def reset_cache(self):
+    def make_cache(self):
         """
-        Return reset value for the cache.
+        Make new cache.
+
+        Subclasses may override this method, if they support fast means
+        to cache config into RAM like JSONConfig.
         """
         return {}
 
