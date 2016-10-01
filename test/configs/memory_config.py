@@ -1,9 +1,9 @@
 import unittest
 
 from nativeconfig.options import IntOption
-from nativeconfig.config import MemoryConfig
+from nativeconfig.configs import MemoryConfig
 
-from test.config import TestConfigMixin
+from test.configs import TestConfigMixin
 
 
 class MyMemoryConfig(MemoryConfig):

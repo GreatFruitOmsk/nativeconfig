@@ -3,7 +3,7 @@ import json
 import logging
 from pathlib import Path
 
-from nativeconfig.config.base_config import BaseConfig
+from nativeconfig.configs.base_config import BaseConfig
 
 
 LOG = logging.getLogger('nativeconfig')

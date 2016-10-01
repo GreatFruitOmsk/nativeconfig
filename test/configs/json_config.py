@@ -5,10 +5,10 @@ import tempfile
 import unittest
 import unittest.mock
 
-from nativeconfig.config.json_config import JSONConfig
+from nativeconfig.configs.json_config import JSONConfig
 from nativeconfig.options import StringOption, IntOption, ArrayOption, DictOption
 
-from test.config import TestConfigMixin
+from test.configs import TestConfigMixin
 
 
 class MyJSONConfig(JSONConfig):

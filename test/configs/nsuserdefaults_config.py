@@ -2,7 +2,7 @@ import sys
 import unittest
 
 try:
-    from nativeconfig.config import NSUserDefaultsConfig
+    from nativeconfig.configs import NSUserDefaultsConfig
 except ImportError:
     pass
 else:

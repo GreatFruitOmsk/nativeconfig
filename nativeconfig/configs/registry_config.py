@@ -1,7 +1,7 @@
 import logging
 import winreg
 
-from nativeconfig.config.base_config import BaseConfig
+from nativeconfig.configs.base_config import BaseConfig
 
 
 LOG = logging.getLogger('nativeconfig')

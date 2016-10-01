@@ -3,7 +3,7 @@ import logging
 import objc
 import traceback
 
-from nativeconfig.config.base_config import BaseConfig
+from nativeconfig.configs.base_config import BaseConfig
 
 
 LOG = logging.getLogger('nativeconfig')

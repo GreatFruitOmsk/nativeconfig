@@ -5,11 +5,11 @@ import sys
 if sys.platform.startswith('win32'):
     import winreg
 
-    from nativeconfig.config import RegistryConfig
-    from nativeconfig.config.registry_config import traverse_registry_key
+    from nativeconfig.configs import RegistryConfig
+    from nativeconfig.configs.registry_config import traverse_registry_key
     from nativeconfig.options import StringOption, ArrayOption, DictOption
 
-    from test.config import TestConfigMixin
+    from test.configs import TestConfigMixin
 
     class MyRegistryConfig(RegistryConfig):
         REGISTRY_PATH = r'Software\test_config'

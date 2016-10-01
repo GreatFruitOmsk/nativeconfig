@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from nativeconfig.config.base_config import BaseConfig
+from nativeconfig.configs.base_config import BaseConfig
 
 
 class MemoryConfig(BaseConfig):

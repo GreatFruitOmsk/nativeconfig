@@ -1,4 +1,4 @@
-from nativeconfig.config import MemoryConfig
+from nativeconfig.configs import MemoryConfig
 
 
 def all_casings(input_string):

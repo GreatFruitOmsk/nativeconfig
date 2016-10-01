@@ -13,7 +13,7 @@ with open(os.path.join(os.path.dirname(__file__), 'nativeconfig', 'version.py'))
 setup(
     name='nativeconfig',
     version=VERSION,
-    packages=['nativeconfig', 'nativeconfig.options', 'nativeconfig.config'],
+    packages=['nativeconfig', 'nativeconfig.options', 'nativeconfig.configs'],
     url='https://github.com/GreatFruitOmsk/nativeconfig',
     license='MIT License',
     author='Ilya Kulakov',
