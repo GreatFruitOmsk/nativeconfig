@@ -131,7 +131,7 @@ class BaseOption(property, metaclass=ABCMeta):
         self._one_shot_value = python_value
         self._is_one_shot_value_set = True
 
-#{ Validation
+    #{ Validation
 
     def validate(self, python_value):
         """
@@ -145,7 +145,7 @@ class BaseOption(property, metaclass=ABCMeta):
         if self._choices is not None and python_value not in self._choices:
             raise ValidationError("Value \"{}\" is not one of the choices {} allowed for \"{}\"!".format(python_value, self._choices, self.name), python_value, self.name)
 
-#{ Serialization and deserialization
+    #{ Serialization and deserialization
 
     def serialize(self, python_value):
         """
@@ -185,7 +185,7 @@ class BaseOption(property, metaclass=ABCMeta):
         """
         return json.loads(json_value)
 
-#{ Access backend
+    #{ Access backend
 
     def allow_cache(self, enclosing_self):
         return self._allow_cache or \
@@ -278,4 +278,4 @@ class BaseOption(property, metaclass=ABCMeta):
         self._is_one_shot_value_set = False
         getattr(enclosing_self, self._deleter)(self.name, allow_cache=self.allow_cache(enclosing_self))
 
-#}
+    #}

@@ -30,7 +30,7 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         del c.float_dict
         os.environ.pop('TEST_DICT', None)
 
-#{ Custom
+    #{ Custom
 
     def test_value_option_must_be_instance_of_base_option(self):
         with self.assertRaises(InitializationError):
@@ -106,7 +106,7 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         value['key'] = 'another_value'
         c.dict_option = {'key': 'value'}
 
-#{ TestOptionMixin
+    #{ TestOptionMixin
 
     def test_choices_cannot_be_empty(self):
         c = MyConfig.get_instance()
@@ -230,4 +230,4 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             DictOption('_').deserialize_json("1")
 
-#}
+    #}

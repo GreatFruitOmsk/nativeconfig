@@ -27,7 +27,7 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
         os.environ.pop('WIDTH', None)
 
 
-#{ Custom
+    #{ Custom
 
     def test_cannot_be_empty(self):
         c = MyConfig.get_instance()
@@ -36,7 +36,7 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
         self.assertEqual(c.height, 185.5)
 
 
-#{ TestOptionMixin
+    #{ TestOptionMixin
 
     def test_choices_cannot_be_empty(self):
         c = MyConfig.get_instance()
@@ -158,4 +158,4 @@ class TestFloatOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             FloatOption('_').deserialize_json('"fortytwo"')
 
-#}
+    #}

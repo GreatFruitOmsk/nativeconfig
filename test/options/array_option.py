@@ -32,7 +32,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         del c.float_array
         os.environ.pop('TEST_ARRAY', None)
 
-#{ Custom
+    #{ Custom
 
     def test_value_option_must_be_instance_of_base_option(self):
         with self.assertRaises(InitializationError):
@@ -108,7 +108,7 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         value[0] = 'another_value'
         c.array_option = ['value']
 
-#{ TestOptionMixin
+    #{ TestOptionMixin
 
     def test_choices_cannot_be_empty(self):
         c = MyConfig.get_instance()
@@ -233,4 +233,4 @@ class TestArrayOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             ArrayOption('_').deserialize_json("1")
 
-#}
+    #}

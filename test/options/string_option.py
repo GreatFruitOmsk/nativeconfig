@@ -28,7 +28,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         del c.surname
         os.environ.pop('SURNAME', None)
 
-#{ Custom
+    #{ Custom
 
     def test_cannot_be_empty_if_disallowed(self):
         c = MyConfig.get_instance()
@@ -42,7 +42,7 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         empty_string = c.empty_string
         self.assertEqual(empty_string, '')
 
-#{ TestOptionMixin
+    #{ TestOptionMixin
 
     def test_choices_cannot_be_empty(self):
         c = MyConfig.get_instance()
@@ -164,4 +164,4 @@ class TestStringOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             StringOption('_').deserialize_json("1")
 
-#}
+    #}

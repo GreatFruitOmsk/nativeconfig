@@ -161,4 +161,4 @@ class TestIntOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             IntOption('_').deserialize_json('"fortytwo"')
 
-#}
+    #}

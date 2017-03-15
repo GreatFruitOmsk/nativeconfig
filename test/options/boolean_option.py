@@ -28,7 +28,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         del c.boolean_false
         os.environ.pop('BOOLEAN_TRUE', None)
 
-#{ Custom
+    #{ Custom
 
     def test_cannot_be_empty(self):
         c = MyConfig.get_instance()
@@ -100,7 +100,7 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             c.boolean_false
 
-#{ TestOptionMixin
+    #{ TestOptionMixin
 
     def test_choices_cannot_be_empty(self):
         pass  # choices are hardcoded
@@ -209,4 +209,4 @@ class TestBooleanOption(unittest.TestCase, TestOptionMixin):
         with self.assertRaises(DeserializationError):
             BooleanOption('_').deserialize_json('"fortytwo"')
 
-#}
+    #}
