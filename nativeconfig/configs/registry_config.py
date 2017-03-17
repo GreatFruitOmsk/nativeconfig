@@ -57,7 +57,7 @@ class RegistryConfig(BaseConfig):
                     value, value_type = winreg.QueryValueEx(app_key, name)
 
                     if not value_type == winreg.REG_SZ:
-                        raise ValueError("Value must be of REG_SZ type!")
+                        raise ValueError("value must be a REG_SZ")
 
                     return value
                 except OSError:
@@ -94,7 +94,7 @@ class RegistryConfig(BaseConfig):
                 value, value_type = winreg.QueryValueEx(app_key, name)
 
                 if not value_type == winreg.REG_MULTI_SZ:
-                    raise ValueError("Value must be of REG_MULTI_SZ type!")
+                    raise ValueError("value must be a REG_MULTI_SZ")
 
                 return value
         except:
@@ -123,7 +123,7 @@ class RegistryConfig(BaseConfig):
                         name, value, value_type = winreg.EnumValue(app_key, i)
 
                         if value_type != winreg.REG_SZ:
-                            raise ("Value must be of REG_SZ type!")
+                            raise ValueError("value must be a REG_SZ")
 
                         if value is not None:
                             v[name] = value

@@ -16,7 +16,7 @@ class PathOption(BaseOption):
         @type path_type: PurePath
         """
         if not issubclass(path_type, PurePath):
-            raise ValueError("Path type should be subclass of PurePath")
+            raise ValueError("'path_type' must be a subclass of PurePath")
 
         self._path_type = path_type
 
@@ -35,7 +35,7 @@ class PathOption(BaseOption):
 
         if value is not None:
             if not isinstance(value, str):
-                raise DeserializationError("\"{}\" is not a JSON string!".format(json_value), json_value, self.name)
+                raise DeserializationError("'{}' is not a JSON string".format(json_value), json_value, self.name)
             else:
                 return self._path_type(value)
         else:
@@ -45,4 +45,4 @@ class PathOption(BaseOption):
         super().validate(python_value)
 
         if not isinstance(python_value, self._path_type):
-            raise ValidationError("Invalid path \"{}\" for \"{}\"!".format(python_value, self.name), python_value, self.name)
+            raise ValidationError("'{}' must be a {}".format(python_value, self._path_type), python_value, self.name)

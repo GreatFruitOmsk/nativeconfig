@@ -19,7 +19,7 @@ class DictOption(BaseContainerOption):
         if isinstance(value_option, BaseOption) and not isinstance(value_option, BaseContainerOption):
             self._value_option = value_option
         else:
-            raise ValueError("Value option must be instance of one of base options except array and dict!")
+            raise ValueError("value option must be an instance of BaseOption and not of BaseContainerOption")
 
         super().__init__(name, getter='get_dict_value', setter='set_dict_value', **kwargs)
 
@@ -41,7 +41,7 @@ class DictOption(BaseContainerOption):
 
                 value = deserialized_dict
         except DeserializationError:
-            raise DeserializationError("Unable to deserialize \"{}\" into dict for \"{}\"!".format(raw_value, self.name), raw_value, self.name)
+            raise DeserializationError("unable to deserialize '{}' into dict".format(raw_value), raw_value, self.name)
         else:
             return value
 
@@ -55,7 +55,7 @@ class DictOption(BaseContainerOption):
             if isinstance(value, dict):
                 return {k: self._value_option.deserialize_json(json.dumps(v)) for k, v in value.items()}
             else:
-                raise DeserializationError("\"{}\" is not a JSON dict!".format(json_value), json_value, self.name)
+                raise DeserializationError("'{}' is not a JSON dict".format(json_value), json_value, self.name)
         else:
             return None
 
@@ -63,7 +63,7 @@ class DictOption(BaseContainerOption):
         super().validate(python_value)
 
         if not isinstance(python_value, dict):
-            raise ValidationError("Invalid dict \"{}\" for \"{}\"!".format(python_value, self.name), python_value, self.name)
+            raise ValidationError("'{}' must be a dict".format(python_value), python_value, self.name)
 
         for v in python_value.values():
             self._value_option.validate(v)

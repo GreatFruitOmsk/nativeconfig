@@ -16,14 +16,14 @@ class IntOption(BaseOption):
         try:
             return int(raw_value)
         except ValueError:
-            raise DeserializationError("Unable to deserialize \"{}\" into int for \"{}\"!".format(raw_value, self.name), raw_value, self.name)
+            raise DeserializationError("unable to deserialize '{}' into int".format(raw_value), raw_value, self.name)
 
     def deserialize_json(self, json_value):
         value = super().deserialize_json(json_value)
 
         if value is not None:
             if not isinstance(value, int):
-                raise DeserializationError("\"{}\" is not a JSON integer!".format(json_value), json_value, self.name)
+                raise DeserializationError("'{}' is not a JSON integer".format(json_value), json_value, self.name)
             else:
                 return int(value)
         else:
@@ -33,4 +33,4 @@ class IntOption(BaseOption):
         super().validate(python_value)
 
         if not isinstance(python_value, int):
-            raise ValidationError("Invalid integer \"{}\" for \"{}\"!".format(python_value, self.name), python_value, self.name)
+            raise ValidationError("'{}' must be an int".format(python_value), python_value, self.name)

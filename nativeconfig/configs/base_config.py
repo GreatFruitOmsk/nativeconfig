@@ -367,7 +367,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         if attribute:
             return attribute.validate(python_value)
         else:
-            raise KeyError("No option named \"{}\".".format(name))
+            raise KeyError("no option named '{}'".format(name))
 
     def validate_raw_value_for_option_name(self, name, raw_value):
         """

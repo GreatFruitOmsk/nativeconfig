@@ -32,14 +32,14 @@ class BooleanOption(BaseOption):
         elif raw_value.upper() in self.FALSE_RAW_VALUES:
             return False
         else:
-            raise DeserializationError("Value \"{}\" must be one of {} for \"{}\"!".format(raw_value, self.ALLOWED_RAW_VALUES, self.name), raw_value, self.name)
+            raise DeserializationError("'{}' must be in {}".format(raw_value, self.ALLOWED_RAW_VALUES), raw_value, self.name)
 
     def deserialize_json(self, json_value):
         value = super().deserialize_json(json_value)
 
         if value is not None:
             if not isinstance(value, bool):
-                raise DeserializationError("\"{}\" is not a JSON boolean!".format(json_value), json_value, self.name)
+                raise DeserializationError("'{}' is not a JSON boolean".format(json_value), json_value, self.name)
             else:
                 return bool(value)
         else:
@@ -49,4 +49,4 @@ class BooleanOption(BaseOption):
         super().validate(python_value)
 
         if not isinstance(python_value, bool):
-            raise ValidationError("{!r} must be an instance of bool".format(python_value), python_value, self.name)
+            raise ValidationError("'{}' must be a bool".format(python_value), python_value, self.name)

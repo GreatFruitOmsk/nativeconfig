@@ -35,7 +35,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     Setting option to None is equivalent to deleting it.
 
-    @raise Error: Raise if any of the arguments has inappropriate value.
+    @raise ValueError: Raise if any of the arguments has inappropriate value.
     @raise ValidationError: Raise if default value or any of the choices values is invalid.
     """
     def __init__(self,
@@ -93,13 +93,13 @@ class BaseOption(property, metaclass=ABCMeta):
         self._is_one_shot_value_set = False  # None is allowed for One Shot Value
 
         if not isinstance(name, str) or not name:
-            raise ValueError("\"name\" must be nonempty string")
+            raise ValueError("'name' must be nonempty string")
 
         if env_name is not None and (not isinstance(env_name, str) or not env_name):
-            raise ValueError("\"env_name\" must be nonempty string")
+            raise ValueError("'env_name' must be nonempty string")
 
         if choices is not None and (not isinstance(choices, Iterable) or not choices):
-            raise ValueError("\"choices\" must be nonempty iterable")
+            raise ValueError("'choices' must be nonempty iterable")
 
         if choices is not None:
             for c in choices:
@@ -145,7 +145,7 @@ class BaseOption(property, metaclass=ABCMeta):
             raise ValidationError("None is never valid and must not reach this method", python_value, self.name)
 
         if self._choices is not None and python_value not in self._choices:
-            raise ValidationError("Value \"{}\" is not one of the choices {} allowed for \"{}\"!".format(python_value, self._choices, self.name), python_value, self.name)
+            raise ValidationError("'{}' must be in {}".format(python_value, self._choices), python_value, self.name)
 
     #{ Serialization and deserialization
 
@@ -188,7 +188,7 @@ class BaseOption(property, metaclass=ABCMeta):
         try:
             return json.loads(json_value)
         except ValueError:
-            raise DeserializationError("\"{}\" is an invalid json".format(json_value), json_value, self.name)
+            raise DeserializationError("'{}' is invalid JSON".format(json_value), json_value, self.name)
 
     #{ Access backend
 

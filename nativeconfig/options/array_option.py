@@ -19,7 +19,7 @@ class ArrayOption(BaseContainerOption):
         if isinstance(value_option, BaseOption) and not isinstance(value_option, BaseContainerOption):
             self._value_option = value_option
         else:
-            raise ValueError("Value option must be an instance BaseOption except ArrayOption and DictOption!")
+            raise ValueError("value option must be a BaseOption but not BaseContainerOption")
 
         super().__init__(name, setter='set_array_value', getter='get_array_value', **kwargs)
 
@@ -40,7 +40,7 @@ class ArrayOption(BaseContainerOption):
 
             value = deserialized_list
         except DeserializationError:
-            raise DeserializationError("Unable to deserialize \"{}\" into array for \"{}\"!".format(raw_value, self.name), raw_value, self.name)
+            raise DeserializationError("unable to deserialize '{}' into array".format(raw_value), raw_value, self.name)
         else:
             return value
 
@@ -54,7 +54,7 @@ class ArrayOption(BaseContainerOption):
 
         if value is not None:
             if not isinstance(value, list):
-                raise DeserializationError("\"{}\" is not a JSON array!".format(json_value), json_value, self.name)
+                raise DeserializationError("'{}' is not a JSON array".format(json_value), json_value, self.name)
             else:
                 return [self._value_option.deserialize_json(json.dumps(v)) for v in value]
         else:
@@ -64,7 +64,7 @@ class ArrayOption(BaseContainerOption):
         super().validate(python_value)
 
         if not isinstance(python_value, (list, tuple)):
-            raise ValidationError("Invalid array \"{}\" for \"{}\"!".format(python_value, self.name), python_value, self.name)
+            raise ValidationError("'{}' must be a list or tuple".format(python_value), python_value, self.name)
 
         for v in python_value:
             self._value_option.validate(v)
