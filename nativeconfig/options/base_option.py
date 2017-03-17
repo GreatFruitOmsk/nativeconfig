@@ -1,4 +1,5 @@
 from abc import ABCMeta
+from collections.abc import Iterable
 import copy
 from enum import Enum
 import json
@@ -27,7 +28,7 @@ class BaseOption(property, metaclass=ABCMeta):
     Value of each option can be represented by three different versions:
 
         1. Python Value: used in the code
-        2. Raw Value (utf-8 sting): used to store in underlying config
+        2. Raw Value (UTF-8 sting): used to store in underlying config
         3. JSON Value: used to interact with the user
 
     Value of an option can be overridden by an environment variable.
@@ -62,6 +63,7 @@ class BaseOption(property, metaclass=ABCMeta):
         @param resolver: Name of the resolver of the enclosing class to resolve value that cannot be serialized.
 
         @param choices: List of allowed Python Values for the option. Deep copied.
+        @type choices: Container
 
         @param env_name: Name of the env variable that contains JSON Value that can override value of the option.
         @type env_name: str
@@ -81,23 +83,23 @@ class BaseOption(property, metaclass=ABCMeta):
         self._setter = setter
         self._deleter = deleter
         self._resolver = resolver
-        self._choices = copy.deepcopy(choices) if choices is not None else choices
+        self._choices = copy.deepcopy(choices) if choices is not None else None
         self._env_name = env_name
-        self._default = copy.deepcopy(default) if default is not None else default
+        self._default = copy.deepcopy(default) if default is not None else None
         self._allow_cache = allow_cache
         self.__doc__ = doc or self.__doc__
 
         self._one_shot_value = None
         self._is_one_shot_value_set = False  # None is allowed for One Shot Value
 
-        if not name:
-            raise InitializationError("\"name\" cannot be empty!")
+        if not isinstance(name, str) or not name:
+            raise InitializationError("\"name\" must be nonempty string")
 
-        if env_name is not None and len(env_name) == 0:
-            raise InitializationError("\"env_name\" cannot be empty!")
+        if env_name is not None and (not isinstance(env_name, str) or not env_name):
+            raise InitializationError("\"env_name\" must be nonempty string")
 
-        if choices is not None and len(choices) == 0:
-            raise InitializationError("\"choices\" cannot be empty!")
+        if choices is not None and (not isinstance(choices, Iterable) or not choices):
+            raise InitializationError("\"choices\" must be nonempty iterable")
 
         if choices is not None:
             for c in choices:
@@ -140,7 +142,7 @@ class BaseOption(property, metaclass=ABCMeta):
         @raise ValidationError: Raise if value is wrong.
         """
         if python_value is None:
-            return
+            raise ValidationError("None is never valid and must not reach this method", python_value, self.name)
 
         if self._choices is not None and python_value not in self._choices:
             raise ValidationError("Value \"{}\" is not one of the choices {} allowed for \"{}\"!".format(python_value, self._choices, self.name), python_value, self.name)
@@ -183,7 +185,10 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @see: serialize_json
         """
-        return json.loads(json_value)
+        try:
+            return json.loads(json_value)
+        except ValueError:
+            raise DeserializationError("\"{}\" is an invalid json".format(json_value), json_value, self.name)
 
     #{ Access backend
 
@@ -219,12 +224,15 @@ class BaseOption(property, metaclass=ABCMeta):
 
         if self._env_name:
             json_value = os.getenv(self._env_name)
-            if json_value is not None:
-                LOG.debug("value of \"%s\" is overridden by environment variable: %s.", self.name, json_value)
+            if json_value == 'null':
+                LOG.debug('Value of \"%s\" is reset to default by environment variable.', self.name)
+                python_value, source = self._default, ValueSource.env
+            elif json_value is not None:
+                LOG.debug("Value of \"%s\" is overridden by environment variable: %s.", self.name, json_value)
                 python_value, source = make_python_value_from_json_value(json_value, ValueSource.env)
 
         if python_value is None and self._is_one_shot_value_set:
-            LOG.debug("value of \"%s\" is temporary overridden by one shot value: %s.", self.name, self._one_shot_value)
+            LOG.debug("Value of \"%s\" is temporary overridden by one shot value: %s.", self.name, self._one_shot_value)
             python_value, source = self._one_shot_value, ValueSource.one_shot
         elif python_value is None:
             raw_value = getattr(enclosing_self, self._getter)(self.name, allow_cache=self.allow_cache(enclosing_self))
@@ -279,3 +287,17 @@ class BaseOption(property, metaclass=ABCMeta):
         getattr(enclosing_self, self._deleter)(self.name, allow_cache=self.allow_cache(enclosing_self))
 
     #}
+
+
+class BaseContainerOption(BaseOption):
+    """
+    Base class for container options.
+
+    A container option is an option that consists of other options.
+    Think of it as of typed container, where each element is an option of a given type.
+
+    Unlike BaseOption, raw values are represented by a container class (such as list or dict) where each value
+    is a UTF-8 encoded string.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

@@ -1,8 +1,7 @@
-import json
 from pathlib import PurePath, Path
 
+from .base_option import BaseOption
 from nativeconfig.exceptions import ValidationError, InitializationError, DeserializationError
-from nativeconfig.options.base_option import BaseOption
 
 
 class PathOption(BaseOption):
@@ -13,14 +12,11 @@ class PathOption(BaseOption):
     def __init__(self, name, *, path_type=Path, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
+
+        @type path_type: PurePath
         """
-        try:
-            if not issubclass(path_type, PurePath):
-                raise InitializationError(
-                    "Path type should be subclass of PurePath")
-        except:
-            raise InitializationError(
-                "Path type should be subclass of PurePath")
+        if not issubclass(path_type, PurePath):
+            raise InitializationError("Path type should be subclass of PurePath")
 
         self._path_type = path_type
 
@@ -32,21 +28,18 @@ class PathOption(BaseOption):
         return self._path_type(raw_value)
 
     def serialize_json(self, python_value):
-        return json.dumps(str(python_value) if python_value is not None else None)
+        return super().serialize_json(str(python_value) if python_value is not None else None)
 
     def deserialize_json(self, json_value):
-        try:
-            value = json.loads(json_value)
-        except ValueError:
-            raise DeserializationError("Invalid JSON value for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
-        else:
-            if value is not None:
-                if not isinstance(value, str):
-                    raise DeserializationError("\"{}\" is not a JSON string!".format(json_value), json_value, self.name)
-                else:
-                    return self._path_type(value)
+        value = super().deserialize_json(json_value)
+
+        if value is not None:
+            if not isinstance(value, str):
+                raise DeserializationError("\"{}\" is not a JSON string!".format(json_value), json_value, self.name)
             else:
-                return None
+                return self._path_type(value)
+        else:
+            return None
 
     def validate(self, python_value):
         super().validate(python_value)

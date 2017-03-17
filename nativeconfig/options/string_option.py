@@ -1,6 +1,5 @@
-import json
+from .base_option import BaseOption
 from nativeconfig.exceptions import DeserializationError, ValidationError
-from nativeconfig.options.base_option import BaseOption
 
 
 class StringOption(BaseOption):
@@ -18,18 +17,15 @@ class StringOption(BaseOption):
         super().__init__(name, **kwargs)
 
     def deserialize_json(self, json_value):
-        try:
-            value = json.loads(json_value)
-        except ValueError:
-            raise DeserializationError("Invalid JSON value for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
-        else:
-            if value is not None:
-                if not isinstance(value, str):
-                    raise DeserializationError("\"{}\" is not a JSON string!".format(json_value), json_value, self.name)
-                else:
-                    return str(value)
+        value = super().deserialize_json(json_value)
+
+        if value is not None:
+            if not isinstance(value, str):
+                raise DeserializationError("\"{}\" is not a JSON string!".format(json_value), json_value, self.name)
             else:
-                return None
+                return str(value)
+        else:
+            return None
 
     def validate(self, python_value):
         super().validate(python_value)

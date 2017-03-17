@@ -1,6 +1,5 @@
-import json
+from .base_option import BaseOption
 from nativeconfig.exceptions import DeserializationError, ValidationError
-from nativeconfig.options.base_option import BaseOption
 
 
 class IntOption(BaseOption):
@@ -20,18 +19,15 @@ class IntOption(BaseOption):
             raise DeserializationError("Unable to deserialize \"{}\" into int for \"{}\"!".format(raw_value, self.name), raw_value, self.name)
 
     def deserialize_json(self, json_value):
-        try:
-            value = json.loads(json_value)
-        except ValueError:
-            raise DeserializationError("Invalid JSON value for \"{}\": \"{}\"!".format(self.name, json_value), json_value, self.name)
-        else:
-            if value is not None:
-                if not isinstance(value, int):
-                    raise DeserializationError("\"{}\" is not a JSON integer!".format(json_value), json_value, self.name)
-                else:
-                    return int(value)
+        value = super().deserialize_json(json_value)
+
+        if value is not None:
+            if not isinstance(value, int):
+                raise DeserializationError("\"{}\" is not a JSON integer!".format(json_value), json_value, self.name)
             else:
-                return None
+                return int(value)
+        else:
+            return None
 
     def validate(self, python_value):
         super().validate(python_value)

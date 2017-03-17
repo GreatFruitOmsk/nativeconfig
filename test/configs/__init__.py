@@ -620,7 +620,7 @@ class TestConfigMixin(ABC):
 
     def test_remove_fields_from_dict(self):
         class MyConfig(self.CONFIG_TYPE):
-            test_dict = DictOption('TestDict')
+            test_dict = DictOption('TestDict', value_option=StringOption('_'))
 
         c = MyConfig.get_instance()
 
