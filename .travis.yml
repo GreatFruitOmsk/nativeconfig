@@ -5,6 +5,7 @@ language: python
 python:
   - "3.4"
   - "3.5"
+  - "3.6"
 # before install:
   # - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip install https://github.com/GreatFruitOmsk/pyobjc-core/releases/download/v3.0.5.dev0/pyobjc-core-3.0.5.tar.gz          ; fi
 install:
