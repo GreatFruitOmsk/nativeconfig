@@ -4,7 +4,7 @@ import os
 from unittest.mock import MagicMock
 
 from nativeconfig.options import StringOption, IntOption, ArrayOption, DictOption, ValueSource
-from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
+from nativeconfig.exceptions import DeserializationError, ValidationError
 
 
 class TestConfigMixin(ABC):
@@ -620,7 +620,7 @@ class TestConfigMixin(ABC):
 
     def test_remove_fields_from_dict(self):
         class MyConfig(self.CONFIG_TYPE):
-            test_dict = DictOption('TestDict')
+            test_dict = DictOption('TestDict', value_option=StringOption('_'))
 
         c = MyConfig.get_instance()
 

@@ -1,6 +1,6 @@
-from nativeconfig.version import VERSION
-
 from nativeconfig.configs import *
+from nativeconfig.exceptions import *
 from nativeconfig.options import *
 
-__version__ = VERSION
+from nativeconfig.version import VERSION as _VERSION
+__version__ = _VERSION

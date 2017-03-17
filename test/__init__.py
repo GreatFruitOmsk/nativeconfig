@@ -15,7 +15,7 @@ def all_casings(input_string):
                 yield first.upper() + sub_casing
 
 
-class DummyMemoryConfig(MemoryConfig):
+class StubConfig(MemoryConfig):
     def resolve_value(self, exc_info, name, raw_value, source):
         if raw_value == "":
             return self.option_for_name(name)._default
