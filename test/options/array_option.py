@@ -1,6 +1,6 @@
 import unittest
 
-from nativeconfig import InitializationError, DeserializationError
+from nativeconfig import DeserializationError
 from nativeconfig import ArrayOption, FloatOption, IntOption, StringOption
 
 from test.options import TestOptionMixin, Option, make_option_type
@@ -29,13 +29,13 @@ class TestArrayOption(TestOptionMixin, unittest.TestCase):
         ]
 
     def test_value_option_must_be_instance_of_base_option(self):
-        with self.assertRaises(InitializationError):
+        with self.assertRaises(ValueError):
             ArrayOption('_', value_option=str)
 
         ArrayOption('_', value_option=StringOption('_'))
 
     def test_value_option_cannot_be_container(self):
-        with self.assertRaises(InitializationError):
+        with self.assertRaises(ValueError):
             ArrayOption('_', value_option=ArrayOption('_', value_option=StringOption('_')))
 
     def test_json_value_must_be_list(self):

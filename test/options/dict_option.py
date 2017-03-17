@@ -1,6 +1,5 @@
 import unittest
 
-from nativeconfig import InitializationError
 from nativeconfig import ArrayOption, DictOption, FloatOption, IntOption, StringOption
 
 from test.options import TestOptionMixin, Option, make_option_type
@@ -37,11 +36,11 @@ class TestDictOption(unittest.TestCase, TestOptionMixin):
         ]
 
     def test_value_option_must_be_instance_of_base_option(self):
-        with self.assertRaises(InitializationError):
+        with self.assertRaises(ValueError):
             DictOption('_', value_option=str)
 
         DictOption('_', value_option=StringOption('_'))
 
     def test_value_option_cannot_be_container(self):
-        with self.assertRaises(InitializationError):
+        with self.assertRaises(ValueError):
             DictOption('_', value_option=ArrayOption('_', value_option=StringOption('_')))

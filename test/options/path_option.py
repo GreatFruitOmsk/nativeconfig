@@ -1,7 +1,6 @@
 from pathlib import Path, PurePosixPath
 import unittest
 
-from nativeconfig import InitializationError
 from nativeconfig import PathOption
 
 from test.options import TestOptionMixin, Option, make_option_type
@@ -30,5 +29,5 @@ class TestPathOption(unittest.TestCase, TestOptionMixin):
         ]
 
     def test_path_type_must_be_an_instance_of_PurePath(self):
-        with self.assertRaises(InitializationError):
+        with self.assertRaises(ValueError):
             PathOption('_', path_type=str)

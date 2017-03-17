@@ -7,7 +7,7 @@ import logging
 import os
 import sys
 
-from nativeconfig.exceptions import InitializationError, ValidationError, DeserializationError
+from nativeconfig.exceptions import ValidationError, DeserializationError
 
 
 LOG = logging.getLogger('nativeconfig')
@@ -73,7 +73,7 @@ class BaseOption(property, metaclass=ABCMeta):
         @param allow_cache: Whether value can be cached. If None, default of enclosing config will be used.
         @type allow_cache: bool
 
-        @raise InitializationError: If any of arguments is incorrect. Only handles most obvious errors.
+        @raise ValueError: If any of arguments is incorrect. Only handles most obvious errors.
         @raise ValidationError: If default or any of choices is invalid.
         """
         super(BaseOption, self).__init__(self.fget, self.fset, self.fdel, doc=doc or self.__doc__)
@@ -93,13 +93,13 @@ class BaseOption(property, metaclass=ABCMeta):
         self._is_one_shot_value_set = False  # None is allowed for One Shot Value
 
         if not isinstance(name, str) or not name:
-            raise InitializationError("\"name\" must be nonempty string")
+            raise ValueError("\"name\" must be nonempty string")
 
         if env_name is not None and (not isinstance(env_name, str) or not env_name):
-            raise InitializationError("\"env_name\" must be nonempty string")
+            raise ValueError("\"env_name\" must be nonempty string")
 
         if choices is not None and (not isinstance(choices, Iterable) or not choices):
-            raise InitializationError("\"choices\" must be nonempty iterable")
+            raise ValueError("\"choices\" must be nonempty iterable")
 
         if choices is not None:
             for c in choices:

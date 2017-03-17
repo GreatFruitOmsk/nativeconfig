@@ -1,7 +1,7 @@
 from pathlib import PurePath, Path
 
 from .base_option import BaseOption
-from nativeconfig.exceptions import ValidationError, InitializationError, DeserializationError
+from nativeconfig.exceptions import ValidationError, DeserializationError
 
 
 class PathOption(BaseOption):
@@ -16,7 +16,7 @@ class PathOption(BaseOption):
         @type path_type: PurePath
         """
         if not issubclass(path_type, PurePath):
-            raise InitializationError("Path type should be subclass of PurePath")
+            raise ValueError("Path type should be subclass of PurePath")
 
         self._path_type = path_type
 

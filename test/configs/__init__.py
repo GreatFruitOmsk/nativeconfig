@@ -4,7 +4,7 @@ import os
 from unittest.mock import MagicMock
 
 from nativeconfig.options import StringOption, IntOption, ArrayOption, DictOption, ValueSource
-from nativeconfig.exceptions import InitializationError, DeserializationError, ValidationError
+from nativeconfig.exceptions import DeserializationError, ValidationError
 
 
 class TestConfigMixin(ABC):

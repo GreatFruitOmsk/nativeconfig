@@ -5,7 +5,7 @@ from .base_option import BaseOption, BaseContainerOption
 from .float_option import FloatOption
 from .int_option import IntOption
 from .string_option import StringOption
-from nativeconfig.exceptions import DeserializationError, ValidationError, InitializationError
+from nativeconfig.exceptions import DeserializationError, ValidationError
 
 
 LOG = logging.getLogger('nativeconfig')
@@ -31,13 +31,13 @@ class EnumOption(BaseOption):
         if issubclass(enum_type, enum.Enum):
             self._enum_type = enum_type
         else:
-            raise InitializationError("enum_class must be of a enum.Enum type")
+            raise ValueError("enum_class must be of a enum.Enum type")
 
         if value_option:
             if isinstance(value_option, BaseOption) and not isinstance(value_option, BaseContainerOption):
                 self._value_option = value_option
             else:
-                raise InitializationError("value_option cannot be a container option")
+                raise ValueError("value_option cannot be a container option")
         elif issubclass(enum_type, int):
             self._value_option = IntOption('IntOption')
         elif issubclass(enum_type, float):

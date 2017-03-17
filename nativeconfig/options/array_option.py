@@ -1,7 +1,7 @@
 import json
 
 from .base_option import BaseOption, BaseContainerOption
-from nativeconfig.exceptions import DeserializationError, ValidationError, InitializationError
+from nativeconfig.exceptions import DeserializationError, ValidationError
 
 
 class ArrayOption(BaseContainerOption):
@@ -19,7 +19,7 @@ class ArrayOption(BaseContainerOption):
         if isinstance(value_option, BaseOption) and not isinstance(value_option, BaseContainerOption):
             self._value_option = value_option
         else:
-            raise InitializationError("Value option must be an instance BaseOption except ArrayOption and DictOption!")
+            raise ValueError("Value option must be an instance BaseOption except ArrayOption and DictOption!")
 
         super().__init__(name, setter='set_array_value', getter='get_array_value', **kwargs)
 

@@ -2,11 +2,6 @@ class Error(Exception):
     pass
 
 
-class InitializationError(Error):
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
 class OptionError(Error):
     def __init__(self, msg, option_name):
         self.option_name = option_name

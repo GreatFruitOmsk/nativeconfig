@@ -4,7 +4,7 @@ from functools import partial
 import os
 from unittest.mock import patch
 
-from nativeconfig.exceptions import DeserializationError, InitializationError, ValidationError
+from nativeconfig.exceptions import DeserializationError, ValidationError
 
 from test import StubConfig
 
@@ -34,15 +34,15 @@ class TestOptionMixin(ABC):
 
     def test_name_must_be_nonempty_string(self):
         for o in self.OPTIONS:
-            with self.assertRaises(InitializationError):
+            with self.assertRaises(ValueError):
                 class MyConfig(StubConfig):
                     option = o.option_type(name=None)
 
-            with self.assertRaises(InitializationError):
+            with self.assertRaises(ValueError):
                 class MyConfig(StubConfig):
                     option = o.option_type(name='')
 
-            with self.assertRaises(InitializationError):
+            with self.assertRaises(ValueError):
                 class MyConfig(StubConfig):
                     option = o.option_type(name=42)
 
@@ -51,11 +51,11 @@ class TestOptionMixin(ABC):
 
     def test_env_name_must_be_nonempty_string_if_set(self):
         for o in self.OPTIONS:
-            with self.assertRaises(InitializationError):
+            with self.assertRaises(ValueError):
                 class MyConfig(StubConfig):
                     option = o.option_type('_', env_name='')
 
-            with self.assertRaises(InitializationError):
+            with self.assertRaises(ValueError):
                 class MyConfig(StubConfig):
                     option = o.option_type('_', env_name=42)
 
@@ -64,11 +64,11 @@ class TestOptionMixin(ABC):
 
     def test_choices_must_be_nonempty_iterable_if_set(self):
         for o in self.OPTIONS:
-            with self.assertRaises(InitializationError):
+            with self.assertRaises(ValueError):
                 class MyConfig(StubConfig):
                     option = o.option_type('_', choices=[])
 
-            with self.assertRaises(InitializationError):
+            with self.assertRaises(ValueError):
                 class MyConfig(StubConfig):
                     option = o.option_type('_', choices=42)
 

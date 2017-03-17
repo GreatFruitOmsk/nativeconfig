@@ -3,7 +3,6 @@ from enum import Enum
 from pathlib import Path
 import unittest
 
-from nativeconfig import InitializationError
 from nativeconfig import EnumOption, PathOption, IntOption, FloatOption, StringOption, ArrayOption
 
 from test import StubConfig
@@ -90,12 +89,12 @@ class TestEnumOption(TestOptionMixin, unittest.TestCase):
         self.assertIsNone(MyConfig.path_enum_no_value_option._value_option)
 
     def test_enum_type_must_subclass_Enum(self):
-        with self.assertRaises(InitializationError):
+        with self.assertRaises(ValueError):
             class MyConfig(StubConfig):
                 enum_option = EnumOption('_', int)
 
     def test_value_option_cannot_be_container(self):
-        with self.assertRaises(InitializationError):
+        with self.assertRaises(ValueError):
             class MyConfig(StubConfig):
                 enum_option = EnumOption('_', IntEnum, value_option=ArrayOption('_', value_option=StringOption('_')))
 
