@@ -84,7 +84,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         """
         Return singleton for current config subclass.
 
-        @rtype: type(cls)
+        @rtype: BaseConfig
         """
         with cls._instances_lock:
             instance_event = cls._instances_events.get(cls, threading.Event())
