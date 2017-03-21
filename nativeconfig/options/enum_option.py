@@ -15,56 +15,56 @@ class EnumOption(BaseOption):
     """±
     EnumOption represents Python Enum in config.
     """
-    def __init__(self, name, enum_type, value_option=None, **kwargs):
+    def __init__(self, name, enum_type, value_type=None, **kwargs):
         """
         Accepts all the arguments of BaseConfig except choices.
 
-        If value_option is provided, it's used to serialize values. Otherwise Enum names are used.
+        If value_type is provided, it's used to serialize values. Otherwise Enum names are used.
 
         @param enum_type: Type that subclasses from enum.Enum that will be used to instantiate python value.
         @type enum_type: enum.EnumMeta
 
-        @param value_option: An instance of BaseOption subclass that provides serialization and validation.
-            For known Enum types, value_option will be picked automatically unless set explicitly.
-        @type value_option: BaseOption
+        @param value_type: An instance of BaseOption subclass that provides serialization and validation.
+            For known Enum types, value_type will be picked automatically unless set explicitly.
+        @type value_type: BaseOption
         """
         if issubclass(enum_type, enum.Enum):
             self._enum_type = enum_type
         else:
             raise ValueError("'enum_type' must be a subclass of enum.Enum")
 
-        if value_option:
-            if isinstance(value_option, BaseOption) and not isinstance(value_option, BaseContainerOption):
-                self._value_option = value_option
+        if value_type:
+            if isinstance(value_type, BaseOption) and not isinstance(value_type, BaseContainerOption):
+                self._value_type = value_type
             else:
-                raise ValueError("'value_option' cannot be a container option")
+                raise ValueError("'value_type' cannot be a container option")
         elif issubclass(enum_type, int):
-            self._value_option = IntOption('IntOption')
+            self._value_type = IntOption('IntOption')
         elif issubclass(enum_type, float):
-            self._value_option = FloatOption('FloatOption')
+            self._value_type = FloatOption('FloatOption')
         elif issubclass(enum_type, str):
-            self._value_option = StringOption('StringOption')
+            self._value_type = StringOption('StringOption')
         else:
-            self._value_option = None
+            self._value_type = None
 
         choices = kwargs.pop('choices', tuple(enum_type.__members__.values()))
 
         super().__init__(name, choices=choices, **kwargs)
 
     def serialize(self, python_value):
-        if self._value_option:
-            return self._value_option.serialize(python_value.value)
+        if self._value_type:
+            return self._value_type.serialize(python_value.value)
         else:
             return python_value.name
 
     def deserialize(self, raw_value):
         """
-        1. If value_option is set, will try to instantiate enum by value
+        1. If value_type is set, will try to instantiate enum by value
         2. Otherwise will try to find an appropriate value by comparing string.
         """
-        if self._value_option:
+        if self._value_type:
             try:
-                return self._enum_type(self._value_option.deserialize(raw_value))
+                return self._enum_type(self._value_type.deserialize(raw_value))
             except (ValueError, DeserializationError):
                 pass
 
@@ -79,17 +79,17 @@ class EnumOption(BaseOption):
         raise DeserializationError("unable to deserialize '{}' into {}".format(raw_value, self._enum_type), raw_value, self.name)
 
     def serialize_json(self, python_value):
-        if self._value_option:
-            return self._value_option.serialize_json(python_value.value)
+        if self._value_type:
+            return self._value_type.serialize_json(python_value.value)
         else:
             return super().serialize_json(python_value.name)
 
     def deserialize_json(self, json_value):
         if json_value == 'null':
             return None
-        elif self._value_option:
+        elif self._value_type:
             try:
-                enum_value = self._value_option.deserialize_json(json_value)
+                enum_value = self._value_type.deserialize_json(json_value)
             except DeserializationError:
                 enum_value = super().deserialize_json(json_value)
         else:
