@@ -3,19 +3,7 @@ import os
 import unittest.mock
 import uuid
 
-from nativeconfig import ChainConfig, MemoryConfig, IntOption
-
-
-class AConfig(MemoryConfig):
-    pass
-
-
-class BConfig(MemoryConfig):
-    pass
-
-
-class CConfig(MemoryConfig):
-    pass
+from nativeconfig import ChainConfig, MemoryConfig, IntOption, StringOption
 
 
 class TestChainConfig(unittest.TestCase):
@@ -51,7 +39,7 @@ class TestChainConfig(unittest.TestCase):
 
         a = AConfig.get_instance()
         b = BConfig.get_instance()
-        c = ChainConfig(OrderedDict(a=a, b=b))
+        c = ChainConfig(OrderedDict([('a', a), ('b', b)]))
 
         b.age = 42
         self.assertEqual(c.age, 42)
@@ -71,7 +59,7 @@ class TestChainConfig(unittest.TestCase):
 
         a = AConfig.get_instance()
         b = BConfig.get_instance()
-        c = ChainConfig(OrderedDict(a=a, b=b))
+        c = ChainConfig(OrderedDict([('a', a), ('b', b)]))
 
         b.age = 9000
         self.assertEqual(c.age, 9000)
@@ -91,7 +79,7 @@ class TestChainConfig(unittest.TestCase):
 
         a = AConfig.get_instance()
         b = BConfig.get_instance()
-        c = ChainConfig(OrderedDict(a=a, b=b))
+        c = ChainConfig(OrderedDict([('a', a), ('b', b)]))
 
         self.assertEqual(c.age, 42)
 
@@ -107,9 +95,86 @@ class TestChainConfig(unittest.TestCase):
 
         a = AConfig.get_instance()
         b = BConfig.get_instance()
-        c = ChainConfig(OrderedDict(a=a, b=b))
+        c = ChainConfig(OrderedDict([('a', a), ('b', b)]))
 
         self.assertEqual(c.age, 42)
 
         os.environ[self.OPTION_ENV_NAME] = BConfig.age.serialize_json(0xdeadbeef)
         self.assertEqual(c.age, 0xdeadbeef)
+
+    def test_temp_value(self):
+        class AConfig(MemoryConfig):
+            age = IntOption('_')
+
+        class BConfig(MemoryConfig):
+            age = IntOption('_')
+
+        a = AConfig.get_instance()
+        b = BConfig.get_instance()
+        c = ChainConfig(OrderedDict([('a', a), ('b', b)]))
+
+        c.temporary.age = 0xdeadbeef
+        self.assertEqual(c.age, 0xdeadbeef)
+
+    def test_temp_value_with_env(self):
+        class AConfig(MemoryConfig):
+            age = IntOption('_')
+
+        class BConfig(MemoryConfig):
+            age = IntOption('_', env_name=self.OPTION_ENV_NAME)
+
+        a = AConfig.get_instance()
+        b = BConfig.get_instance()
+        c = ChainConfig(OrderedDict([('a', a), ('b', b)]))
+
+        c.temporary.age = 0xdeadbeef
+        self.assertEqual(c.age, 0xdeadbeef)
+
+        os.environ[self.OPTION_ENV_NAME] = '42'
+        self.assertEqual(c.age,  0xdeadbeef)
+
+        del c.temporary.age
+        self.assertEqual(c.age, 42)
+
+    def test_temp_takes_options_from_first_appearance(self):
+        class AConfig(MemoryConfig):
+            age = IntOption('_')
+
+        class BConfig(MemoryConfig):
+            age = IntOption('_', env_name=self.OPTION_ENV_NAME)
+
+        a = AConfig.get_instance()
+        b = BConfig.get_instance()
+        c = ChainConfig(OrderedDict([('a', a), ('b', b)]))
+
+        self.assertEqual(c.temporary.__class__.age, AConfig.age)
+
+    def test_option_type_mismatch_raises(self):
+        class AConfig(MemoryConfig):
+            age = IntOption('_')
+
+        class BConfig(MemoryConfig):
+            age = StringOption('_')
+
+        with self.assertRaises(ValueError):
+            ChainConfig(OrderedDict([('a', AConfig.get_instance()), ('b', BConfig.get_instance())]))
+
+    def test_option_name_mismatch_raises(self):
+        class AConfig(MemoryConfig):
+            age = IntOption('_')
+
+        class BConfig(MemoryConfig):
+            age = IntOption('Age')
+
+        with self.assertRaises(ValueError):
+            ChainConfig(OrderedDict([('a', AConfig.get_instance()), ('b', BConfig.get_instance())]))
+
+    def test_option_attibute_name_mismatch_raises(self):
+        class AConfig(MemoryConfig):
+            age = IntOption('_')
+
+        class BConfig(MemoryConfig):
+            height = IntOption('_')
+
+        with self.assertRaises(AttributeError):
+            ChainConfig(OrderedDict([('a', AConfig.get_instance()), ('b', BConfig.get_instance())]))
