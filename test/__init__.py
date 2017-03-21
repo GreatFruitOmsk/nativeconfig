@@ -18,7 +18,7 @@ def all_casings(input_string):
 class StubConfig(MemoryConfig):
     def resolve_value(self, exc_info, name, raw_value, source):
         if raw_value == "":
-            return self.option_for_name(name)._default
+            return self.get_option(name)._default
         else:
             raise exc_info[1].with_traceback(exc_info[2])
 

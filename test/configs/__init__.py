@@ -24,7 +24,7 @@ class TestConfigMixin(ABC):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
-        MyConfig.get_instance().del_value_for_option_name('FirstName')
+        MyConfig.get_instance().del_option_value('FirstName')
         self.assertEqual(MyConfig.get_instance().get_value('FirstName'), None)
 
     def test_get_value_for_option_name_returns_python(self):
@@ -32,21 +32,21 @@ class TestConfigMixin(ABC):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        self.assertEqual(c.get_value_for_option_name('FirstName'), 'Ilya')
+        self.assertEqual(c.get_option_value('FirstName'), 'Ilya')
 
     def test_get_raw_value_for_option_name_returns_raw(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        self.assertEqual(c.option_for_name('FirstName').deserialize(c.get_raw_value_for_option_name('FirstName')), 'Ilya')
+        self.assertEqual(c.get_option('FirstName').deserialize(c.get_raw_option_value('FirstName')), 'Ilya')
 
     def test_get_json_value_for_option_name_returns_json(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        self.assertEqual(json.loads(c.get_json_value_for_option_name('FirstName')), 'Ilya')
+        self.assertEqual(json.loads(c.get_json_option_value('FirstName')), 'Ilya')
 
     def test_get_value_for_option_raises_key_error_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -55,7 +55,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(KeyError):
-            self.assertEqual(c.get_value_for_option_name('LastName'), None)
+            self.assertEqual(c.get_option_value('LastName'), None)
 
     def test_get_raw_value_for_option_raises_key_error_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -64,7 +64,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(KeyError):
-            c.get_raw_value_for_option_name('LastName')
+            c.get_raw_option_value('LastName')
 
     def test_get_json_value_for_option_raises_key_error_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -73,7 +73,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(KeyError):
-            c.get_json_value_for_option_name('LastName')
+            c.get_json_option_value('LastName')
 
     def test_set_value_for_option_name_accepts_python(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -81,7 +81,7 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        c.set_value_for_option_name('FirstName', 'Artem')
+        c.set_option_value('FirstName', 'Artem')
         self.assertEqual(c.first_name, 'Artem')
 
     def test_set_raw_value_for_option_name_accepts_raw(self):
@@ -90,11 +90,11 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        c.set_raw_value_for_option_name('Age', c.option_for_name('Age').serialize(9000))
+        c.set_raw_option_value('Age', c.get_option('Age').serialize(9000))
         self.assertEqual(c.age, 9000)
 
         with self.assertRaises(DeserializationError):
-            c.set_raw_value_for_option_name('Age', 'Artem')
+            c.set_raw_option_value('Age', 'Artem')
 
     def test_set_json_value_for_option_name_accepts_json(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -102,11 +102,11 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        c.set_json_value_for_option_name('FirstName', json.dumps('Artem'))
+        c.set_json_option_value('FirstName', json.dumps('Artem'))
         self.assertEqual(c.first_name, 'Artem')
 
         with self.assertRaises(DeserializationError):
-            c.set_json_value_for_option_name('FirstName', 'Artem')
+            c.set_json_option_value('FirstName', 'Artem')
 
     def test_set_None_value_for_option_name_deletes_value(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -114,8 +114,8 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
         c.first_name = 'Artem'
-        self.assertEqual(c.get_value_for_option_name('FirstName'), 'Artem')
-        c.set_value_for_option_name('FirstName', None)
+        self.assertEqual(c.get_option_value('FirstName'), 'Artem')
+        c.set_option_value('FirstName', None)
         self.assertEqual(c.get_value('FirstName'), None)
 
     def test_set_null_json_value_for_option_name_deletes_value(self):
@@ -124,8 +124,8 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
         c.first_name = 'Artem'
-        self.assertEqual(c.get_json_value_for_option_name('FirstName'), '"Artem"')
-        c.set_json_value_for_option_name('FirstName', json.dumps(None))
+        self.assertEqual(c.get_json_option_value('FirstName'), '"Artem"')
+        c.set_json_option_value('FirstName', json.dumps(None))
         self.assertEqual(c.get_value('FirstName'), None)
 
     def test_set_value_for_option_name_raises_key_error_if_option_not_found(self):
@@ -135,7 +135,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(KeyError):
-            c.set_value_for_option_name('LastName', 'Kulakov')
+            c.set_option_value('LastName', 'Kulakov')
 
     def test_set_raw_value_for_option_name_raises_key_error_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -144,7 +144,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(KeyError):
-            c.set_json_value_for_option_name('LastName', 'Kulakov')
+            c.set_json_option_value('LastName', 'Kulakov')
 
     def test_set_json_value_for_option_name_raises_key_error_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -153,7 +153,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(KeyError):
-            c.set_json_value_for_option_name('LastName', '"Kulakov"')
+            c.set_json_option_value('LastName', '"Kulakov"')
 
     def test_del_value_for_option_name_deletes_value(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -161,7 +161,7 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
         c.first_name = 'Ivan'
-        c.del_value_for_option_name('FirstName')
+        c.del_option_value('FirstName')
         self.assertEqual(c.get_value('FirstName'), None)
 
     def test_del_value_for_option_name_raises_warn_if_option_not_found(self):
@@ -171,7 +171,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(KeyError):
-            c.del_value_for_option_name('LastName')
+            c.del_option_value('LastName')
 
     def test_validate_value_for_option_name_accepts_python(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -179,7 +179,7 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        c.validate_value_for_option_name('FirstName', 'Artem')
+        c.validate_option_value('FirstName', 'Artem')
 
     def test_validate_raw_value_for_option_name_accepts_raw(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -187,7 +187,7 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        c.validate_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Artem'))
+        c.validate_raw_option_value('FirstName', c.get_option('FirstName').serialize('Artem'))
 
     def test_validate_json_value_for_option_name_accepts_json(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -195,7 +195,7 @@ class TestConfigMixin(ABC):
 
         c = MyConfig.get_instance()
 
-        c.validate_json_value_for_option_name('FirstName', json.dumps('Artem'))
+        c.validate_json_option_value('FirstName', json.dumps('Artem'))
 
     def test_validate_value_for_option_name_raises_validation_error_for_invalid_value(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -204,7 +204,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(ValidationError):
-            c.validate_value_for_option_name('FirstName', 42)
+            c.validate_option_value('FirstName', 42)
 
     def test_validate_raw_value_for_option_name_raises_validation_error_for_invalid_value(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -213,7 +213,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(ValidationError):
-            c.validate_raw_value_for_option_name('FirstName', c.option_for_name('FirstName').serialize('Ivan'))
+            c.validate_raw_option_value('FirstName', c.get_option('FirstName').serialize('Ivan'))
 
     def test_validate_json_value_for_option_name_raises_validation_error_for_invalid_value(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -222,7 +222,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(ValidationError):
-            c.validate_json_value_for_option_name('FirstName', json.dumps('Ivan'))
+            c.validate_json_option_value('FirstName', json.dumps('Ivan'))
 
     def test_validate_raw_value_for_option_name_raises_deserialization_error_for_malformed_raw(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -231,7 +231,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(DeserializationError):
-            c.validate_raw_value_for_option_name('Age', 'fortytwo')
+            c.validate_raw_option_value('Age', 'fortytwo')
 
     def test_validate_json_value_for_option_name_raises_deserialization_error_for_malformed_json(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -240,7 +240,7 @@ class TestConfigMixin(ABC):
         c = MyConfig.get_instance()
 
         with self.assertRaises(DeserializationError):
-            c.validate_json_value_for_option_name('Age', '"fortytwo"')
+            c.validate_json_option_value('Age', '"fortytwo"')
 
     def test_items_enumerates_values(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -278,7 +278,7 @@ class TestConfigMixin(ABC):
             last_name = StringOption('LastName', default='Kulakov')
 
         c = MyConfig.get_instance()
-        s = c.snapshot()
+        s = c.make_snapshot()
         self.assertIsInstance(json.loads(s), dict)
 
     def test_option_for_name_returns_property(self):
@@ -286,14 +286,14 @@ class TestConfigMixin(ABC):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        self.assertEqual(c.option_for_name('FirstName'), getattr(MyConfig, 'first_name'))
+        self.assertEqual(c.get_option('FirstName'), getattr(MyConfig, 'first_name'))
 
     def test_option_for_name_returns_None_if_option_not_found(self):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
-        self.assertEqual(c.option_for_name('LastName'), None)
+        self.assertEqual(c.get_option('LastName'), None)
 
     def test_resolve_value_is_called_to_resolve_broken_value(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -443,7 +443,7 @@ class TestConfigMixin(ABC):
             lucky_number = IntOption('LuckyNumber', default=42)
 
         c = MyConfig.get_instance()
-        c.del_value_for_option_name('LuckyNumber')
+        c.del_option_value('LuckyNumber')
         self.assertEqual(c.lucky_number, 42)
 
     def test_overriding_base_option_moves_it_to_the_end(self):
@@ -756,6 +756,27 @@ class TestConfigMixin(ABC):
 
         c = MyConfig()
         self.assertIn('Age', c)
+
+    def test_context_manager_locks(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age')
+
+        c = MyConfig.get_instance()
+        with c:
+            self.assertFalse(c._lock.acquire(False))
+
+    def test_rename_option(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age')
+
+        c = MyConfig.get_instance()
+
+        c.set_value('Age', '42')
+        self.assertEqual(c.get_value('Age'), '42')
+
+        c.rename_option('Age', 'Height')
+        self.assertEqual(c.get_value('Height'), '42')
+        self.assertEqual(c.get_value('Age'), None)
 
     @abstractmethod
     def test_config_is_created_if_not_found(self):

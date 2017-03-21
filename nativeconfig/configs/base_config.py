@@ -132,11 +132,11 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         """
         properties = set()
 
-        for attribute_name, attribute_value in cls._ordered_options_by_attribute.items():
-            if attribute_value.name in properties:
-                raise AttributeError("duplication of option named '{}'".format(attribute_value.name))
+        for option in cls._ordered_options_by_attribute.values():
+            if option.name in properties:
+                raise AttributeError("duplication of option named '{}'".format(option.name))
             else:
-                properties.add(attribute_value.name)
+                properties.add(option.name)
 
     def __init__(self):
         self.validate()
@@ -161,7 +161,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
     #{ Access options by name
 
-    def get_value_for_option_name(self, name):
+    def get_option_value(self, name):
         """
         Get option's Python Value by its name.
 
@@ -174,14 +174,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             return attribute.fget(self)
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def get_raw_value_for_option_name(self, name):
+    def get_raw_option_value(self, name):
         """
         Get option's Raw Value by its name.
 
@@ -194,14 +194,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             return attribute.serialize(attribute.fget(self))
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def get_json_value_for_option_name(self, name):
+    def get_json_option_value(self, name):
         """
         Get option's JSON Value by its name.
 
@@ -214,14 +214,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             return attribute.serialize_json(attribute.fget(self))
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def set_value_for_option_name(self, name, python_value):
+    def set_option_value(self, name, python_value):
         """
         Set option's Raw Value by its name.
 
@@ -235,14 +235,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             attribute.fset(self, python_value)
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def set_raw_value_for_option_name(self, name, raw_value):
+    def set_raw_option_value(self, name, raw_value):
         """
         Set option's Raw Value by its name.
 
@@ -256,14 +256,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             attribute.fset(self, attribute.deserialize(raw_value))
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def set_json_value_for_option_name(self, name, json_value):
+    def set_json_option_value(self, name, json_value):
         """
         Set option's JSON Value by its name.
 
@@ -277,14 +277,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             attribute.fset(self, attribute.deserialize_json(json_value))
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def del_value_for_option_name(self, name):
+    def del_option_value(self, name):
         """
         Delete option by its name.
 
@@ -295,14 +295,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             attribute.fdel(self)
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def validate_value_for_option_name(self, name, python_value):
+    def validate_option_value(self, name, python_value):
         """
         Validate Python Value for an option with a given name.
 
@@ -315,14 +315,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         @raise ValidationError: Raised if value is invalid.
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             return attribute.validate(python_value)
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def validate_raw_value_for_option_name(self, name, raw_value):
+    def validate_raw_option_value(self, name, raw_value):
         """
         Validate Raw Value for an option with a given name.
 
@@ -336,14 +336,14 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         @raise DeserializationError: Raised if value cannot be deserialized.
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             return attribute.validate(attribute.deserialize(raw_value))
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def validate_json_value_for_option_name(self, name, json_value):
+    def validate_json_option_value(self, name, json_value):
         """
         Validate Raw Value for an option with a given name.
 
@@ -357,20 +357,57 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         @raise DeserializationError: Raised if value cannot be deserialized.
         @raise KeyError: Raised if there is no option with given name.
         """
-        attribute = self.option_for_name(name)
+        attribute = self.get_option(name)
 
         if attribute:
             return attribute.validate(attribute.deserialize_json(json_value))
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    #{ Enumeration
+    #{ Snapshots
+
+    def make_snapshot(self):
+        """
+        Get snapshot of current config.
+
+        Default and environment value are ignored.
+
+        @return: Ordered JSON dict of json-serialized options.
+        @rtype: str
+        """
+        return '{' + ', '.join('{}: {}'.format(json.dumps(o.name), o.serialize_json(o.fget(self))) for o in self.options()) + '}'
+
+    def restore_snapshot(self, snapshot):
+        """
+        Set config values from older snapshot.
+
+        If option represented in snapshot does not exist, warning will be raised.
+
+        @param snapshot: Snapshot as returned by BaseConfig.snapshot
+        """
+        for k, v in json.loads(snapshot).items():
+            # Additional quotes are needed, because values will be loaded into python strings,
+            # but set_value_for_option_name expects JSON.
+            self.set_json_option_value(k, json.dumps(v))
+
+    #{ Introspection
+
+    def get_option(self, name):
+        """
+        Return option (property object) for name.
+
+        @param name: Name of an option.
+        @type name: str
+
+        @rtype: BaseOption or None
+        """
+        return self._ordered_options_by_name.get(name, None)
 
     def options(self):
         """
         Generator to enumerate options.
         """
-        for o in self._ordered_options_by_attribute.values():
+        for o in self._ordered_options_by_name.values():
             yield o
 
     def python_items(self):
@@ -403,43 +440,6 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
             python_value, source = o.read_value(self)
             yield o.name, (o.serialize_json(python_value), source)
 
-    #{ Snapshots
-
-    def snapshot(self):
-        """
-        Get snapshot of current config.
-
-        @return: Ordered JSON dict of json-serialized options.
-        @rtype: str
-        """
-        return '{' + ', '.join(['{}: {}'.format(json.dumps(o.name), o.serialize_json(o.fget(self))) for o in self.options()]) + '}'
-
-    def restore_snapshot(self, snapshot):
-        """
-        Set config values for older snapshot.
-
-        If option represented in snapshot does not exist, warning will be raised.
-
-        @param snapshot: Snapshot as returned by BaseConfig.snapshot
-        """
-        for k, v in json.loads(snapshot).items():
-            # Additional quotes are needed, because values will be loaded into python strings,
-            # but set_value_for_option_name expects JSON.
-            self.set_json_value_for_option_name(k, json.dumps(v))
-
-    #{ Introspection
-
-    def option_for_name(self, name):
-        """
-        Return option (property object) for name.
-
-        @param name: Name of an option.
-        @type name: str
-
-        @rtype: BaseOption or None
-        """
-        return self._ordered_options_by_name.get(name, None)
-
     #{ Recovery and migrations
 
     def resolve_value(self, exc_info, name, raw_or_json_value, source):
@@ -464,7 +464,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         """
         LOG.error("Unable to deserialize value of \"%s\" from \"%s\":\n%s.", name, raw_or_json_value,
                   traceback.format_exception(*exc_info))
-        return self.option_for_name(name).default
+        return self.get_option(name).default
 
     def migrate(self, version):
         """
@@ -498,7 +498,6 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         @param transform: Optional callable that accepts current raw value and returns new raw value.
         @type transform: Callable or None
         """
-
         value = self.get_value(old_name)
 
         if value is not None:
@@ -783,16 +782,15 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         return len(self._ordered_options_by_name)
 
     def __getitem__(self, key):
-        return self.get_value_for_option_name(key)
+        return self.get_option_value(key)
 
     def __setitem__(self, key, value):
-        self.set_value_for_option_name(key, value)
+        self.set_option_value(key, value)
 
     def __delitem__(self, key):
-        self.del_value_for_option_name(key)
+        self.del_option_value(key)
 
     def __iter__(self):
-        for o in self.options():
-            yield o.name
+        return self.options()
 
     #}

@@ -107,7 +107,7 @@ class TestOptionMixin(ABC):
                 option = o.option_type('_', doc=doc_string)
 
             self.assertEqual(MyConfig.option.__doc__, doc_string)
-            self.assertEqual(MyConfig.get_instance().option_for_name('_').__doc__, doc_string)
+            self.assertEqual(MyConfig.get_instance().get_option('_').__doc__, doc_string)
 
     def test_doc_inherited_if_not_passed(self):
         for o in self.OPTIONS:
@@ -115,7 +115,7 @@ class TestOptionMixin(ABC):
                 option = o.option_type('_')
 
             self.assertEqual(MyConfig.option.__doc__, o.option_type.__doc__)
-            self.assertEqual(MyConfig.get_instance().option_for_name('_').__doc__, o.option_type.__doc__)
+            self.assertEqual(MyConfig.get_instance().get_option('_').__doc__, o.option_type.__doc__)
 
     def test_default_must_be_in_choices_if_set(self):
         for o in self.OPTIONS:
@@ -207,10 +207,10 @@ class TestOptionMixin(ABC):
                 c.option = o.alternate_value
 
             with self.assertRaises(ValidationError):
-                c.set_json_value_for_option_name('_', MyConfig.option.serialize_json(o.alternate_value))
+                c.set_json_option_value('_', MyConfig.option.serialize_json(o.alternate_value))
 
             with self.assertRaises(ValidationError):
-                c.set_raw_value_for_option_name('_', MyConfig.option.serialize(o.alternate_value))
+                c.set_raw_option_value('_', MyConfig.option.serialize(o.alternate_value))
 
     def test_setting_env_value(self):
         for o in self.OPTIONS:
