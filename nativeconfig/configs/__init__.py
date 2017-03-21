@@ -1,5 +1,6 @@
 import sys
 
+from nativeconfig.configs.chain_config import ChainConfig
 from nativeconfig.configs.memory_config import MemoryConfig
 from nativeconfig.configs.json_config import JSONConfig
 

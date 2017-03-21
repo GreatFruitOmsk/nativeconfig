@@ -3,6 +3,7 @@ from collections import namedtuple
 from functools import partial
 import os
 from unittest.mock import patch
+import uuid
 
 from nativeconfig.exceptions import DeserializationError, ValidationError
 
@@ -27,7 +28,7 @@ def make_option_type(option_type, **kwargs):
 
 class TestOptionMixin(ABC):
     OPTIONS = None
-    OPTION_ENV_NAME = 'NATIVECONFIG_OPTION'
+    OPTION_ENV_NAME = str(uuid.uuid4())
 
     def tearDown(self):
         os.environ.pop(self.OPTION_ENV_NAME, None)

@@ -456,14 +456,14 @@ class TestConfigMixin(ABC):
             lucky_number = IntOption('LuckyNumber', default=9000)
 
         old_index = 0
-        for i, option in enumerate(MyConfig._ordered_options):
-            if option._name == 'LuckyNumber':
+        for i, option_name in enumerate(MyConfig._ordered_options_by_name.keys()):
+            if option_name == 'LuckyNumber':
                 old_index = i
                 break
 
         new_index = 0
-        for i, option in enumerate(SubMyConfig._ordered_options):
-            if option._name == 'LuckyNumber':
+        for i, option_name in enumerate(SubMyConfig._ordered_options_by_name.keys()):
+            if option_name == 'LuckyNumber':
                 new_index = i
                 break
 
@@ -489,17 +489,21 @@ class TestConfigMixin(ABC):
         class MyConfig(self.CONFIG_TYPE, MyConfigMixin1, MyConfigMixin2):
             age = IntOption('Age', default=42)
 
-        self.assertIn(MyConfigMixin1.first_name._name, [o._name for o in MyConfig._ordered_options])
-        self.assertIn(MyConfigMixin2.last_name, MyConfig._ordered_options)
-        self.assertIn(MyConfig.age, MyConfig._ordered_options)
+        self.assertIn(MyConfigMixin1.first_name.name, MyConfig._ordered_options_by_name)
+        self.assertIn(MyConfigMixin2.last_name.name, MyConfig._ordered_options_by_name)
+        self.assertIn(MyConfig.age.name, MyConfig._ordered_options_by_name)
 
-    def test_overriding_option_type_raises_warn_if_not_subclass(self):
+    def test_overriding_option_type_raises_if_not_subclass(self):
         class MyConfig(self.CONFIG_TYPE):
-            first_name = StringOption('FirstName', default='Ilya')
+            first_name = StringOption('FirstName')
 
-        with self.assertWarns(UserWarning):
+        with self.assertRaises(ValueError):
             class MyConfig2(MyConfig):
-                first_name = IntOption('FirstName', default=42)
+                first_name = IntOption('FirstName')
+
+        with self.assertRaises(ValueError):
+            class MyConfig2(MyConfig):
+                first_name = StringOption('SecondName')
 
     def test_reset_deletes_from_config(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -691,9 +695,9 @@ class TestConfigMixin(ABC):
             first_name = StringOption('FirstName', default='Ilya', allow_cache=False)
             last_name = StringOption('LastName', default='Kulakov', allow_cache=False)
 
-        self.assertEqual(len(ZeroItemsConfig.get_instance()), len(ZeroItemsConfig._ordered_options))
-        self.assertEqual(len(OneItemConfig.get_instance()), len(OneItemConfig._ordered_options))
-        self.assertEqual(len(TwoItemsConfig.get_instance()), len(TwoItemsConfig._ordered_options))
+        self.assertEqual(len(ZeroItemsConfig.get_instance()), len(ZeroItemsConfig._ordered_options_by_name))
+        self.assertEqual(len(OneItemConfig.get_instance()), len(OneItemConfig._ordered_options_by_name))
+        self.assertEqual(len(TwoItemsConfig.get_instance()), len(TwoItemsConfig._ordered_options_by_name))
 
     def test_magic_getitem(self):
         class OneItemConfig(self.CONFIG_TYPE):

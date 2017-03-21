@@ -1,12 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict, Mapping
 import contextlib
-import inspect
+import itertools
 import json
 import logging
 import threading
 import traceback
-from warnings import warn
 
 from nativeconfig.options.base_option import BaseOption
 from nativeconfig.options import StringOption
@@ -24,36 +23,51 @@ class _OrderedClass(ABCMeta):
         return OrderedDict()
 
     def __new__(cls, name, bases, classdict):
-        result = type.__new__(cls, name, bases, dict(classdict))
-        result._ordered_options = []
+        instance_cls = type.__new__(cls, name, bases, dict(classdict))
+        instance_cls._ordered_options_by_name = OrderedDict()
+        instance_cls._ordered_options_by_attribute = OrderedDict()
 
-        def add_option(base_class, option):
-            for i, o in enumerate(result._ordered_options):
-                if o.name == option.name:
-                    if not issubclass(option.__class__, o.__class__):
-                        warn("Type (\"{}\") of the \"{}\" option overridden by \"{}\" is different than type (\"{}\") defined by one of super classes.".format(option.__class__.__name__, option.name, base_class.__name__, o.__class__.__name__))
-                    result._ordered_options.pop(i)
-                    break
-            result._ordered_options.append(option)
+        def add_option(attribute_name, option):
+            option_by_name = instance_cls._ordered_options_by_name.pop(option.name, None)
 
-        # Get ordered options from base class.
-        mro = inspect.getmro(result)
+            if option_by_name is not None:
+                if not isinstance(option, option_by_name.__class__):
+                    raise ValueError("'{}' is overridden as '{}' while expected '{}'".format(
+                        option.name, option.__class__, option_by_name.__class__
+                    ))
+
+            option_by_attribute = instance_cls._ordered_options_by_attribute.pop(attribute_name, None)
+
+            if option_by_attribute is not None:
+                if option_by_attribute.name != option.name:
+                    raise ValueError("identically named attributes ('{}') represent different options: '{}' and '{}'".format(
+                        attribute_name, option.name, option_by_attribute.name
+                    ))
+
+            instance_cls._ordered_options_by_name[option.name] = option
+            instance_cls._ordered_options_by_attribute[attribute_name] = option
+
+        # Resolve options from the origin class to current class.
+        def is_option(v):
+            attribute_name, attribute = v
+            return isinstance(attribute, BaseOption)
+
+        inherited_options = []
+        mro = instance_cls.__mro__
+
         if len(mro) > 1:
             for base_class in reversed(mro[1:]):
-
-                if hasattr(base_class, '_ordered_options'):
-                    options = base_class._ordered_options
+                if hasattr(base_class, '_ordered_options_by_attribute'):
+                    inherited_options.append(base_class._ordered_options_by_attribute.items())
                 else:  # e.g. mixin
-                    options = [o for k, o in base_class.__dict__.items() if isinstance(o, BaseOption)]
+                    inherited_options.append(filter(is_option, base_class.__dict__.items()))
 
-                for o in options:
-                    add_option(base_class, o)
+        inherited_options.append(filter(is_option, classdict.items()))
 
-        new_options = [v for k, v in classdict.items() if inspect.isdatadescriptor(v) and isinstance(v, BaseOption)]
-        for o in new_options:
-            add_option(result, o)
+        for attribute_name, option in itertools.chain.from_iterable(inherited_options):
+            add_option(attribute_name, option)
 
-        return result
+        return instance_cls
 
 
 class BaseConfig(Mapping, metaclass=_OrderedClass):
@@ -69,7 +83,13 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
     @cvar CONFIG_VERSION: Version of the config. Used during migrations and usually should be identical to app's __version__.
     @cvar CONFIG_VERSION_OPTION_NAME: Name of the option that represents config version in backend.
 
-    @ivar _ordered_options: Ordered dict of options defined in the order of definition from base class to subclasses.
+    @cvar _ordered_options_by_name: Ordered dict of options defined in the order of definition
+        from base class to subclasses. Keys are names, values are options.
+    @type _ordered_options_by_name: {'str', BaseOption}
+
+    @cvar _ordered_options_by_attribute: Ordered dict of options defined in the order of definition
+        from base class to subclasses. Keys are attribute names, values are options.
+    @type _ordered_options_by_attribute: {'str', BaseOption}
     """
     ALLOW_CACHE = False
     CONFIG_VERSION = '1.0'
@@ -116,15 +136,15 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         """
         properties = set()
 
-        for attribute_name, attribute_value in inspect.getmembers(cls, inspect.isdatadescriptor):
-            if isinstance(attribute_value, BaseOption):
-                if attribute_value.name in properties:
-                    raise AttributeError("duplication of option named '{}'".format(attribute_value.name))
-                else:
-                    properties.add(attribute_value.name)
+        for attribute_name, attribute_value in cls._ordered_options_by_attribute.items():
+            if attribute_value.name in properties:
+                raise AttributeError("duplication of option named '{}'".format(attribute_value.name))
+            else:
+                properties.add(attribute_value.name)
 
     def __init__(self):
         self.validate()
+
         super().__init__()
 
         self._lock = threading.Lock()
@@ -354,15 +374,8 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         """
         Generator to enumerate options.
         """
-        for o in self._ordered_options:
+        for o in self._ordered_options_by_attribute.values():
             yield o
-
-    def option_names(self):
-        """
-        Generator to enumerate option names.
-        """
-        for o in self._ordered_options:
-            yield o.name
 
     def python_items(self):
         """
@@ -429,11 +442,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
         @rtype: BaseOption or None
         """
-        for o in self.options():
-            if o.name == name:
-                return o
-        else:
-            return None
+        return self._ordered_options_by_name.get(name, None)
 
     #{ Recovery and migrations
 
@@ -459,7 +468,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         """
         LOG.error("Unable to deserialize value of \"%s\" from \"%s\":\n%s.", name, raw_or_json_value,
                   traceback.format_exception(*exc_info))
-        return self.option_for_name(name)._default
+        return self.option_for_name(name).default
 
     def migrate(self, version):
         """
@@ -775,7 +784,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
     #{ Dict magic methods
 
     def __len__(self):
-        return len(self._ordered_options)
+        return len(self._ordered_options_by_name)
 
     def __getitem__(self, key):
         return self.get_value_for_option_name(key)
@@ -787,6 +796,7 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         self.del_value_for_option_name(key)
 
     def __iter__(self):
-        return self.option_names()
+        for o in self.options():
+            yield o.name
 
     #}

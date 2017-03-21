@@ -76,7 +76,7 @@ For this reason there are methods to convert each option individually or whole c
 Introspection
 -------------
 It's always cool when you hack around possible flaws in lib's code. So you have it: API of BasicConfig and BasicOption is carefully designed to be hackable.
-In particular, config's attibutes can be easily inspected via the set of methods grouped under "Introspection" section or by playing with the BasicConfig._ordered_options
+In particular, config's attibutes can be easily inspected via the set of methods grouped under "Introspection" section or by playing with the BasicConfig._ordered_options_by_name
 directly. You didn't misread, options are already are ordered in order of definition and even subclassing and even overriding!
 
 .. code-block:: python
