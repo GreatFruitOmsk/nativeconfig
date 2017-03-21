@@ -778,6 +778,68 @@ class TestConfigMixin(ABC):
         self.assertEqual(c.get_value('Height'), '42')
         self.assertEqual(c.get_value('Age'), None)
 
+    def test_restore_snapshot(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age')
+
+        c = MyConfig.get_instance()
+
+        c.age = 42
+        self.assertEqual(c.age, 42)
+
+        snapshot = c.make_snapshot()
+
+        c.reset()
+        self.assertEqual(c.age, None)
+
+        c.restore_snapshot(snapshot)
+        self.assertEqual(c.age, 42)
+
+    def test_resolve_value_returns_default(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+        c.set_value('Age', 'Hello World')
+
+        self.assertEqual(c.age, 42)
+
+    def test_option_by_unknown_name_raises(self):
+        class MyConfig(self.CONFIG_TYPE):
+            age = IntOption('Age', default=42)
+
+        c = MyConfig.get_instance()
+
+        with self.assertRaises(KeyError):
+            c.get_option_value('Name')
+
+        with self.assertRaises(KeyError):
+            c.get_raw_option_value('Name')
+
+        with self.assertRaises(KeyError):
+            c.get_json_option_value('Name')
+
+        with self.assertRaises(KeyError):
+            c.set_option_value('Name', '_')
+
+        with self.assertRaises(KeyError):
+            c.set_raw_option_value('Name', '_')
+
+        with self.assertRaises(KeyError):
+            c.set_json_option_value('Name', '"_"')
+
+        with self.assertRaises(KeyError):
+            c.del_option_value('Name')
+
+        with self.assertRaises(KeyError):
+            c.validate_option_value('Name', '_')
+
+        with self.assertRaises(KeyError):
+            c.validate_raw_option_value('Name', '_')
+
+        with self.assertRaises(KeyError):
+            c.validate_json_option_value('Name', '"_"')
+
     @abstractmethod
     def test_config_is_created_if_not_found(self):
         pass
