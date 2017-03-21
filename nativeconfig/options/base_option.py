@@ -89,9 +89,6 @@ class BaseOption(property, metaclass=ABCMeta):
         self._allow_cache = allow_cache
         self.__doc__ = doc or self.__doc__
 
-        self._one_shot_value = None
-        self._is_one_shot_value_set = False  # None is allowed for One Shot Value
-
         if not isinstance(name, str) or not name:
             raise ValueError("'name' must be nonempty string")
 
@@ -119,19 +116,6 @@ class BaseOption(property, metaclass=ABCMeta):
     @property
     def default(self):
         return copy.deepcopy(self._default)
-
-    def set_one_shot_value(self, python_value):
-        """
-        Set One Shot Value of the option that overrides Raw Value from storage but can be reset by set.
-
-        Useful if you want to allow a user to temporary override the option via CLI.
-
-        @raise ValidationError: Raise if python_value is not valid.
-        """
-        if python_value is not None:
-            self.validate(python_value)
-        self._one_shot_value = python_value
-        self._is_one_shot_value_set = True
 
     #{ Validation
 
@@ -231,10 +215,7 @@ class BaseOption(property, metaclass=ABCMeta):
                 LOG.debug("Value of \"%s\" is overridden by environment variable: %s.", self.name, json_value)
                 python_value, source = make_python_value_from_json_value(json_value, ValueSource.env)
 
-        if python_value is None and self._is_one_shot_value_set:
-            LOG.debug("Value of \"%s\" is temporary overridden by one shot value: %s.", self.name, self._one_shot_value)
-            python_value, source = self._one_shot_value, ValueSource.one_shot
-        elif python_value is None:
+        if python_value is None:
             raw_value = getattr(enclosing_self, self._getter)(self.name, allow_cache=self.allow_cache(enclosing_self))
             if raw_value is not None:
                 python_value, source = make_python_value_from_raw_value(raw_value, ValueSource.config)
@@ -259,16 +240,12 @@ class BaseOption(property, metaclass=ABCMeta):
         """
         Serialize Python Value into Raw Value and write it to storage.
 
-        Resets One Shot Value.
         Setting None simply deletes Raw Value from storage.
 
         @param enclosing_self: Instance of class that defines this property.
 
         @param python_value: Python Value to be set.
         """
-        self._one_shot_value = None
-        self._is_one_shot_value_set = False
-
         if python_value is not None:
             self.validate(python_value)
             raw_value = self.serialize(python_value)
@@ -282,8 +259,6 @@ class BaseOption(property, metaclass=ABCMeta):
 
         @param enclosing_self: Instance of class that defines this property.
         """
-        self._one_shot_value = None
-        self._is_one_shot_value_set = False
         getattr(enclosing_self, self._deleter)(self.name, allow_cache=self.allow_cache(enclosing_self))
 
     #}

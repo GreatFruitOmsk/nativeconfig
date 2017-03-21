@@ -211,50 +211,6 @@ class TestOptionMixin(ABC):
             with self.assertRaises(ValidationError):
                 c.set_raw_value_for_option_name('_', MyConfig.option.serialize(o.alternate_value))
 
-    def test_setting_one_shot_value(self):
-        for o in self.OPTIONS:
-            class MyConfig(StubConfig):
-                option = o.option_type('_')
-
-            c = MyConfig.get_instance()
-
-            c.option = o.value
-            self.assertEqual(c.option, o.value)
-
-            c.set_one_shot_value_for_option_name('_', o.alternate_value)
-            self.assertEqual(c.option, o.alternate_value)
-
-            self.assertEqual(getattr(c, MyConfig.option._getter)('_'), MyConfig.option.serialize(o.value))
-
-    def test_one_shot_value_must_be_valid(self):
-        for o in self.OPTIONS:
-            class MyConfig(StubConfig):
-                option = o.option_type('_')
-
-            c = MyConfig.get_instance()
-
-            c.option = o.value
-            self.assertEqual(c.option, o.value)
-
-            with self.assertRaises(ValidationError):
-                c.set_one_shot_value_for_option_name('_', o.invalid_value)
-
-    def test_one_shot_value_must_be_in_choices_if_set(self):
-        for o in self.OPTIONS:
-            class MyConfig(StubConfig):
-                option = o.option_type('_', choices=[o.value])
-
-            c = MyConfig.get_instance()
-
-            with self.assertRaises(ValidationError):
-                c.set_one_shot_value_for_option_name('_', o.alternate_value)
-
-            with self.assertRaises(ValidationError):
-                c.set_one_shot_json_value_for_option_name('_', MyConfig.option.serialize_json(o.alternate_value))
-
-            with self.assertRaises(ValidationError):
-                c.set_one_shot_raw_value_for_option_name('_', MyConfig.option.serialize(o.alternate_value))
-
     def test_setting_env_value(self):
         for o in self.OPTIONS:
             os.environ.pop(self.OPTION_ENV_NAME, None)
@@ -320,22 +276,6 @@ class TestOptionMixin(ABC):
 
             del c.option
             self.assertEqual(c.option, o.value)
-
-    def test_deleting_value_resets_one_shot_value(self):
-        for o in self.OPTIONS:
-            class MyConfig(StubConfig):
-                option = o.option_type('_')
-
-            c = MyConfig.get_instance()
-
-            c.option = o.value
-            self.assertEqual(c.option, o.value)
-
-            c.set_one_shot_value_for_option_name('_', o.alternate_value)
-            self.assertEqual(c.option, o.alternate_value)
-
-            del c.option
-            self.assertIsNone(c.option)
 
     def test_deleting_value_preserves_env_if_set(self):
         for o in self.OPTIONS:

@@ -268,69 +268,6 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         else:
             raise KeyError("no option named '{}'".format(name))
 
-    def set_one_shot_value_for_option_name(self, name, python_value):
-        """
-        Set One Shot Value for a given name.
-
-        Issues a warning if option with a given name does not exist.
-
-        @param name: Name of the option.
-        @type name: str
-
-        @param python_value: Python Value.
-        @type python_value: object or None
-
-        @raise KeyError: Raised if there is no option with given name.
-        """
-        attribute = self.option_for_name(name)
-
-        if attribute:
-            attribute.set_one_shot_value(python_value)
-        else:
-            raise KeyError("no option named '{}'".format(name))
-
-    def set_one_shot_raw_value_for_option_name(self, name, raw_value):
-        """
-        Set One Shot Value for a given name.
-
-        Issues a warning if option with a given name does not exist.
-
-        @param name: Name of the option.
-        @type name: str
-
-        @param raw_value: Raw Value.
-        @type raw_value: str
-
-        @raise KeyError: Raised if there is no option with given name.
-        """
-        attribute = self.option_for_name(name)
-
-        if attribute:
-            attribute.set_one_shot_value(attribute.deserialize(raw_value))
-        else:
-            raise KeyError("no option named '{}'".format(name))
-
-    def set_one_shot_json_value_for_option_name(self, name, json_value):
-        """
-        Set One Shot Value for a given name.
-
-        Issues a warning if option with a given name does not exist.
-
-        @param name: Name of the option.
-        @type name: str
-
-        @param json_value: JSON Value.
-        @type json_value: str
-
-        @raise KeyError: Raised if there is no option with given name.
-        """
-        attribute = self.option_for_name(name)
-
-        if attribute:
-            attribute.set_one_shot_value(attribute.deserialize_json(json_value))
-        else:
-            raise KeyError("no option named '{}'".format(name))
-
     def del_value_for_option_name(self, name):
         """
         Delete option by its name.
