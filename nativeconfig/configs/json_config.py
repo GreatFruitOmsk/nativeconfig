@@ -47,20 +47,28 @@ class JSONConfig(BaseConfig):
     def _set_json_value(self, key, raw_value):
         try:
             with open(self.JSON_PATH, 'r+', encoding='utf-8') as f:
-                conf = json.load(f)
+                config = json.load(f)
 
                 if raw_value is None:
-                    conf.pop(key, None)
+                    config.pop(key, None)
                 else:
-                    conf[key] = raw_value
+                    config[key] = raw_value
 
-                ordered_conf = OrderedDict()
-                for m in self.options():
-                    if m.name in conf:
-                        ordered_conf[m.name] = conf.pop(m.name)
+                ordered_config = OrderedDict()
+
+                # Ensure that current options are stored in order.
+                for o in self.options():
+                    if o.name in config:
+                        ordered_config[o.name] = config.pop(o.name)
+                    elif not len(config):
+                        break
+
+                # Everything else can appear in arbitrary order at the end.
+                for k, v in config.items():
+                    ordered_config[k] = v
 
                 f.seek(0)
-                json.dump(ordered_conf, f, indent=4)
+                json.dump(ordered_config, f, indent=4)
                 f.truncate()
         except:
             self.LOG.exception("Unable to access config file:")
