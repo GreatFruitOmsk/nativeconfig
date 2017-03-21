@@ -185,6 +185,7 @@ class BaseOption(property, metaclass=ABCMeta):
         Read value for the option from all supported sources.
 
         @param enclosing_self: Instance of class that defines this property.
+        @type enclosing_self: BaseConfig
 
         @rtype: (object, ValueSource)
         """
@@ -228,11 +229,12 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def fget(self, enclosing_self):
         """
-        Read Raw Value from the storage and deserialized it into Python Value.
+        Read Raw Value from the storage and deserialize it into Python Value.
 
         If either DeserializationError or ValidationError occurs in process, they will be forwarded to resolver.
 
         @param enclosing_self: Instance of class that defines this property.
+        @type enclosing_self: BaseConfig
         """
         return self.read_value(enclosing_self)[0]
 
@@ -243,6 +245,7 @@ class BaseOption(property, metaclass=ABCMeta):
         Setting None simply deletes Raw Value from storage.
 
         @param enclosing_self: Instance of class that defines this property.
+        @type enclosing_self: BaseConfig
 
         @param python_value: Python Value to be set.
         """
@@ -258,6 +261,7 @@ class BaseOption(property, metaclass=ABCMeta):
         Delete Raw Value from the config.
 
         @param enclosing_self: Instance of class that defines this property.
+        @type enclosing_self: BaseConfig
         """
         getattr(enclosing_self, self._deleter)(self.name, allow_cache=self.allow_cache(enclosing_self))
 
