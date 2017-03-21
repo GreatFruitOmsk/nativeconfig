@@ -96,7 +96,6 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
     CONFIG_VERSION_OPTION_NAME = "ConfigVersion"
 
     _instances = {}
-    _instances_events = {}
     _instances_lock = threading.Lock()
 
     @classmethod
@@ -107,16 +106,13 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
         @rtype: BaseConfig
         """
         with cls._instances_lock:
-            instance_event = cls._instances_events.get(cls, threading.Event())
+            instance = cls._instances.get(cls, None)
 
-            if not instance_event.is_set():
-                try:
-                    cls._instances[cls] = cls()
-                finally:
-                    instance_event.set()
-                    cls._instances_events[cls] = instance_event
+            if instance is None:
+                instance = cls()
+                cls._instances[cls] = instance
 
-        return cls._instances.get(cls, None)
+            return cls._instances.get(cls, None)
 
     @classmethod
     def instance(cls):
