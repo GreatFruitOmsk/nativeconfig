@@ -13,6 +13,5 @@ with open(os.path.join(os.path.dirname(__file__), 'nativeconfig', 'version.py'))
 setup(
     version=VERSION,
     packages=['nativeconfig', 'nativeconfig.options', 'nativeconfig.configs'],
-    keywords='config',
-    test_suite='test'
+    test_suite='test',
 )
