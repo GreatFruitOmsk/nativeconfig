@@ -47,7 +47,10 @@ class ArrayOption(BaseContainerOption):
     def serialize_json(self, python_value):
         # A JSON array of JSON-serialized values must be constructed manually
         # to avoid double-serialization.
-        return '[' + ', '.join([self._value_option.serialize_json(v) for v in python_value]) + ']'
+        if python_value is not None:
+            return '[' + ', '.join([self._value_option.serialize_json(v) for v in python_value]) + ']'
+        else:
+            return super().serialize_json(python_value)
 
     def deserialize_json(self, json_value):
         value = super().deserialize_json(json_value)

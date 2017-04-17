@@ -155,6 +155,13 @@ class TestOptionMixin(ABC):
             python_value = MyConfig.option.deserialize_json(json_value)
             self.assertEqual(python_value, o.value)
 
+    def test_serialize_json_to_None(self):
+        for o in self.OPTIONS:
+            class MyConfig(StubConfig):
+                option = o.option_type('_')
+
+            self.assertEqual(MyConfig.option.serialize_json(None), 'null')
+
     def test_deserialize_json_from_None(self):
         for o in self.OPTIONS:
             class MyConfig(StubConfig):

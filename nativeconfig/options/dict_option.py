@@ -34,19 +34,24 @@ class DictOption(BaseContainerOption):
 
     def deserialize(self, raw_value):
         try:
-                deserialized_dict = {}
+            deserialized_dict = {}
 
-                for k, v in raw_value.items():
-                    deserialized_dict.update({k: self._value_option.deserialize(v)})
+            for k, v in raw_value.items():
+                deserialized_dict.update({k: self._value_option.deserialize(v)})
 
-                value = deserialized_dict
+            value = deserialized_dict
         except DeserializationError:
             raise DeserializationError("unable to deserialize '{}' into dict".format(raw_value), raw_value, self.name)
         else:
             return value
 
     def serialize_json(self, python_value):
-        return '{' + ', '.join(['{}: {}'.format(json.dumps(k), self._value_option.serialize_json(v)) for k, v in python_value.items()]) + '}'
+        # A JSON dict of JSON-serialized values must be constructed manually
+        # to avoid double-serialization.
+        if python_value is not None:
+            return '{' + ', '.join(['{}: {}'.format(json.dumps(k), self._value_option.serialize_json(v)) for k, v in python_value.items()]) + '}'
+        else:
+            return super().serialize_json(python_value)
 
     def deserialize_json(self, json_value):
         value = super().deserialize_json(json_value)

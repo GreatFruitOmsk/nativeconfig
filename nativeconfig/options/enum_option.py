@@ -79,7 +79,9 @@ class EnumOption(BaseOption):
         raise DeserializationError("unable to deserialize '{}' into {}".format(raw_value, self._enum_type), raw_value, self.name)
 
     def serialize_json(self, python_value):
-        if self._value_option:
+        if python_value is None:
+            return super().serialize_json(python_value)
+        elif self._value_option:
             return self._value_option.serialize_json(python_value.value)
         else:
             return super().serialize_json(python_value.name)

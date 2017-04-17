@@ -173,6 +173,8 @@ class BaseOption(property, metaclass=ABCMeta):
         """
         Serialize Python Value into JSON Value.
 
+        Custom implementation should properly handle None as a python_value.
+
         @see: deserialize_json
 
         @rtype: str
@@ -182,6 +184,8 @@ class BaseOption(property, metaclass=ABCMeta):
     def deserialize_json(self, json_value):
         """
         Deserialize JSON Value into Python Value.
+
+        Custom implementation should properly handle None as a python_value.
 
         @see: serialize_json
         """
