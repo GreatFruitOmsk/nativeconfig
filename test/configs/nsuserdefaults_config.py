@@ -1,4 +1,3 @@
-import sys
 import unittest
 
 try:
@@ -6,7 +5,7 @@ try:
 except ImportError:
     pass
 else:
-    from test.config import TestConfigMixin
+    from test.configs import TestConfigMixin
 
 
     class MyNSUserDefaultsConfig(NSUserDefaultsConfig):
