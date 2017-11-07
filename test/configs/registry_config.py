@@ -14,7 +14,7 @@ if sys.platform.startswith('win32'):
     class MyRegistryConfig(RegistryConfig):
         REGISTRY_PATH = r'Software\test_config'
 
-    class TestRegistryConfig(unittest.TestCase, TestConfigMixin):
+    class TestRegistryConfig(TestConfigMixin, unittest.TestCase):
         CONFIG_TYPE = MyRegistryConfig
 
         def tearDown(self):
@@ -24,7 +24,7 @@ if sys.platform.startswith('win32'):
             except OSError:
                 pass
 
-            TestConfigMixin.tearDown(self)
+            super().tearDown()
 
         def test_config_is_created_if_not_found(self):
             class MyConfig(MyRegistryConfig):

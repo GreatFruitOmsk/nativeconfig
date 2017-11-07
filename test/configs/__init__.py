@@ -12,6 +12,7 @@ class TestConfigMixin(ABC):
 
     def tearDown(self):
         os.environ.pop('FIRST_NAME', None)
+        super().tearDown()
 
     def test_exception_is_raised_for_duplicate_options(self):
         with self.assertRaises(AttributeError):

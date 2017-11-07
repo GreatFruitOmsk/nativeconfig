@@ -12,7 +12,7 @@ else:
         pass
 
 
-    class TestNSUserDefaultsConfig(unittest.TestCase, TestConfigMixin):
+    class TestNSUserDefaultsConfig(TestConfigMixin, unittest.TestCase):
         CONFIG_TYPE = MyNSUserDefaultsConfig
 
         def tearDown(self):
@@ -22,7 +22,7 @@ else:
             except OSError:
                 pass
 
-            TestConfigMixin.tearDown(self)
+            super().tearDown()
 
         def test_config_is_created_if_not_found(self):
             pass

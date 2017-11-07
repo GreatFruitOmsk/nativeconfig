@@ -10,7 +10,7 @@ class MyMemoryConfig(MemoryConfig):
     pass
 
 
-class TestMemoryConfig(unittest.TestCase, TestConfigMixin):
+class TestMemoryConfig(TestConfigMixin, unittest.TestCase):
     CONFIG_TYPE = MyMemoryConfig
 
     def test_config_is_created_if_not_found(self):
