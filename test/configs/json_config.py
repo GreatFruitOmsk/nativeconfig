@@ -15,7 +15,7 @@ class MyJSONConfig(JSONConfig):
     JSON_PATH = tempfile.mktemp("_test.json")
 
 
-class TestJSONConfig(unittest.TestCase, TestConfigMixin):
+class TestJSONConfig(TestConfigMixin, unittest.TestCase):
     CONFIG_TYPE = MyJSONConfig
 
     def tearDown(self):
@@ -24,7 +24,7 @@ class TestJSONConfig(unittest.TestCase, TestConfigMixin):
         except FileNotFoundError:
             pass
 
-        TestConfigMixin.tearDown(self)
+        super().tearDown()
 
     def test_exception_is_suppressed_if_config_is_not_accessible(self):
         class MyConfig(MyJSONConfig):
