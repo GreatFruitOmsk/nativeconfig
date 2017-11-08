@@ -23,8 +23,8 @@ class _OrderedClass(ABCMeta):
     def __prepare__(metacls, name, bases):
         return OrderedDict()
 
-    def __new__(cls, name, bases, classdict):
-        result = type.__new__(cls, name, bases, dict(classdict))
+    def __new__(cls, name, bases, classdict, **kwargs):
+        result = type.__new__(cls, name, bases, dict(classdict), **kwargs)
         result._ordered_options = []
 
         def add_option(base_class, option):
