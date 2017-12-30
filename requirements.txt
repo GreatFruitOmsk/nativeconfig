@@ -1,2 +1,2 @@
-pyobjc-core ; sys_platform == 'darwin'
+pyobjc-core==4.1; sys_platform == 'darwin'
 pyyaml --global-option="--with-libyaml"
