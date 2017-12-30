@@ -6,7 +6,7 @@ import unittest
 from nativeconfig import EnumOption, PathOption, IntOption, FloatOption, StringOption, ArrayOption
 
 from test import StubConfig
-from test.options import TestOptionMixin, Option, make_option_type
+from test.options import OptionMixin, Option, make_option_type
 
 
 class IntEnum(int, Enum):
@@ -29,7 +29,7 @@ class PathEnum(Enum):
     B = Path('/b')
 
 
-class TestEnumOption(TestOptionMixin, unittest.TestCase):
+class TestEnumOption(OptionMixin, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.OPTIONS = [

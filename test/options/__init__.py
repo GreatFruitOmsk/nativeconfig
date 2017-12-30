@@ -25,7 +25,7 @@ def make_option_type(option_type, **kwargs):
     return t
 
 
-class TestOptionMixin(ABC):
+class OptionMixin(ABC):
     OPTIONS = None
     OPTION_ENV_NAME = 'NATIVECONFIG_OPTION'
 

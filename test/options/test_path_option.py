@@ -3,10 +3,10 @@ import unittest
 
 from nativeconfig import PathOption
 
-from test.options import TestOptionMixin, Option, make_option_type
+from test.options import OptionMixin, Option, make_option_type
 
 
-class TestPathOption(unittest.TestCase, TestOptionMixin):
+class TestPathOption(unittest.TestCase, OptionMixin):
     @classmethod
     def setUpClass(cls):
         cls.OPTIONS = [

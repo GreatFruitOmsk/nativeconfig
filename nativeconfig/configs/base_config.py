@@ -459,14 +459,20 @@ class BaseConfig(Mapping, metaclass=_OrderedClass):
 
     #{ Snapshots
 
-    def snapshot(self):
+    def snapshot(self, option_names=None):
         """
         Get snapshot of current config.
 
         @return: Ordered JSON dict of json-serialized options.
         @rtype: str
         """
-        return '{' + ', '.join(['{}: {}'.format(json.dumps(o.name), o.serialize_json(o.fget(self))) for o in self.options()]) + '}'
+        items = []
+
+        for name, (value, source) in self.json_items():
+            if option_names is None or name in option_names:
+                items.append('{}: {}'.format(json.dumps(name), value))
+
+        return '{' + ', '.join(items) + '}'
 
     def restore_snapshot(self, snapshot):
         """

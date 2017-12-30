@@ -251,7 +251,7 @@ class BaseOption(property, metaclass=ABCMeta):
 
     def fget(self, enclosing_self):
         """
-        Read Raw Value from the storage and deserialized it into Python Value.
+        Read Raw Value from the storage and deserialize it into Python Value.
 
         If either DeserializationError or ValidationError occurs in process, they will be forwarded to resolver.
 

@@ -1,17 +1,66 @@
-os:
-  - linux
-language: python
-python:
-  - "3.4"
-  - "3.5"
-  - "3.6"
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libyaml-dev
+matrix:
+  include:
+    - os: osx
+      language: generic
+      before_install:
+        - brew update
+        - brew install python3
+        - virtualenv env -p python3
+        - source env/bin/activate
+    - os: osx
+      language: generic
+      before_install:
+        - brew update
+        - brew install python3 --HEAD
+        - virtualenv env -p python3
+        - source env/bin/activate
+    - os: osx
+      language: generic
+      before_install:
+        - brew update
+        - brew install python3 --devel
+        - virtualenv env -p python3
+        - source env/bin/activate
+    - os: linux
+      language: python
+      python: 3.4
+    - os: linux
+      language: python
+      python: 3.5
+    - os: linux
+      language: python
+      python: 3.6
+      script:
+        - python setup.py test --pytest-args "--cov=nativeconfig --cov-report=html --cov-branch --ignore=setup.py"
+        - python setup.py check -srm
+      after_success:
+        - flake8 nativeconfig
+        - codecov
+    - os: linux
+      language: python
+      python: 3.6-dev
+    - os: linux
+      language: python
+      python: 3.7-dev
+    - os: linux
+      language: python
+      python: nightly
+
 install:
-  - pip install -r requirements.txt
-  - pip install codecov
-  - python setup.py install
-script: coverage run -m test
-after_success:
-  - codecov
+  - python -m pip install --upgrade pip wheel setuptools
+  - python -m pip install -r requirements.txt
+
+script:
+  - python setup.py test
+  - python setup.py check -srm
+
+deploy:
+  provider: pypi
+  user: Ilya.Kulakov
+  password:
+    secure: "VlZYEwVXqGknNEfz6vCo26JWtcbXfBY0ihG+Co6PO7JQn2jEoogKEsMhi3f/rs22nlsH124AQa7bugmH1TkgBn8ODsKLZWGAQKSm9tQlYD2idsTYqCDk5bCAWpjX/RJqZZeMnDmL9BFJkaubrTfnFWdMxI1xXi/G9wC4NaSXSJc="
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+    branch: master
+    python: 3.6
