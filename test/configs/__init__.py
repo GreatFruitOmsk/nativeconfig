@@ -7,7 +7,7 @@ from nativeconfig.options import StringOption, IntOption, ArrayOption, DictOptio
 from nativeconfig.exceptions import DeserializationError, ValidationError
 
 
-class TestConfigMixin(ABC):
+class ConfigMixin(ABC):
     CONFIG_TYPE = None
 
     def tearDown(self):
@@ -497,8 +497,8 @@ class TestConfigMixin(ABC):
             last_name = StringOption('LastName', default='Kulakov')
 
         c = MyConfig.get_instance()
-        s = c.snapshot()
-        self.assertIsInstance(json.loads(s), dict)
+        self.assertEqual(json.loads(c.snapshot()), {'ConfigVersion': '1.0', 'FirstName': 'Ilya', 'LastName': 'Kulakov'})
+        self.assertEqual(json.loads(c.snapshot(['FirstName'])), {'FirstName': 'Ilya'})
 
     def test_option_for_name_returns_property(self):
         class MyConfig(self.CONFIG_TYPE):
@@ -734,7 +734,7 @@ class TestConfigMixin(ABC):
 
     def test_get_value_is_cached(self):
         class MyConfig(self.CONFIG_TYPE):
-            first_name = StringOption('FirstName', default='Ilya', allow_cache=True)
+            first_name = StringOption('FirstName', allow_cache=True)
 
         c = MyConfig.get_instance()
         c.get_value_cache_free = MagicMock(return_value='Ilya')
@@ -746,7 +746,7 @@ class TestConfigMixin(ABC):
 
     def test_set_value_is_cached(self):
         class MyConfig(self.CONFIG_TYPE):
-            first_name = StringOption('FirstName', default='Ilya', allow_cache=True)
+            first_name = StringOption('FirstName', allow_cache=True)
 
         c = MyConfig.get_instance()
         c.set_value_cache_free = MagicMock(return_value='Ilya')
@@ -758,7 +758,7 @@ class TestConfigMixin(ABC):
 
     def test_get_array_value_is_cached(self):
         class MyConfig(self.CONFIG_TYPE):
-            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'), default=(1, 2, 3), allow_cache=True)
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'), allow_cache=True)
 
         c = MyConfig.get_instance()
         c.get_array_value_cache_free = MagicMock(return_value=[1, 2, 3])
@@ -769,7 +769,7 @@ class TestConfigMixin(ABC):
 
     def test_set_array_value_is_cached(self):
         class MyConfig(self.CONFIG_TYPE):
-            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'), default=(1, 2, 3), allow_cache=True)
+            lucky_numbers = ArrayOption('LuckyNumber', IntOption('_'), allow_cache=True)
 
         c = MyConfig.get_instance()
         c.set_array_value_cache_free = MagicMock(return_value=[1, 2, 3])
@@ -780,7 +780,7 @@ class TestConfigMixin(ABC):
 
     def test_get_dict_value_is_cached(self):
         class MyConfig(self.CONFIG_TYPE):
-            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), allow_cache=True)
 
         c = MyConfig.get_instance()
         c.get_dict_value_cache_free = MagicMock(return_value={'a': 1, 'b': 2, 'c': 3})
@@ -791,7 +791,7 @@ class TestConfigMixin(ABC):
 
     def test_set_dict_value_is_cached(self):
         class MyConfig(self.CONFIG_TYPE):
-            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), allow_cache=True)
 
         c = MyConfig.get_instance()
         c.set_dict_value_cache_free = MagicMock(return_value={'a': 1, 'b': 2, 'c': 3})
@@ -802,7 +802,7 @@ class TestConfigMixin(ABC):
 
     def test_del_value_is_cached(self):
         class MyConfig(self.CONFIG_TYPE):
-            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), default={'a': 1, 'b': 2, 'c': 3}, allow_cache=True)
+            lucky_numbers = DictOption('LuckyNumber', IntOption('_'), allow_cache=True)
 
         c = MyConfig.get_instance()
         c.del_value_cache_free = MagicMock()

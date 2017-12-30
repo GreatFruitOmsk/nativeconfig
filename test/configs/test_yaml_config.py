@@ -3,23 +3,28 @@ import tempfile
 import unittest
 import yaml
 
-from nativeconfig.configs.yaml_config import YAMLConfig
+from nativeconfig.configs.yaml_config import YAMLConfig as _YAMLConfig
 from nativeconfig.options import StringOption, IntOption
 
-from . import TestConfigMixin
+from . import ConfigMixin
 
 
-class TestYAMLConfigMixin(TestConfigMixin):
+class YAMLConfigMixin(ConfigMixin):
+    def setUp(self):
+        super().setUp()
+
+        self.CONFIG_TYPE.YAML_PATH = tempfile.mktemp("_test.yml")
+
     def tearDown(self):
         try:
-            os.unlink(MyYAMLConfig.YAML_PATH)
+            os.unlink(self.CONFIG_TYPE.YAML_PATH)
         except FileNotFoundError:
             pass
 
         super().tearDown()
 
     def test_exception_is_suppressed_if_config_is_not_accessible(self):
-        class MyConfig(MyYAMLConfig):
+        class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
@@ -28,7 +33,7 @@ class TestYAMLConfigMixin(TestConfigMixin):
         self.assertEqual(c.first_name, 'Ilya')
 
     def test_get_value_returns_None_if_yaml_file_is_malformed(self):
-        class MyConfig(MyYAMLConfig):
+        class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         c = MyConfig.get_instance()
@@ -43,7 +48,7 @@ class TestYAMLConfigMixin(TestConfigMixin):
         self.assertEqual(c.get_value('FirstName'), None)
 
     def test_config_is_created_if_not_found(self):
-        class MyConfig(MyYAMLConfig):
+        class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
         self.assertEqual(os.path.isfile(MyConfig.YAML_PATH), False)
@@ -51,7 +56,7 @@ class TestYAMLConfigMixin(TestConfigMixin):
         self.assertEqual(os.path.isfile(MyConfig.YAML_PATH), True)
 
     def test_order_is_preserved_in_yaml(self):
-        class MyConfig(MyYAMLConfig):
+        class MyConfig(self.CONFIG_TYPE):
             second_name = StringOption('SecondName', default='Kulakov')
             age = IntOption('Age', default=42)
             first_name = StringOption('FirstName', default='Ilya')
@@ -71,21 +76,19 @@ class TestYAMLConfigMixin(TestConfigMixin):
         self.assertLess(age_index, first_name_index)
 
 
-class MyYAMLConfig(YAMLConfig):
-    YAML_PATH = tempfile.mktemp("_test.yml")
+class YAMLConfig(_YAMLConfig):
     YAML_LOADER = yaml.Loader
     YAML_DUMPER = yaml.Dumper
 
 
-class MyCYAMLConfig(YAMLConfig):
-    YAML_PATH = tempfile.mktemp("_test.yml")
+class CYAMLConfig(YAMLConfig):
     YAML_LOADER = yaml.CLoader
     YAML_DUMPER = yaml.CDumper
 
 
-class TestYAMLConfig(TestYAMLConfigMixin, unittest.TestCase):
-    CONFIG_TYPE = MyYAMLConfig
+class TestYAMLConfig(YAMLConfigMixin, unittest.TestCase):
+    CONFIG_TYPE = YAMLConfig
 
 
-class TestCYAMLConfig(TestYAMLConfigMixin, unittest.TestCase):
-    CONFIG_TYPE = MyCYAMLConfig
+class TestCYAMLConfig(YAMLConfigMixin, unittest.TestCase):
+    CONFIG_TYPE = CYAMLConfig

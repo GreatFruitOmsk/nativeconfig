@@ -5,24 +5,25 @@ try:
 except ImportError:
     pass
 else:
-    from test.configs import TestConfigMixin
+    from test.configs import ConfigMixin
 
 
     class MyNSUserDefaultsConfig(NSUserDefaultsConfig):
-        pass
+        NSUSERDEFAULTS_SUITE = 'nativeconfig'
 
 
-    class TestNSUserDefaultsConfig(TestConfigMixin, unittest.TestCase):
+    class TestNSUserDefaultsConfig(ConfigMixin, unittest.TestCase):
         CONFIG_TYPE = MyNSUserDefaultsConfig
 
-        def tearDown(self):
+        def setUp(self):
             try:
                 c = self.CONFIG_TYPE.get_instance()
-                c.reset()
+                domain = self.CONFIG_TYPE.NSUSERDEFAULTS_SUITE
+                c._user_defaults.removePersistentDomainForName_(c._copy_str(domain))
             except OSError:
                 pass
 
-            super().tearDown()
+            super().setUp()
 
         def test_config_is_created_if_not_found(self):
             pass

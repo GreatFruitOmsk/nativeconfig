@@ -2,10 +2,10 @@ import unittest
 
 from nativeconfig import FloatOption
 
-from test.options import TestOptionMixin, Option
+from test.options import OptionMixin, Option
 
 
-class TestFloatOption(unittest.TestCase, TestOptionMixin):
+class TestFloatOption(unittest.TestCase, OptionMixin):
     @classmethod
     def setUpClass(cls):
         cls.OPTIONS = [

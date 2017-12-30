@@ -9,12 +9,12 @@ if sys.platform.startswith('win32'):
     from nativeconfig.configs.registry_config import traverse_registry_key
     from nativeconfig.options import StringOption, ArrayOption, DictOption
 
-    from test.configs import TestConfigMixin
+    from test.configs import ConfigMixin
 
     class MyRegistryConfig(RegistryConfig):
         REGISTRY_PATH = r'Software\test_config'
 
-    class TestRegistryConfig(TestConfigMixin, unittest.TestCase):
+    class TestRegistryConfig(ConfigMixin, unittest.TestCase):
         CONFIG_TYPE = MyRegistryConfig
 
         def tearDown(self):

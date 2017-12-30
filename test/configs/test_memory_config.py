@@ -3,14 +3,14 @@ import unittest
 from nativeconfig.options import IntOption
 from nativeconfig.configs import MemoryConfig
 
-from test.configs import TestConfigMixin
+from test.configs import ConfigMixin
 
 
 class MyMemoryConfig(MemoryConfig):
     pass
 
 
-class TestMemoryConfig(TestConfigMixin, unittest.TestCase):
+class TestMemoryConfig(ConfigMixin, unittest.TestCase):
     CONFIG_TYPE = MyMemoryConfig
 
     def test_config_is_created_if_not_found(self):

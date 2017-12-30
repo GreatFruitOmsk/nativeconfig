@@ -1,7 +1,6 @@
 import logging
 
 import objc
-import traceback
 
 from nativeconfig.configs.base_config import BaseConfig
 

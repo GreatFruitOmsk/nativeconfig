@@ -3,10 +3,10 @@ import unittest
 from nativeconfig import DeserializationError
 from nativeconfig import ArrayOption, FloatOption, IntOption, StringOption
 
-from test.options import TestOptionMixin, Option, make_option_type
+from test.options import OptionMixin, Option, make_option_type
 
 
-class TestArrayOption(TestOptionMixin, unittest.TestCase):
+class TestArrayOption(OptionMixin, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.OPTIONS = [

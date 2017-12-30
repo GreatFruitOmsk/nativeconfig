@@ -2,10 +2,10 @@ import unittest
 
 from nativeconfig import StringOption
 
-from test.options import TestOptionMixin, Option, make_option_type
+from test.options import OptionMixin, Option, make_option_type
 
 
-class TestStringOption(unittest.TestCase, TestOptionMixin):
+class TestStringOption(unittest.TestCase, OptionMixin):
     @classmethod
     def setUpClass(cls):
         cls.OPTIONS = [

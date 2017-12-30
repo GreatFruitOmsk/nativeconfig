@@ -4,7 +4,7 @@ import unittest
 from nativeconfig import BooleanOption
 
 from test import StubConfig, all_casings
-from test.options import TestOptionMixin, make_option_type, Option
+from test.options import OptionMixin, make_option_type, Option
 
 
 class MyConfig(StubConfig):
@@ -12,7 +12,7 @@ class MyConfig(StubConfig):
     boolean_false = BooleanOption('BooleanFalse', default=False)
 
 
-class TestBooleanOption(unittest.TestCase, TestOptionMixin):
+class TestBooleanOption(unittest.TestCase, OptionMixin):
     @classmethod
     def setUpClass(cls):
         cls.OPTIONS = [
