@@ -1,13 +1,24 @@
 nativeconfig
 ============
 
-.. image:: https://travis-ci.org/GreatFruitOmsk/nativeconfig.svg?branch=master
-
 .. image:: https://badge.fury.io/py/nativeconfig.png
     :target: http://badge.fury.io/py/nativeconfig
-
+    :alt: Travis
+.. image:: https://ci.appveyor.com/api/projects/status/l39b91mms8lch8au/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/GreatFruitOmsk/nativeconfig
+    :alt: AppVeyor
 .. image:: https://codecov.io/gh/GreatFruitOmsk/nativeconfig/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/GreatFruitOmsk/nativeconfig
+    :alt: Coverage
+.. image:: https://pyup.io/repos/github/GreatFruitOmsk/nativeconfig/shield.svg
+    :target: https://pyup.io/repos/github/GreatFruitOmsk/nativeconfig
+    :alt: Updates
+.. image:: https://pyup.io/repos/github/GreatFruitOmsk/nativeconfig/python-3-shield.svg
+    :target: https://pyup.io/repos/github/GreatFruitOmsk/nativeconfig
+    :alt: Python 3
+.. image:: https://img.shields.io/pypi/v/nativeconfig.svg
+    :target: https://pypi.python.org/pypi/nativeconfig
+    :alt: PyPI
 
 
 Developers of cross-platform applications often face problems when they need to interact with the system.

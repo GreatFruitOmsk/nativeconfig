@@ -81,14 +81,17 @@ class YAMLConfig(_YAMLConfig):
     YAML_DUMPER = yaml.Dumper
 
 
-class CYAMLConfig(YAMLConfig):
-    YAML_LOADER = yaml.CLoader
-    YAML_DUMPER = yaml.CDumper
-
-
 class TestYAMLConfig(YAMLConfigMixin, unittest.TestCase):
     CONFIG_TYPE = YAMLConfig
 
 
-class TestCYAMLConfig(YAMLConfigMixin, unittest.TestCase):
-    CONFIG_TYPE = CYAMLConfig
+try:
+    class CYAMLConfig(YAMLConfig):
+        YAML_LOADER = yaml.CLoader
+        YAML_DUMPER = yaml.CDumper
+
+
+    class TestCYAMLConfig(YAMLConfigMixin, unittest.TestCase):
+        CONFIG_TYPE = CYAMLConfig
+except AttributeError:
+    pass
