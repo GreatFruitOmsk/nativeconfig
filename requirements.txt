@@ -1,4 +1,4 @@
-codecov==2.0.10
+codecov==2.0.11
 docutils==0.14
 flake8==3.5.0
 Pygments==2.2.0
