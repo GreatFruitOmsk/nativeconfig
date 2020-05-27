@@ -20,6 +20,7 @@ class JSONConfig(BaseConfig):
     JSON_PATH = None
 
     def __init__(self):
+        Path(self.JSON_PATH).parent.mkdir(parents= True, exist_ok = True)
         if not Path(self.JSON_PATH).is_file():
             with open(self.JSON_PATH, 'w+', encoding='utf-8') as f:
                 f.write(json.dumps({}))
