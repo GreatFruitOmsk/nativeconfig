@@ -3,6 +3,6 @@ docutils==0.14
 flake8==3.5.0
 Pygments==2.2.0
 pyobjc-core==4.1 ; sys_platform == 'darwin'
+pytest==5.4.2
 pytest-cov==2.5.1
-pytest==3.3.1
-pyyaml==3.12
+PyYAML==5.3.1
