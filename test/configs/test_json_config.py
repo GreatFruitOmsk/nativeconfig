@@ -1,6 +1,7 @@
 import collections
 import json
 import os
+import shutil
 import tempfile
 import unittest
 import unittest.mock
@@ -25,6 +26,8 @@ class TestJSONConfig(ConfigMixin, unittest.TestCase):
 
     def tearDown(self):
         try:
+            shutil.rmtree(self.CONFIG_TYPE.JSON_PATH)
+        except NotADirectoryError:
             os.unlink(self.CONFIG_TYPE.JSON_PATH)
         except FileNotFoundError:
             pass
@@ -59,6 +62,14 @@ class TestJSONConfig(ConfigMixin, unittest.TestCase):
         class MyConfig(self.CONFIG_TYPE):
             first_name = StringOption('FirstName', default='Ilya')
 
+        self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), False)
+        MyConfig.get_instance()
+        self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), True)
+
+    def test_config_is_created_if_not_found__and_app_directory_need_creating(self):
+        class MyConfig(self.CONFIG_TYPE):
+            JSON_PATH = os.path.join(self.CONFIG_TYPE.JSON_PATH,'_cfgtmp.json')
+            first_name = StringOption('FirstName', default='Ilya')
         self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), False)
         MyConfig.get_instance()
         self.assertEqual(os.path.isfile(MyConfig.JSON_PATH), True)
