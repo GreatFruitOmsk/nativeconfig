@@ -1,7 +1,7 @@
 codecov==2.0.11
 docutils==0.14
 flake8==3.5.0
-Pygments==2.2.0
+Pygments==2.7.4
 pyobjc-core==4.1 ; sys_platform == 'darwin'
 pytest-cov==2.5.1
 pytest==5.4.2 ; python_version > "3.4"
