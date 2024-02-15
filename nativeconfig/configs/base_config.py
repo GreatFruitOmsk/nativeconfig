@@ -1,8 +1,8 @@
 from abc import ABCMeta, abstractmethod
 try:
-    from collections.abc import Mapping
+    from collections.abc import OrderedDict, Mapping
 except ImportError:
-    from collections import Mapping
+    from collections import OrderedDict, Mapping
 import contextlib
 import inspect
 import json
