@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict, Mapping
+from collections.abc import Mapping
+from collections import OrderedDict
 import contextlib
 import inspect
 import json
